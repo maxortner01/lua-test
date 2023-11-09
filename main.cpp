@@ -3,6 +3,10 @@
 #include <optional>
 #include <unordered_map>
 #include <memory>
+#include <filesystem>
+
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 extern "C"
 {
@@ -125,6 +129,27 @@ namespace CompileTime
         std::optional<Error<E>> _err;
     };
 
+    template<typename E>
+    struct Result<void, E>
+    {
+        Result() = default;
+
+        Result(Error<E> err) :
+            _err(err)
+        {   }
+
+        Result(const Result&) = delete;
+        ~Result() = default;
+
+        Error<E> error() const { assert(!good()); return _err.value(); }
+        bool     good()  const { return !_err.has_value(); }
+
+        operator bool() const { return good(); }
+
+    private:
+        std::optional<Error<E>> _err;
+    };
+
     struct Table
     {
         friend class Runtime;
@@ -152,7 +177,8 @@ namespace CompileTime
             NotFunction,
             WrongTypeTable,
             FunctionError,
-            TypeMismatch
+            TypeMismatch,
+            VariableDoesntExist
         };
 
         template<typename T>
@@ -165,6 +191,15 @@ namespace CompileTime
             luaL_openlibs(L);
         }
 
+        Runtime(Runtime&& r) :
+            L(r.L),
+            _good(r._good)
+        {
+            r.L = nullptr;
+        }
+
+        Runtime(const Runtime&) = delete;
+
         ~Runtime()
         {
             if (L)
@@ -174,8 +209,41 @@ namespace CompileTime
             }
         }
 
+        RuntimeResult<void> 
+        registerFunction(
+            const std::string& table_name,
+            const std::string& func_name,
+            lua_CFunction func)
+        {
+            lua_getglobal(L, table_name.c_str());
+            if (!lua_istable(L, -1))
+            {
+                lua_createtable(L, 0, 1);
+                lua_setglobal(L, table_name.c_str());
+                lua_getglobal(L, table_name.c_str());
+                if (!lua_istable(L, -1)) return { ErrorCode::VariableDoesntExist };
+            }
+            lua_pushstring(L, func_name.c_str());
+            lua_pushcfunction(L, func);
+            lua_settable(L, -3);
+
+            lua_pop(L, 1);
+
+            return { };
+        }
+
+        template<typename T>
+        RuntimeResult<T>
+        get(const std::string& name)
+        {
+            lua_getglobal(L, name.c_str());
+            if (!CompileTime::TypeMap<T>::check(L)) return { ErrorCode::TypeMismatch };
+            return { CompileTime::TypeMap<T>::construct(L) };
+        }
+
+        template<>
         RuntimeResult<Table>
-        getTable(const std::string& name)
+        get(const std::string& name)
         {
             lua_getglobal(L, name.c_str());
             if (!lua_istable(L, -1)) { lua_pop(L, 1); return { ErrorCode::WrongTypeTable }; }
@@ -211,14 +279,6 @@ namespace CompileTime
             lua_pop(L, 1);
 
             return { std::move(table) };
-        }
-
-        RuntimeResult<Lua::Number> 
-        getNumber(const std::string& name)
-        {
-            lua_getglobal(L, name.c_str());
-            if (!lua_isnumber(L, -1)) return { ErrorCode::NotNumber };
-            return { static_cast<Lua::Number>(lua_tonumber(L, -1)) };
         }
 
         template<typename... Return, typename... Args>
@@ -278,26 +338,127 @@ namespace CompileTime
     };
 }
 
+template<typename T>
+struct Singleton
+{
+    static T& get()
+    {
+        if (!instance) instance = new T();
+        return *instance;
+    }
+
+    static void destroy()
+    {
+        if (instance) delete instance;
+        instance = nullptr;
+    }
+
+private:
+    inline static T* instance = nullptr;
+};
+
+namespace LuaLib
+{
+    struct Library
+    {
+        void registerFunctions(Lua::Runtime& runtime)
+        {
+            for (auto& p : _funcs)
+                runtime.registerFunction(_name, p.first, p.second);
+        }
+
+    protected:
+        Library(
+            const std::string& name,
+            const std::unordered_map<std::string, lua_CFunction>& funcs) :
+                _name(name),
+                _funcs(funcs)
+        {   }
+
+        std::string _name;
+        std::unordered_map<std::string, lua_CFunction> _funcs;
+    };
+
+    struct Debug : Library, Singleton<Debug>
+    {
+        static int log(lua_State* L)
+        {
+            assert(lua_gettop(L) == 1);
+            assert(lua_isstring(L, -1));
+
+            auto val = std::string(lua_tostring(L, -1));
+
+            spdlog::get("lua")->info(val);
+
+            return 0;
+        }
+
+        static int _assert(lua_State* L)
+        {
+            assert(lua_gettop(L) == 1);
+            assert(lua_isboolean(L, -1));
+
+            lua_Debug debug;
+            lua_getstack(L, 1, &debug);
+            lua_getinfo(L, "nSl", &debug);
+
+            bool expr = lua_toboolean(L, -1);
+            if (!expr)
+            {
+                std::filesystem::path path(debug.source);
+                spdlog::get("lua")->critical("Assertion failed: file {}, file {}.", path.filename().c_str(), debug.currentline);
+                exit(1);
+            }
+            return 0;
+        }
+
+    private:
+        friend class Singleton<Debug>;
+
+        Debug() : Library("Debug",
+            {
+                { "log",    Debug::log     },
+                { "assert", Debug::_assert }
+            })
+        {   }
+    };
+}
+
+namespace Engine
+{
+    static Lua::Runtime createRuntime(const std::string& filename)
+    {
+        Lua::Runtime runtime(filename);
+        assert(runtime);
+
+        using namespace LuaLib;
+        Debug::get().registerFunctions(runtime);
+        Debug::destroy();
+
+        return runtime;
+    }
+}
+
 int main()
 {
-    Lua::Runtime runtime(SOURCE_DIR "/scripts/test.lua");
-    assert(runtime);
+    auto runtime = Engine::createRuntime(SOURCE_DIR "/scripts/test.lua");
 
+    auto c_log   = spdlog::stdout_color_mt("main");
+    auto lua_log = spdlog::stdout_color_mt("lua");
+
+    c_log->trace("Starting Engine");
     runtime.runFunction<>("Start");
     
     const auto [name, level] = [&]()
     {
-        auto table_res = runtime.getTable("player");
+        auto table_res = runtime.get<Lua::Table>("player");
         if (!table_res) { std::cout << "Table failed: " << (int)table_res.error().code() << "\n"; assert(false); }
         auto& table = table_res.value();
         return std::pair(table.get<Lua::String>("Name"), table.get<Lua::Number>("Level"));
     }();
 
-    std::cout << "Player: " << name << " [Lvl: " << level << "]\n";
+    c_log->info("Player: {} [Lvl: {}]", name, level);
     
+    c_log->trace("Destroying Engine");
     return 0;
-    while (true)
-    {
-        runtime.runFunction<>("Update");
-    }
 }
