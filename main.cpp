@@ -127,7 +127,7 @@ namespace CompileTime
 
     struct Table
     {
-        friend class File;
+        friend class Runtime;
 
         template<typename T>
         T& get(const std::string& name)
@@ -142,7 +142,7 @@ namespace CompileTime
         std::unordered_map<std::string, std::shared_ptr<void>> dictionary;
     };
 
-    struct File
+    struct Runtime
     {
         enum class ErrorCode
         {
@@ -156,16 +156,16 @@ namespace CompileTime
         };
 
         template<typename T>
-        using FileResult = Result<T, ErrorCode>;
+        using RuntimeResult = Result<T, ErrorCode>;
 
-        File(const std::string& filename) :
+        Runtime(const std::string& filename) :
             L(luaL_newstate()),
             _good(lua_check(L, luaL_dofile(L, filename.c_str())))
         {   
             luaL_openlibs(L);
         }
 
-        ~File()
+        ~Runtime()
         {
             if (L)
             {
@@ -174,7 +174,7 @@ namespace CompileTime
             }
         }
 
-        FileResult<Table>
+        RuntimeResult<Table>
         getTable(const std::string& name)
         {
             lua_getglobal(L, name.c_str());
@@ -213,7 +213,7 @@ namespace CompileTime
             return { std::move(table) };
         }
 
-        FileResult<Lua::Number> 
+        RuntimeResult<Lua::Number> 
         getNumber(const std::string& name)
         {
             lua_getglobal(L, name.c_str());
@@ -222,7 +222,7 @@ namespace CompileTime
         }
 
         template<typename... Return, typename... Args>
-        FileResult<std::tuple<Return...>>
+        RuntimeResult<std::tuple<Return...>>
         runFunction(
             const std::string& name,
             Args&&... args)
@@ -280,14 +280,14 @@ namespace CompileTime
 
 int main()
 {
-    Lua::File file(SOURCE_DIR "/scripts/test.lua");
-    assert(file);
+    Lua::Runtime runtime(SOURCE_DIR "/scripts/test.lua");
+    assert(runtime);
 
-    file.runFunction<>("Start");
+    runtime.runFunction<>("Start");
     
     const auto [name, level] = [&]()
     {
-        auto table_res = file.getTable("player");
+        auto table_res = runtime.getTable("player");
         if (!table_res) { std::cout << "Table failed: " << (int)table_res.error().code() << "\n"; assert(false); }
         auto& table = table_res.value();
         return std::pair(table.get<Lua::String>("Name"), table.get<Lua::Number>("Level"));
@@ -295,17 +295,9 @@ int main()
 
     std::cout << "Player: " << name << " [Lvl: " << level << "]\n";
     
+    return 0;
     while (true)
     {
-        file.runFunction<>("Update");
+        runtime.runFunction<>("Update");
     }
-
-    /*
-    auto res = file.runFunction<Lua::Number>("AddStuff", 2.f, 4.f);
-    assert(res);
-    std::cout << std::get<0>(res.value()) << "\n";*/
-
-    //auto res = file.getNumberFromFunction("AddStuff", 2.f, 4.f);
-    //assert(res);
-    //std::cout << "2 + 4 = " << res.value() << "\n";
 }
