@@ -77,7 +77,6 @@ namespace CompileTime
         inline static void
         push(lua_State* L, const T& val)
         {
-            //lua_pushboolean(L, boolean);
             auto* ptr = lua_newuserdata(L, sizeof(T));
             *reinterpret_cast<T*>(ptr) = val;
         }
@@ -493,15 +492,6 @@ namespace CompileTime
             return { CompileTime::TypeMap<T>::construct(L) };
         }
 
-        template<>
-        RuntimeResult<Table>
-        get(const std::string& name)
-        {
-            lua_getglobal(L, name.c_str());
-            if (!lua_istable(L, -1)) { lua_pop(L, 1); return { ErrorCode::WrongTypeTable }; }
-            return { Table(L) };
-        }
-
         template<typename... Return, typename... Args>
         RuntimeResult<std::tuple<Return...>>
         runFunction(
@@ -512,7 +502,7 @@ namespace CompileTime
             if (!lua_isfunction(L, -1)) { lua_pop(L, 1); return { ErrorCode::NotFunction }; }
 
             auto args_set = std::tuple(std::forward<Args>(args)...);
-            CompileTime::static_for<sizeof...(args)>([&](auto n){
+            Util::CompileTime::static_for<sizeof...(args)>([&](auto n){
                 constexpr std::size_t I = n;
                 using Type = std::remove_reference_t<CompileTime::NthType<I, Args...>>;
                 CompileTime::TypeMap<Type>::push(L, std::get<I>(args_set));
@@ -523,7 +513,7 @@ namespace CompileTime
             bool err = false;
             auto left = sizeof...(Return);
             auto return_vals = std::tuple<Return...>();
-            CompileTime::static_for<sizeof...(Return)>([&](auto n) {
+            Util::CompileTime::static_for<sizeof...(Return)>([&](auto n) {
                 constexpr std::size_t I = n;
                 using Type = CompileTime::NthType<I, Return...>;
                 using Map  = CompileTime::TypeMap<Type>;
@@ -601,7 +591,7 @@ namespace LuaLib
         {
             assert(lua_gettop(L) == sizeof...(Args));
             std::tuple<Args...> values;
-            Lua::CompileTime::static_for<sizeof...(Args)>([&](auto n) {
+            Lua::Util::CompileTime::static_for<sizeof...(Args)>([&](auto n) {
                 const std::size_t I = n;
                 const auto i = sizeof...(Args) - I - 1;
                 using Type = Lua::CompileTime::NthType<i, Args...>;
@@ -830,7 +820,7 @@ tableToComponent(const Lua::Table& table, void* data)
 {
     bool found = false;
 
-    Lua::CompileTime::static_for<(int)Component::Count>([&](auto n)
+    Lua::Util::CompileTime::static_for<(int)Component::Count>([&](auto n)
     {
         if (found) return;
 
@@ -857,7 +847,7 @@ componentToTable(const std::string& name, const void* data)
     Lua::Table table;
     bool found = false;
 
-    Lua::CompileTime::static_for<(int)Component::Count>([&](auto n)
+    Lua::Util::CompileTime::static_for<(int)Component::Count>([&](auto n)
     {
         if (found) return;
 

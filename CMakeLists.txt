@@ -13,10 +13,16 @@ find_package(Lua REQUIRED)
 add_definitions(-DSOURCE_DIR="${CMAKE_SOURCE_DIR}")
 include_directories(
     ${LUA_INCLUDE_DIR}
+    ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/extern/spdlog/include
     ${CMAKE_SOURCE_DIR}/extern/flecs/include
     ${CMAKE_SOURCE_DIR}/extern/sfml/include)
 
-add_executable(main main.cpp)
+set(SOURCES 
+    ${CMAKE_SOURCE_DIR}/src/Lua/Lib.cpp
+    ${CMAKE_SOURCE_DIR}/src/Lua/Runtime.cpp
+    ${CMAKE_SOURCE_DIR}/src/Lua/Table.cpp)
+
+add_executable(main entry.cpp ${SOURCES})
 
 target_link_libraries(main PUBLIC ${LUA_LIBRARIES} spdlog::spdlog flecs::flecs sfml-graphics sfml-window sfml-system)
