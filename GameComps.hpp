@@ -34,10 +34,6 @@ struct Component;
 #define COMPONENT_ENUM_NAME Name
 #define COMPONENT_STRUCT_NAME Component
 
-// Hate this
-#define NAME_PRE "Component<Name::"
-#define NAME_POST ">.Data"
-
 template<>
 struct Component<Name::Position>
 {

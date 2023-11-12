@@ -1,14 +1,48 @@
 #pragma once
 
-#include <iostream>
-
 #include "../Lua.hpp"
-#include "Components.hpp"
 
 #include <flecs.h>
 
+#ifndef COMPONENT_ENUM_NAME
+#ERROR "Must define a component enum class that details each component type avaliable"
+#endif
+
+#ifndef COMPONENT_STRUCT_NAME
+#ERROR "Must define a component struct with the name enum as its template"
+#endif
+
 namespace S2D::Engine
 {
+#ifdef DOCS
+
+/**
+ * @brief This is documentation for the scripting API for Lua.
+ */
+namespace LuaAPI
+{
+    /**
+     * @brief Represents the entity that a script is attached to
+     * 
+     */
+    struct Entity
+    {
+        /**
+         * @brief Get a component of a specific type from the entity
+         * 
+         * @param type The type of component
+         * @return Component The component associated with that type
+         */
+        Component getComponent(ComponentType type);
+        void setComponent(Component)
+    };
+}
+
+#endif
+
+    template<COMPONENT_ENUM_NAME T>
+    using ComponentData = typename COMPONENT_STRUCT_NAME<T>::Data;
+
     struct Library : Lua::Lib::Base
     {
         static int getComponent(Lua::State L);
@@ -39,12 +73,12 @@ namespace S2D::Engine
 
             constexpr std::size_t i = n;
             constexpr auto component = static_cast<COMPONENT_ENUM_NAME>(i);
-            auto id = world.component<typename COMPONENT_STRUCT_NAME<component>::Data>().raw_id();
+            auto id = world.component<ComponentData<component>>().raw_id();
             if (id == ID)
             {
                 // Found
                 const void* comp = entity.get(id);
-                table.fromTable(COMPONENT_STRUCT_NAME<component>::getTable(*(const typename COMPONENT_STRUCT_NAME<component>::Data*)comp));
+                table.fromTable(COMPONENT_STRUCT_NAME<component>::getTable(*(const ComponentData<component>*)comp));
                 table.set("good", true);
                 table.set("type", (Lua::Number)ID);
                 found = true;
@@ -87,7 +121,7 @@ namespace S2D::Engine
 
             constexpr std::size_t i = n;
             constexpr auto component = static_cast<COMPONENT_ENUM_NAME>(i);
-            auto id = world.component<typename COMPONENT_STRUCT_NAME<component>::Data>().raw_id();
+            auto id = world.component<ComponentData<component>>().raw_id();
             if (id == component_id)
             {
                 // Found
