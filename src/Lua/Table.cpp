@@ -46,7 +46,7 @@ Table::Table(const Table::Map& map) :
     dictionary(map)
 {   }
 
-Table::Table(lua_State* L)
+Table::Table(State L)
 {
     lua_pushnil(L);
     while (lua_next(L, -2) != 0)
@@ -111,12 +111,12 @@ const T& Table::get(const std::string& name) const
     assert(dictionary.count(name));
     return *static_cast<T*>(dictionary.at(name).data.get());
 }
-template const Lua::Number&   Table::get(const std::string&);
-template const Lua::String&   Table::get(const std::string&);
-template const Lua::Boolean&  Table::get(const std::string&);
-template const Lua::Function& Table::get(const std::string&);
-template const Lua::Table&    Table::get(const std::string&);
-template const uint64_t*&     Table::get(const std::string&);
+template const Lua::Number&   Table::get(const std::string&) const;
+template const Lua::String&   Table::get(const std::string&) const;
+template const Lua::Boolean&  Table::get(const std::string&) const;
+template const Lua::Function& Table::get(const std::string&) const;
+template const Lua::Table&    Table::get(const std::string&) const;
+template uint64_t* const&     Table::get(const std::string&) const;
 
 template<typename T>
 void Table::set(const std::string& name, const T& value)
@@ -128,14 +128,14 @@ template void Table::set(const std::string&, const Lua::String&);
 template void Table::set(const std::string&, const Lua::Boolean&);
 template void Table::set(const std::string&, const Lua::Function&);
 template void Table::set(const std::string&, const Lua::Table&);
-template void Table::set(const std::string&, uint64_t* const&);
+template void Table::set(const std::string&, const uint64_t&);
 
 const Table::Map&
 Table::getMap() const
 { return dictionary; }
 
 void
-Table::toStack(lua_State* L) const
+Table::toStack(State L) const
 {
     using namespace CompileTime;
 

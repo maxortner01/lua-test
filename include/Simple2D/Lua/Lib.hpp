@@ -1,7 +1,13 @@
 #pragma once
 
-#include "Lua.hpp"
-#include "Runtime.hpp"
+#include "TypeMap.hpp"
+
+#include "../Util.hpp"
+
+namespace S2D::Lua
+{
+    struct Runtime;
+}
 
 namespace S2D::Lua::Lib
 {
@@ -20,7 +26,7 @@ namespace S2D::Lua::Lib
          */
         template<typename... Args>
         static std::tuple<Args...>
-        extractArgs(lua_State* L);
+        extractArgs(State L);
 
         /**
          * @brief Registers the functions in this library with the given runtime.
@@ -42,7 +48,7 @@ namespace S2D::Lua::Lib
     /* struct Base */
     template<typename... Args>
     std::tuple<Args...>
-    Base::extractArgs(lua_State* L)
+    Base::extractArgs(State L)
     {
         assert(lua_gettop(L) == sizeof...(Args));
         std::tuple<Args...> values;

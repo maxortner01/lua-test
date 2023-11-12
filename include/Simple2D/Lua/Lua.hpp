@@ -8,3 +8,8 @@ extern "C"
 }
 
 #include <string>
+
+namespace S2D::Lua
+{
+    using State = lua_State*;
+}

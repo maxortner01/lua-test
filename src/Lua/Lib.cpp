@@ -1,4 +1,5 @@
 #include <Simple2D/Lua/Lib.hpp>
+#include <Simple2D/Lua/Runtime.hpp>
 
 namespace S2D::Lua::Lib
 {

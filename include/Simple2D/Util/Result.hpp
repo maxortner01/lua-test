@@ -2,6 +2,7 @@
 
 #include "NoCopy.hpp"
 
+#include <string>
 #include <cassert>
 #include <optional>
 
@@ -14,13 +15,15 @@ namespace S2D::Util
     template<typename T = int>
     struct Error
     {
-        Error(const T& num);
+        Error(const T& num, const std::string& msg = "");
         ~Error() = default;
 
         const T& code() const;
+        const std::string& message() const;
     
     private:
         T _num;
+        std::string _msg;
     };
 
     /**
@@ -66,13 +69,18 @@ namespace S2D::Util
 
     /* struct Error */
     template<typename T>
-    Error<T>::Error(const T& num) :
-        _num(num)
+    Error<T>::Error(const T& num, const std::string& msg) :
+        _num(num),
+        _msg(msg)
     {   }
 
     template<typename T>
     const T& Error<T>::code() const
     { return _num; }
+
+    template<typename T>
+    const std::string& Error<T>::message() const
+    { return _msg; }
 
     /* struct Result */
     template<typename T, typename E>

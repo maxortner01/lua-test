@@ -49,7 +49,7 @@ namespace S2D::Lua
          * 
          * @param L 
          */
-        Table(lua_State* L);
+        Table(State L);
         ~Table() = default;
 
         void fromTable(const Table& table);
@@ -68,7 +68,7 @@ namespace S2D::Lua
 
         const Map& getMap() const;
 
-        void toStack(lua_State* L) const;
+        void toStack(State L) const;
     
     private:
         Map dictionary;

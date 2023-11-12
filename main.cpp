@@ -10,7 +10,6 @@
 #include <SFML/Graphics.hpp>
 
 #include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
 
 extern "C"
 {

@@ -2,6 +2,7 @@
 
 #include "../Util.hpp"
 
+#include "Lib.hpp"
 #include "TypeMap.hpp"
 
 namespace S2D::Lua
@@ -33,6 +34,9 @@ namespace S2D::Lua
         Runtime(Runtime&& r);
         ~Runtime();
 
+        template<typename... Libraries>
+        static Runtime create(const std::string& filename);
+
         /**
          * @brief Registers a C++ function for use in the Lua runtime
          * @param table_name Name of the table to register function in
@@ -48,13 +52,24 @@ namespace S2D::Lua
 
         /**
          * @brief Get a global variable by name from runtime
-         * @tparam T Type of the global variable
+         * @tparam T Type of the global variable (supported types in Lua namespace)
          * @param name Name of the variable in the script
          * @return Result<T> The value of the variable or error
          */
         template<typename T>
         Result<T>
         getGlobal(const std::string& name);
+
+        /**
+         * @brief Set a global variable from a value to a name
+         * @tparam T Type of the global variable (supported types in Lua namespace)
+         * @param name  Name of the global variable
+         * @param value Value of the global variable
+         * @return Result<void> The status of the operation
+         */
+        template<typename T>
+        Result<void>
+        setGlobal(const std::string& name, const T& value);
 
         /**
          * @brief Invokes a Lua function from this environment
@@ -74,9 +89,27 @@ namespace S2D::Lua
         operator bool() const;
 
     private:
-        lua_State* L;
+        State L;
         bool _good;
     };
+
+    template<typename... Libraries>
+    Runtime Runtime::create(const std::string& filename)
+    {
+        using namespace Util::CompileTime;
+
+        Runtime runtime(filename);
+
+        static_for<sizeof...(Libraries)>([&](auto n) 
+        {
+            const std::size_t i = n;
+            using Library = NthType<i, Libraries...>;
+            static_assert(std::is_base_of_v<Lua::Lib::Base, Library>);
+            Library().registerFunctions(runtime);
+        });
+
+        return runtime;
+    }
 
     template<typename... Return, typename... Args>
     Runtime::Result<std::tuple<Return...>>
@@ -94,7 +127,7 @@ namespace S2D::Lua
             CompileTime::TypeMap<Type>::push(L, std::get<I>(args_set));
         });
 
-        if (lua_pcall(L, sizeof...(Args), sizeof...(Return), 0) != LUA_OK) return { ErrorCode::FunctionError };
+        if (lua_pcall(L, sizeof...(Args), sizeof...(Return), 0) != LUA_OK) return { { ErrorCode::FunctionError, std::string(lua_tostring(L, -1)) } };
 
         bool err = false;
         auto left = sizeof...(Return);

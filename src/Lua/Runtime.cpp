@@ -1,11 +1,26 @@
 #include <Simple2D/Lua/Runtime.hpp>
 
+#include <iostream>
+
+bool lua_check(lua_State* L, int r, std::optional<int> line = std::nullopt)
+{
+    if (r != LUA_OK)
+    {
+        std::string error_message = lua_tostring(L, -1);
+        std::cout << "Message ";
+        if (line.has_value()) std::cout << "from line " << line.value();
+        std::cout << ": " << error_message << "\n";
+        return false;
+    }
+    return true;
+}
+
 namespace S2D::Lua
 {
 
 Runtime::Runtime(const std::string& filename) :
     L(luaL_newstate()),
-    _good(luaL_dofile(L, filename.c_str()) == LUA_OK)
+    _good(lua_check(L, luaL_dofile(L, filename.c_str())))
 {
     if (good()) luaL_openlibs(L);
 }
@@ -59,6 +74,20 @@ template Runtime::Result<String>   Runtime::getGlobal(const std::string&);
 template Runtime::Result<Boolean>  Runtime::getGlobal(const std::string&);
 template Runtime::Result<Function> Runtime::getGlobal(const std::string&);
 template Runtime::Result<Table>    Runtime::getGlobal(const std::string&);
+
+template<typename T>
+Runtime::Result<void>
+Runtime::setGlobal(const std::string& name, const T& value)
+{
+    Lua::CompileTime::TypeMap<T>::push(L, value);
+    lua_setglobal(L, name.c_str());
+    return { };
+}
+template Runtime::Result<void> Runtime::setGlobal(const std::string&, const Lua::Number&);
+template Runtime::Result<void> Runtime::setGlobal(const std::string&, const Lua::String&);
+template Runtime::Result<void> Runtime::setGlobal(const std::string&, const Lua::Boolean&);
+template Runtime::Result<void> Runtime::setGlobal(const std::string&, const Lua::Table&);
+template Runtime::Result<void> Runtime::setGlobal(const std::string&, const Lua::Function&);
 
 bool Runtime::good() const
 { return _good; }
