@@ -11,6 +11,8 @@
 #include <Simple2D/Engine.hpp>
 
 #include <iostream>
+#include <chrono>
+#include <numeric>
 
 #ifndef SOURCE_DIR
 #define SOURCE_DIR ""
@@ -26,11 +28,11 @@ int main()
         .set(Script{.runtime = std::make_unique<Lua::Runtime>([&](){ 
             auto runtime = Lua::Runtime::create<
                 Log::Library
-            >(SOURCE_DIR "/scripts/entity.lua");
+            >(SOURCE_DIR "/scripts/new_test.lua");
 
             Lua::Table globals;
-            globals.set<Lua::String>("Position", "Position");
-            globals.set<Lua::String>("RigidBody", "RigidBody");
+            globals.set("Position",  (Lua::Number)world.component<Component<Name::Position>::Data>().raw_id());
+            globals.set("RigidBody", (Lua::Number)world.component<Component<Name::RigidBody>::Data>().raw_id());
 
             runtime.setGlobal("Component", globals);
 
@@ -57,7 +59,23 @@ int main()
             s.runtime->runFunction<>("Update", ent);
         });
 
-    world.progress();
+    std::vector<double> micros(1000);
+    for (uint32_t i = 0; i < 1000; i++)
+    {
+        auto start = std::chrono::high_resolution_clock::now();
+
+        world.progress();
+
+        auto micro = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count();
+        micros[i] = micro;
+    }
+
+    double average = std::accumulate(micros.begin(), micros.end(), 0.0) / micros.size();
+
+    logger->info("Execution time avg. of {} microseconds", average);
+
+    const auto* position = entity.get<Component<Name::Position>::Data>();
+    std::cout << "[C++] Position = (" << position->x << ", " << position->y << ")\n";
 
     return 0;
 }
