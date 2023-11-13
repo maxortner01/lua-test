@@ -1,57 +1,11 @@
-#pragma once
-
-#include "../Lua.hpp"
+#include <Simple2D/Engine/Entity.hpp>
+#include <Simple2D/Engine/Components.hpp>
 
 #include <flecs.h>
 
-#ifndef COMPONENT_ENUM_NAME
-#ERROR "Must define a component enum class that details each component type avaliable"
-#endif
-
-#ifndef COMPONENT_STRUCT_NAME
-#ERROR "Must define a component struct with the name enum as its template"
-#endif
-
 namespace S2D::Engine
 {
-#ifdef DOCS
-
-/**
- * @brief This is documentation for the scripting API for Lua.
- */
-namespace LuaAPI
-{
-    /**
-     * @brief Represents the entity that a script is attached to
-     * 
-     */
-    struct Entity
-    {
-        /**
-         * @brief Get a component of a specific type from the entity
-         * 
-         * @param type The type of component
-         * @return Component The component associated with that type
-         */
-        Component getComponent(ComponentType type);
-        void setComponent(Component)
-    };
-}
-
-#endif
-
-    template<COMPONENT_ENUM_NAME T>
-    using ComponentData = typename COMPONENT_STRUCT_NAME<T>::Data;
-
-    struct Library : Lua::Lib::Base
-    {
-        static int getComponent(Lua::State L);
-        static int setComponent(Lua::State L);
-
-        Library();
-    };
-
-    int Library::getComponent(Lua::State L)
+    int Entity::getComponent(Lua::State L)
     {
         const auto [entity_table, component_id] = extractArgs<Lua::Table, Lua::Number>(L);
         const auto e_id = *entity_table.get<uint64_t*>("id");
@@ -67,20 +21,21 @@ namespace LuaAPI
         Lua::Table table;
 
         bool found = false;
-        static_for<(int)COMPONENT_ENUM_NAME::Count>([&](auto n)
+        static_for<(int)Name::Count>([&](auto n)
         {
             if (found) return;
 
             constexpr std::size_t i = n;
-            constexpr auto component = static_cast<COMPONENT_ENUM_NAME>(i);
+            constexpr auto component = static_cast<Name>(i);
             auto id = world.component<ComponentData<component>>().raw_id();
             if (id == ID)
             {
                 // Found
                 const void* comp = entity.get(id);
-                table.fromTable(COMPONENT_STRUCT_NAME<component>::getTable(*(const ComponentData<component>*)comp));
+                table.fromTable(Component<component>::getTable(*(const ComponentData<component>*)comp));
                 table.set("good", true);
                 table.set("type", (Lua::Number)ID);
+                //table.set("world", (uint64_t)world.c_ptr());
                 found = true;
             }
         });
@@ -97,7 +52,7 @@ namespace LuaAPI
         return 1;
     }
 
-    int Library::setComponent(Lua::State L)
+    int Entity::setComponent(Lua::State L)
     {
         using namespace Util::CompileTime;
 
@@ -115,18 +70,18 @@ namespace LuaAPI
         const auto& table = component_table;
 
         bool found = false;
-        static_for<(int)COMPONENT_ENUM_NAME::Count>([&](auto n)
+        static_for<(int)Name::Count>([&](auto n)
         {
             if (found) return;
 
             constexpr std::size_t i = n;
-            constexpr auto component = static_cast<COMPONENT_ENUM_NAME>(i);
+            constexpr auto component = static_cast<Name>(i);
             auto id = world.component<ComponentData<component>>().raw_id();
             if (id == component_id)
             {
                 // Found
                 void* comp = entity.get_mut(id);
-                COMPONENT_STRUCT_NAME<component>::fromTable(table, comp);
+                Component<component>::fromTable(table, comp);
                 found = true;
             }
         });
@@ -136,10 +91,10 @@ namespace LuaAPI
         return 1;
     }
 
-    Library::Library() : Base("Entity",
+    Entity::Entity() : Base("Entity",
         {
-            { "getComponent", Library::getComponent },
-            { "setComponent", Library::setComponent }
+            { "getComponent", Entity::getComponent },
+            { "setComponent", Entity::setComponent }
         })
     {   }
 }

@@ -27,6 +27,8 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/extern/spdlog)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/flecs)
 
 set(ENGINE_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/Engine/Components.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/Entity.cpp
     ${CMAKE_SOURCE_DIR}/src/Log/Library.cpp
     ${CMAKE_SOURCE_DIR}/src/Log/Log.cpp)
 

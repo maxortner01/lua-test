@@ -1,18 +1,13 @@
 #include <Simple2D/Lua.hpp>
-#include <Simple2D/Log.hpp>
-
-// Before we include the engine header, we have to define two things
-// Firstly is COMPONENT_ENUM_NAME which defines the enum that enumerates each component
-// type, has a Count member, and has a const char* operator* defined for it as well as 
-// COMPONENT_STRUCT_NAME, which is the name of the struct that has a specialization for
-// each COMPONENT_ENUM_NAME's members each of which contain a fromTable and toTable static
-// method
-#include "GameComps.hpp"
 #include <Simple2D/Engine.hpp>
 
 #include <iostream>
 #include <chrono>
 #include <numeric>
+
+#include <flecs.h>
+
+using namespace S2D;
 
 #ifndef SOURCE_DIR
 #define SOURCE_DIR ""
@@ -20,6 +15,8 @@
 
 int main()
 {
+    using namespace Engine;
+
     auto& logger = Log::Logger::instance("engine");
     logger->info("Hello");
 
@@ -31,31 +28,31 @@ int main()
             >(SOURCE_DIR "/scripts/new_test.lua");
 
             Lua::Table globals;
-            globals.set("Position",  (Lua::Number)world.component<Component<Name::Position>::Data>().raw_id());
-            globals.set("RigidBody", (Lua::Number)world.component<Component<Name::RigidBody>::Data>().raw_id());
-
+            registerComponents(globals);
             runtime.setGlobal("Component", globals);
 
             return runtime;
          }())})
-        .set(Component<Name::Position>::Data{.x = 10.f, .y = 50.f})
-        .set(Component<Name::RigidBody>::Data{ .velocity = { 2.f, 5.f } });
+        .set(ComponentData<Name::Position>{.x = 10.f, .y = 50.f})
+        .set(ComponentData<Name::Rigidbody>{ .velocity = { 2.f, 10.f } });
     
     // Execute the Start methods of the scripts
     auto scripts = world.filter<Script>();
-    scripts.each([](Script& script)
+    scripts.each([](flecs::entity e, Script& script)
     {
-        script.runtime->runFunction<>("Start");
+        auto ent = Engine::Entity().asTable();
+        ent.set("id", e.raw_id());
+
+        script.runtime->runFunction<>("Start", ent);
     });
 
     // Create Script update system
     world.system<Script>()
         .each([&](flecs::entity e, Script& s)
-        {
-            Lua::Table ent;
+        {   
+            auto ent = Engine::Entity().asTable();
             ent.set("id", e.raw_id());
-            ent.set("getComponent", (Lua::Function)Engine::Library::getComponent);
-            ent.set("setComponent", (Lua::Function)Engine::Library::setComponent);
+
             s.runtime->runFunction<>("Update", ent);
         });
 
@@ -63,9 +60,7 @@ int main()
     for (uint32_t i = 0; i < 1000; i++)
     {
         auto start = std::chrono::high_resolution_clock::now();
-
         world.progress();
-
         auto micro = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start).count();
         micros[i] = micro;
     }

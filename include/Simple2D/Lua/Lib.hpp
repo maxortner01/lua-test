@@ -32,7 +32,9 @@ namespace S2D::Lua::Lib
          * @brief Registers the functions in this library with the given runtime.
          * @param runtime Lua runtime to register the functions with
          */
-        void registerFunctions(Lua::Runtime& runtime);
+        void registerFunctions(Lua::Runtime& runtime) const;
+
+        Lua::Table asTable() const;
 
     protected:
         Base(
@@ -53,6 +55,8 @@ namespace S2D::Lua::Lib
         assert(lua_gettop(L) == sizeof...(Args));
         std::tuple<Args...> values;
         Util::CompileTime::static_for<sizeof...(Args)>([&](auto n) {
+            if (lua_isnil(L, -1)) assert(false);
+
             const std::size_t I = n;
             const auto i = sizeof...(Args) - I - 1;
             using Type = Util::CompileTime::NthType<i, Args...>;

@@ -4,10 +4,20 @@
 namespace S2D::Lua::Lib
 {
 
-void Base::registerFunctions(Lua::Runtime& runtime)
+void Base::registerFunctions(Lua::Runtime& runtime) const
 {
     for (auto& p : _funcs)
         runtime.registerFunction(_name, p.first, p.second);
+}
+
+Lua::Table Base::asTable() const
+{
+    Lua::Table table;
+
+    for (auto& p : _funcs)
+        table.set(p.first, p.second);
+
+    return table;
 }
 
 Base::Base(
