@@ -25,11 +25,11 @@ struct MainScene : Engine::Scene
 
         world.entity()
             .set(loadScript(SOURCE_DIR "/scripts/fps.lua", world))
-            .set(ComponentData<Name::Transform>{ .position = { 100.f, 100.f }, .rotation = 0.f })
+            .set(ComponentData<Name::Transform>{ .position = { 100.f, 100.f, 0.f }, .rotation = 0.f })
             .set(ComponentData<Name::Text>{ .string = "Hello", .font = "arial", .character_size = 16 });
 
         world.entity()
-            .set(ComponentData<Name::Transform>{ .position = { 500.f, 400.f }, .rotation = 0.f })
+            .set(ComponentData<Name::Transform>{ .position = { 100.f, 100.f, -10.f }, .rotation = 0.f })
             .set(ComponentData<Name::Sprite>{ .size = sf::Vector2u(50, 50), .texture = "main" });
     }
 };

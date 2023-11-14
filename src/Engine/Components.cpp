@@ -37,6 +37,7 @@ Component<Name::Transform>::getTable(
     Lua::Table position;
     position.set("x", data.position.x);
     position.set("y", data.position.y);
+    position.set("z", data.position.z);
     table.set("position", position);
     table.set("rotation", data.rotation);
 
@@ -53,6 +54,7 @@ Component<Name::Transform>::fromTable(
     const auto& position = table.get<Lua::Table>("position");
     data->position.x = position.get<float>("x");
     data->position.y = position.get<float>("y");
+    data->position.z = position.get<float>("z");
     data->rotation = table.get<Lua::Number>("rotation");
 }
 

@@ -54,7 +54,7 @@ namespace S2D::Engine
         static constexpr Name Type = Name::Transform;
         struct Data
         {
-            sf::Vector2f position;
+            sf::Vector3f position;
             float rotation;
         };
 

@@ -117,7 +117,16 @@ Core::~Core()
 
 void Core::render(Scene* scene)
 {
-    scene->world.query<const ComponentData<Name::Transform>>().each(
+    // possibly only create the query once
+    auto query = scene->world.query_builder<const ComponentData<Name::Transform>>()
+        .order_by<ComponentData<Name::Transform>>(
+            [](flecs::entity_t e1, const ComponentData<Name::Transform> *d1, flecs::entity_t e2, const ComponentData<Name::Transform> *d2) 
+            {
+                return (d1->position.z > d2->position.z) - (d1->position.z < d2->position.z);
+            })
+        .build();
+    
+    query.each(
         [&](flecs::entity e, const ComponentData<Name::Transform>& transform)
         {
             /* Render Sprites */
@@ -132,7 +141,7 @@ void Core::render(Scene* scene)
                 rect.setSize((sf::Vector2f)sprite->size);
                 rect.setOrigin(rect.getSize() / 2.f);
                 rect.setFillColor(sf::Color::White);
-                rect.setPosition(transform.position);
+                rect.setPosition(sf::Vector2f(transform.position.x, transform.position.y));
                 rect.rotate(sf::degrees(transform.rotation));
                 
                 if (texture) rect.setTexture(texture);
