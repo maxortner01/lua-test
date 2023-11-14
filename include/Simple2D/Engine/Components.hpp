@@ -19,25 +19,7 @@ namespace S2D::Engine
         bool initialized;
     };
 
-    template<typename... Libraries>
-    static Script loadScript(const std::string& filename, flecs::world& world)
-    {
-        return Script {
-            .runtime = std::make_unique<Lua::Runtime>([&]()
-            {
-                auto runtime = Lua::Runtime::create<
-                    Libraries...
-                >(filename);
-
-                Lua::Table globals;
-                registerComponents(globals, world);
-                runtime.setGlobal("Component", globals);
-
-                return runtime;
-            }()),
-            .initialized = false
-        };
-    }
+    Script loadScript(const std::string& filename, flecs::world& world);
 
     enum class Name
     {

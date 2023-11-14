@@ -20,19 +20,13 @@ struct MainScene : Engine::Scene
         using namespace Engine;
 
         world.entity()
-            .set(loadScript<Log::Library>(SOURCE_DIR "/scripts/start.lua", world))
+            .set(loadScript(SOURCE_DIR "/scripts/start.lua", world))
             .set(ComponentData<Name::Position>{ .x = 10.f, .y = 10.f });
     }
 
     void draw(sf::RenderTarget& target) override
     {
         auto& logger = Log::Logger::instance("MainScene");
-
-        world.filter<Engine::ComponentData<Engine::Name::Position>>().each(
-            [&](Engine::ComponentData<Engine::Name::Position>& pos)
-        {
-            logger->info("Position = ({}, {})", pos.x, pos.y);
-        });
     }
 };
 

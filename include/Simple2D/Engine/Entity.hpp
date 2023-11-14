@@ -38,6 +38,8 @@ namespace LuaAPI
         static int getComponent(Lua::State L);
         static int setComponent(Lua::State L);
         static int destroy(Lua::State L);
+        static int addScript(Lua::State L);
+
         Entity();
     };
 }

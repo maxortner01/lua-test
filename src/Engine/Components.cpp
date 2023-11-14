@@ -1,9 +1,30 @@
 #include <Simple2D/Engine/Components.hpp>
+#include <Simple2D/Log/Library.hpp>
 
 #include <flecs.h>
 
 namespace S2D::Engine
 {
+
+
+Script loadScript(const std::string& filename, flecs::world& world)
+{
+    return Script {
+        .runtime = std::make_unique<Lua::Runtime>([&]()
+        {
+            auto runtime = Lua::Runtime::create<
+                Log::Library
+            >(filename);
+
+            Lua::Table globals;
+            registerComponents(globals, world);
+            runtime.setGlobal("Component", globals);
+
+            return runtime;
+        }()),
+        .initialized = false
+    };
+}
 
 /* Position */
 Lua::Table 

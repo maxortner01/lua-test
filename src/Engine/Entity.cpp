@@ -1,5 +1,6 @@
 #include <Simple2D/Engine/Entity.hpp>
 #include <Simple2D/Engine/Components.hpp>
+#include <Simple2D/Log/Library.hpp>
 
 #include <flecs.h>
 
@@ -113,11 +114,29 @@ namespace S2D::Engine
         return 0;
     }
 
+    int Entity::addScript(Lua::State L)
+    {
+        const auto [entity_table, filename] = extractArgs<Lua::Table, Lua::String>(L);
+        assert(entity_table.get<Lua::Boolean>("good"));
+
+        const auto id = *entity_table.get<uint64_t*>("id");
+        const auto world_ptr = (flecs::world_t*)*entity_table.get<uint64_t*>("world");
+
+        flecs::world world(world_ptr);
+        flecs::entity e(world_ptr, id);
+        assert(e.is_alive());
+
+        e.set(loadScript(filename, world));
+
+        return 0;
+    }
+
     Entity::Entity() : Base("Entity",
         {
             { "getComponent", Entity::getComponent },
             { "setComponent", Entity::setComponent },
-            { "destroy",      Entity::destroy      }
+            { "destroy",      Entity::destroy      },
+            { "addScript",    Entity::addScript    }
         })
     {   }
 }
