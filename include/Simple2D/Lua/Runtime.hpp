@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 #include "../Util.hpp"
 
 #include "Lib.hpp"
@@ -34,6 +36,12 @@ namespace S2D::Lua
         Runtime(Runtime&& r);
         ~Runtime();
 
+        /**
+         * @brief Creates a runtime with the given Libraries loaded into it.
+         * @tparam Libraries List of library types that are derived from \ref Lua::Lib::Base.
+         * @param filename Name of the file to load into the runtime
+         * @return Runtime The created runtime 
+         */
         template<typename... Libraries>
         static Runtime create(const std::string& filename);
 
@@ -128,7 +136,10 @@ namespace S2D::Lua
         });
 
         if (lua_pcall(L, sizeof...(Args), sizeof...(Return), 0) != LUA_OK) return { { ErrorCode::FunctionError, std::string(lua_tostring(L, -1)) } };
-
+        
+        //const auto top = lua_gettop(L);
+        //assert(top == sizeof...(Return));
+        
         bool err = false;
         auto left = sizeof...(Return);
         auto return_vals = std::tuple<Return...>();

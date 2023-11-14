@@ -2,12 +2,42 @@
 
 #include "../Lua.hpp"
 
+#include <flecs.h>
+
 namespace S2D::Engine
 {
+    /**
+     * @brief Assigns component world IDs to their respective name key in the table
+     * @param table Table to set the names into
+     */
+    void
+    registerComponents(Lua::Table& table, flecs::world& world);
+
     struct Script
     {
         std::unique_ptr<Lua::Runtime> runtime;
+        bool initialized;
     };
+
+    template<typename... Libraries>
+    static Script loadScript(const std::string& filename, flecs::world& world)
+    {
+        return Script {
+            .runtime = std::make_unique<Lua::Runtime>([&]()
+            {
+                auto runtime = Lua::Runtime::create<
+                    Libraries...
+                >(filename);
+
+                Lua::Table globals;
+                registerComponents(globals, world);
+                runtime.setGlobal("Component", globals);
+
+                return runtime;
+            }()),
+            .initialized = false
+        };
+    }
 
     enum class Name
     {
@@ -15,6 +45,8 @@ namespace S2D::Engine
         Rigidbody,
         Count
     };
+
+    struct Dead { };
 
     static const char* operator*(Name name)
     {
@@ -59,7 +91,4 @@ namespace S2D::Engine
 
     template<Name T>
     using ComponentData = typename Component<T>::Data;
-
-    void
-    registerComponents(Lua::Table& table);
 }

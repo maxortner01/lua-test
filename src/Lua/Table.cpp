@@ -92,6 +92,11 @@ Table::superimpose(const Map& map)
         dictionary.insert(p);
 }
 
+bool Table::hasValue(const std::string& name) const
+{
+    return dictionary.count(name);
+}
+
 template<typename T>
 T& Table::get(const std::string& name)
 {

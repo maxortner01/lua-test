@@ -51,9 +51,8 @@ Component<Name::Rigidbody>::fromTable(
 }
 
 void
-registerComponents(Lua::Table& table)
+registerComponents(Lua::Table& table, flecs::world& world)
 {
-    auto& world = Util::Singleton<flecs::world>::get();
     Util::CompileTime::static_for<(int)Name::Count>([&](auto n)
     {
         constexpr std::size_t i = n;

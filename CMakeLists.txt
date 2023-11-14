@@ -25,8 +25,11 @@ add_library(simple2d-lua SHARED ${LUA_SOURCES})
 # ENGINE
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/spdlog)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/flecs)
+add_subdirectory(${CMAKE_SOURCE_DIR}/extern/sfml)
 
 set(ENGINE_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/Engine/World.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/Core.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Components.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Entity.cpp
     ${CMAKE_SOURCE_DIR}/src/Log/Library.cpp
@@ -34,7 +37,7 @@ set(ENGINE_SOURCES
 
 add_library(simple2d-engine SHARED ${ENGINE_SOURCES})
 
-target_link_libraries(simple2d-engine PRIVATE simple2d-lua spdlog::spdlog flecs)
+target_link_libraries(simple2d-engine PRIVATE simple2d-lua spdlog::spdlog flecs sfml-graphics sfml-window)
 
 ## EXECUTABLE
 add_executable(main entry.cpp)

@@ -52,22 +52,63 @@ namespace S2D::Lua
         Table(State L);
         ~Table() = default;
 
+        /**
+         * @brief Make the entries equivalent to another table
+         * @param table Table to get the entries from
+         */
         void fromTable(const Table& table);
 
+        /**
+         * @brief Copy the entries from a table into this table
+         * @param table Table to get the entries from
+         */
         void superimpose(const Table& table);
+
+        /**
+         * @brief Copy the entries from a map into this table
+         * @param map Map to get the entries from
+         */
         void superimpose(const Map& map);
 
+        bool hasValue(const std::string& name) const;
+
+        /**
+         * @brief Get a reference to a value in the table
+         * @tparam T   Type of the value (with Lua:: prefix)
+         * @param name The value's key
+         * @return T&  The reference to the value
+         */
         template<typename T>
         T& get(const std::string& name);
 
+        /**
+         * @brief Get a constant reference to a value in the table
+         * @tparam T   Type of the value (with Lua:: prefix)
+         * @param name The value's key
+         * @return const T& The constant reference to the value
+         */
         template<typename T>
         const T& get(const std::string& name) const;
 
+        /**
+         * @brief Set the value associated with a key
+         * @tparam T The type of the value (with Lua:: prefix)
+         * @param name  The key
+         * @param value The value
+         */
         template<typename T>
         void set(const std::string& name, const T& value);
 
+        /**
+         * @brief Get the raw mapping of this table
+         * @return const Map& The map in this table
+         */
         const Map& getMap() const;
 
+        /**
+         * @brief Dump all the map information onto the given Lua stack
+         * @param L The Lua state to dump the table onto
+         */
         void toStack(State L) const;
     
     private:

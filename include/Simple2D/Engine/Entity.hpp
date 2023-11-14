@@ -30,10 +30,14 @@ namespace LuaAPI
 
 #endif
 
+    /**
+     * @brief Represents the methods associated with manipulating an entity in Lua.
+     */
     struct Entity : Lua::Lib::Base
     {
         static int getComponent(Lua::State L);
         static int setComponent(Lua::State L);
+        static int destroy(Lua::State L);
         Entity();
     };
 }

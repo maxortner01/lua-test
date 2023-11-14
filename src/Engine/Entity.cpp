@@ -8,11 +8,14 @@ namespace S2D::Engine
     int Entity::getComponent(Lua::State L)
     {
         const auto [entity_table, component_id] = extractArgs<Lua::Table, Lua::Number>(L);
+
+        // Extract the entity id and the world pointer from the entity table
         const auto e_id = *entity_table.get<uint64_t*>("id");
+        const auto world_ptr = (flecs::world_t*)*entity_table.get<uint64_t*>("world");
 
-        auto& world = Util::Singleton<flecs::world>::get();
-
-        flecs::entity entity(world.c_ptr(), e_id);
+        // Construct the world and the entity
+        flecs::world world(world_ptr);
+        flecs::entity entity(world_ptr, e_id);
 
         const std::size_t ID = component_id;
 
@@ -32,10 +35,10 @@ namespace S2D::Engine
             {
                 // Found
                 const void* comp = entity.get(id);
+                assert(comp);
                 table.fromTable(Component<component>::getTable(*(const ComponentData<component>*)comp));
                 table.set("good", true);
                 table.set("type", (Lua::Number)ID);
-                //table.set("world", (uint64_t)world.c_ptr());
                 found = true;
             }
         });
@@ -60,10 +63,15 @@ namespace S2D::Engine
 
         assert(component_table.get<Lua::Boolean>("good"));
 
-        auto& world = Util::Singleton<flecs::world>::get();
+        // Extract the entity id and the world pointer from the entity table
+        const auto id = *entity_table.get<uint64_t*>("id");
+        const auto world_ptr = (flecs::world_t*)*entity_table.get<uint64_t*>("world");
+
+        // Get the world
+        flecs::world world(world_ptr);
 
         // Get the entity
-        flecs::entity entity(world.c_ptr(), *entity_table.get<uint64_t*>("id"));
+        flecs::entity entity(world, id);
 
         // Make sure the component is in the entity
         const auto component_id = component_table.get<Lua::Number>("type");
@@ -91,10 +99,25 @@ namespace S2D::Engine
         return 1;
     }
 
+    int Entity::destroy(Lua::State L)
+    {
+        assert(lua_gettop(L) == 1);
+        Lua::Table entity(L);
+
+        const auto id = *entity.get<uint64_t*>("id");
+        const auto world_ptr = (flecs::world_t*)*entity.get<uint64_t*>("world");
+
+        flecs::entity e(world_ptr, id);
+        if (e.is_alive() && !e.has<Dead>()) e.add<Dead>();
+
+        return 0;
+    }
+
     Entity::Entity() : Base("Entity",
         {
             { "getComponent", Entity::getComponent },
-            { "setComponent", Entity::setComponent }
+            { "setComponent", Entity::setComponent },
+            { "destroy",      Entity::destroy      }
         })
     {   }
 }
