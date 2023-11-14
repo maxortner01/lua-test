@@ -46,7 +46,7 @@ int World::createEntity(Lua::State L)
                 // Found the component
                 found = true;
 
-                Data data{0};
+                Data data;
                 if (table.hasValue("value"))
                 {
                     const auto& value = table.get<Lua::Table>("value");

@@ -3,6 +3,7 @@
 #include "../Lua.hpp"
 
 #include <flecs.h>
+#include <SFML/Graphics.hpp>
 
 namespace S2D::Engine
 {
@@ -23,8 +24,10 @@ namespace S2D::Engine
 
     enum class Name
     {
-        Position,
+        Transform,
         Rigidbody,
+        Sprite,
+        Text,
         Count
     };
 
@@ -34,8 +37,10 @@ namespace S2D::Engine
     {
         switch (name)
         {
-        case Name::Position:  return "Position";
+        case Name::Transform: return "Transform";
         case Name::Rigidbody: return "Rigidbody";
+        case Name::Sprite:    return "Sprite";
+        case Name::Text:      return "Text";
         default: return "";
         }
     }
@@ -44,12 +49,13 @@ namespace S2D::Engine
     struct Component;
 
     template<>
-    struct Component<Name::Position>
+    struct Component<Name::Transform>
     {
-        static constexpr Name Type = Name::Position;
+        static constexpr Name Type = Name::Transform;
         struct Data
         {
-            float x, y;
+            sf::Vector2f position;
+            float rotation;
         };
 
         static Lua::Table getTable(const Data& data);
@@ -65,6 +71,35 @@ namespace S2D::Engine
             struct {
                 float x, y;
             } velocity;
+        };
+
+        static Lua::Table getTable(const Data& data);
+        static void fromTable(const Lua::Table& table, void* _data);
+    };
+
+    template<>
+    struct Component<Name::Sprite>
+    {
+        static constexpr Name Type = Name::Sprite;
+        struct Data
+        {
+            Lua::String texture;
+            sf::Vector2u size;
+        };
+
+        static Lua::Table getTable(const Data& data);
+        static void fromTable(const Lua::Table& table, void* _data);
+    };
+
+    template<>
+    struct Component<Name::Text>
+    {
+        static constexpr Name Type = Name::Text;
+        struct Data
+        {
+            Lua::String string;
+            Lua::String font;
+            Lua::Number character_size;
         };
 
         static Lua::Table getTable(const Data& data);

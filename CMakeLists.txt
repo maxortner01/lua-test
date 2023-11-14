@@ -28,6 +28,8 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/extern/flecs)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/sfml)
 
 set(ENGINE_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/Engine/Resources.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/Time.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/World.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Core.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Components.cpp
@@ -37,7 +39,7 @@ set(ENGINE_SOURCES
 
 add_library(simple2d-engine SHARED ${ENGINE_SOURCES})
 
-target_link_libraries(simple2d-engine PRIVATE simple2d-lua spdlog::spdlog flecs sfml-graphics sfml-window)
+target_link_libraries(simple2d-engine PRIVATE simple2d-lua spdlog::spdlog flecs sfml-graphics sfml-system sfml-window)
 
 ## EXECUTABLE
 add_executable(main entry.cpp)

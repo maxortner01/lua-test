@@ -2,6 +2,8 @@
 
 #include "../Util.hpp"
 
+#include "Resources.hpp"
+
 #include <stack>
 #include <flecs.h>
 #include <SFML/Graphics.hpp>
@@ -12,12 +14,13 @@ namespace S2D::Engine
     {
         flecs::world world;
         bool running = true;
+        Resources resources;
 
         Scene() = default;
         virtual ~Scene() = default;
 
         virtual void start() { };
-        virtual void draw(sf::RenderTarget& target) = 0;
+        virtual void draw(sf::RenderTarget& target) {};
     };
 
     struct Display : Util::Singleton<Display>
@@ -35,12 +38,21 @@ namespace S2D::Engine
         template<typename T, typename... Args>
         T& emplaceScene(Args&&... args);
 
+        // temp
+        void loadFont(const std::string& name);
+
+        double getDeltaTime() const;
+
         void run();
 
     private:
         Core();
         ~Core();
 
+        void render(Scene* scene);
+
+        double dt; // temp
+        sf::Font font;
         sf::RenderWindow window;
 
         std::stack<Scene*> _scenes;

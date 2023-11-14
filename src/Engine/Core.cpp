@@ -2,6 +2,7 @@
 #include <Simple2D/Engine/Components.hpp>
 #include <Simple2D/Engine/Entity.hpp>
 #include <Simple2D/Engine/World.hpp>
+#include <Simple2D/Engine/Resources.hpp>
 
 #include <iostream>
 
@@ -15,6 +16,8 @@ Scene* Core::getTopScene()
 
 void Core::run()
 {
+    auto tick = std::chrono::high_resolution_clock::now();
+
     while (window.isOpen() && _scenes.size())
     {
         sf::Event event;
@@ -58,7 +61,6 @@ void Core::run()
             _world.set("good", true);
 
             script.runtime->template runFunction<>("Update", _world, ent);
-            //if (values && !std::get<0>(values.value())) top_scene->running = false;
 
             // Check if it has a collider component and execute the collision function
         });
@@ -75,9 +77,26 @@ void Core::run()
 
         window.clear();
         world.progress();
+
+        render(top_scene);
         top_scene->draw(window);
+
         window.display();
+
+        auto now = std::chrono::high_resolution_clock::now();
+        dt = std::chrono::duration_cast<std::chrono::microseconds>(now - tick).count() / 1e6;
+        tick = now;
     }
+}
+
+void Core::loadFont(const std::string& name)
+{
+    font.loadFromFile(name);
+}
+
+double Core::getDeltaTime() const
+{
+    return dt;
 }
 
 Core::Core() :
@@ -94,6 +113,54 @@ Core::Core() :
 Core::~Core()
 {
     while (_scenes.size()) { delete _scenes.top(); _scenes.pop(); }
+}
+
+void Core::render(Scene* scene)
+{
+    scene->world.query<const ComponentData<Name::Transform>>().each(
+        [&](flecs::entity e, const ComponentData<Name::Transform>& transform)
+        {
+            /* Render Sprites */
+            const auto* sprite = e.get<const ComponentData<Name::Sprite>>();
+            if (sprite)
+            {
+                const sf::Texture* texture = nullptr;
+                if (sprite->texture.size())
+                    texture = scene->resources.getResource<sf::Texture>(sprite->texture).value();
+
+                sf::RectangleShape rect;
+                rect.setSize((sf::Vector2f)sprite->size);
+                rect.setOrigin(rect.getSize() / 2.f);
+                rect.setFillColor(sf::Color::White);
+                rect.setPosition(transform.position);
+                rect.rotate(sf::degrees(transform.rotation));
+                
+                if (texture) rect.setTexture(texture);
+                
+                window.draw(rect);
+            }
+
+            /* Render Text */
+            const auto* text = e.get<const ComponentData<Name::Text>>();
+            if (text)
+            {
+                auto* font = scene->resources.getResource<sf::Font>(text->font).value();
+                assert(font);
+                sf::Text t(*font, text->string);
+                t.setPosition(sf::Vector2f(
+                    (int)transform.position.x,
+                    (int)transform.position.y
+                ));
+                t.setOrigin(sf::Vector2f(
+                    (int)t.getLocalBounds().left,
+                    (int)t.getLocalBounds().top
+                ));
+                t.setCharacterSize((unsigned int)text->character_size);
+                t.setFillColor(sf::Color::White);
+                window.draw(t);
+            }
+        }
+    );
 }
 
 }

@@ -1,4 +1,5 @@
 #include <Simple2D/Engine/Components.hpp>
+#include <Simple2D/Engine/Time.hpp>
 #include <Simple2D/Log/Library.hpp>
 
 #include <flecs.h>
@@ -13,7 +14,7 @@ Script loadScript(const std::string& filename, flecs::world& world)
         .runtime = std::make_unique<Lua::Runtime>([&]()
         {
             auto runtime = Lua::Runtime::create<
-                Log::Library
+                Log::Library, Time
             >(filename);
 
             Lua::Table globals;
@@ -28,23 +29,31 @@ Script loadScript(const std::string& filename, flecs::world& world)
 
 /* Position */
 Lua::Table 
-Component<Name::Position>::getTable(
-    const ComponentData<Name::Position>& data)
+Component<Name::Transform>::getTable(
+    const Data& data)
 {
     Lua::Table table;
-    table.set("x", data.x);
-    table.set("y", data.y);
+
+    Lua::Table position;
+    position.set("x", data.position.x);
+    position.set("y", data.position.y);
+    table.set("position", position);
+    table.set("rotation", data.rotation);
+
     return table;
 }
 
 void
-Component<Name::Position>::fromTable(
+Component<Name::Transform>::fromTable(
     const Lua::Table& table,
     void* _data)
 {
     auto* data = reinterpret_cast<Data*>(_data);
-    data->x = table.get<float>("x");
-    data->y = table.get<float>("y");
+
+    const auto& position = table.get<Lua::Table>("position");
+    data->position.x = position.get<float>("x");
+    data->position.y = position.get<float>("y");
+    data->rotation = table.get<Lua::Number>("rotation");
 }
 
 /* Rigidbody */
@@ -69,6 +78,55 @@ Component<Name::Rigidbody>::fromTable(
     const auto& velocity = table.get<Lua::Table>("velocity");
     data->velocity.x = velocity.get<float>("x");
     data->velocity.y = velocity.get<float>("y");
+}
+
+Lua::Table 
+Component<Name::Sprite>::getTable(
+    const Data& data)
+{
+    Lua::Table table;
+
+    Lua::Table size;
+    size.set("width",  (Lua::Number)data.size.x);
+    size.set("height", (Lua::Number)data.size.y);
+    table.set("size", size);
+    table.set("texture", data.texture);
+
+    return table;
+}
+
+void 
+Component<Name::Sprite>::fromTable(
+    const Lua::Table& table, 
+    void* _data)
+{
+    auto* data = reinterpret_cast<Data*>(_data);
+    const auto& size = table.get<Lua::Table>("size");
+    data->size.x = size.get<Lua::Number>("x");
+    data->size.y = size.get<Lua::Number>("y");
+    data->texture = table.get<Lua::String>("texture");
+}
+
+Lua::Table 
+Component<Name::Text>::getTable(
+    const Data& data)
+{
+    Lua::Table table;
+    table.set("string", data.string);
+    table.set("font",   data.font);
+    table.set("characterSize", data.character_size);
+    return table;
+}
+
+void 
+Component<Name::Text>::fromTable(
+    const Lua::Table& table, 
+    void* _data)
+{
+    auto* data = reinterpret_cast<Data*>(_data);
+    data->string = table.get<Lua::String>("string");
+    data->font   = table.get<Lua::String>("font");
+    data->character_size = table.get<Lua::Number>("characterSize");
 }
 
 void
