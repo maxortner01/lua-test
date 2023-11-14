@@ -28,10 +28,10 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/extern/flecs)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/sfml)
 
 set(ENGINE_SOURCES
-    ${CMAKE_SOURCE_DIR}/src/Engine/Resources.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Time.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/World.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Core.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/Resources.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Components.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Entity.cpp
     ${CMAKE_SOURCE_DIR}/src/Log/Library.cpp

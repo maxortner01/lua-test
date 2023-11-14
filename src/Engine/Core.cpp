@@ -89,11 +89,6 @@ void Core::run()
     }
 }
 
-void Core::loadFont(const std::string& name)
-{
-    font.loadFromFile(name);
-}
-
 double Core::getDeltaTime() const
 {
     return dt;
@@ -106,9 +101,7 @@ Core::Core() :
         ),
         Display::get().name
     )
-{
-
-}
+{   }
 
 Core::~Core()
 {
@@ -141,7 +134,7 @@ void Core::render(Scene* scene)
                 rect.setSize((sf::Vector2f)sprite->size);
                 rect.setOrigin(rect.getSize() / 2.f);
                 rect.setFillColor(sf::Color::White);
-                rect.setPosition(sf::Vector2f(transform.position.x, transform.position.y));
+                rect.setPosition(sf::Vector2f((int)transform.position.x, (int)transform.position.y));
                 rect.rotate(sf::degrees(transform.rotation));
                 
                 if (texture) rect.setTexture(texture);

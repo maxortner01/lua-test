@@ -162,7 +162,7 @@ namespace S2D::Lua
         assert(!left);
         if (err)
         {
-            lua_pop(L, left);
+            lua_pop(L, (int)left);
             return { ErrorCode::TypeMismatch };
         }
 

@@ -13,6 +13,14 @@ namespace S2D::Engine
             AlreadyExists
         };
 
+        struct DataPoint
+        {
+            void* ptr;
+            std::function<void(void*)> deleter;
+        };
+
+        ~Resources();
+
         template<typename R>
         using Result = Util::Result<R, Util::Error<Error>>;
 
@@ -25,7 +33,7 @@ namespace S2D::Engine
         getResource(const std::string& name) const;
 
     private:
-        using ResourceMap = std::unordered_map<std::string, std::shared_ptr<void>>;
+        using ResourceMap = std::unordered_map<std::string, DataPoint>;
         std::unordered_map<std::size_t, ResourceMap> resources;
     };
 

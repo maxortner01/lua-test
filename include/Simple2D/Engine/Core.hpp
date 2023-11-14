@@ -38,9 +38,6 @@ namespace S2D::Engine
         template<typename T, typename... Args>
         T& emplaceScene(Args&&... args);
 
-        // temp
-        void loadFont(const std::string& name);
-
         double getDeltaTime() const;
 
         void run();
@@ -52,7 +49,6 @@ namespace S2D::Engine
         void render(Scene* scene);
 
         double dt; // temp
-        sf::Font font;
         sf::RenderWindow window;
 
         std::stack<Scene*> _scenes;
