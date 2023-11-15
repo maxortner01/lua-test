@@ -84,11 +84,6 @@ void Core::run()
     }
 }
 
-double Core::getDeltaTime() const
-{
-    return dt;
-}
-
 Core::Core(const Application& app) :
     window(
         sf::VideoMode(app.size),

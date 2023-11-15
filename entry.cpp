@@ -20,8 +20,8 @@ struct MainScene : Engine::Scene
     {
         using namespace Engine;
 
-        resources.loadResource<sf::Font>("arial", SOURCE_DIR "/fonts/arial.ttf");
-        resources.loadResource<sf::Texture>("main", SOURCE_DIR "/textures/test.png");
+        resources.loadResource<sf::Font>   ("arial", SOURCE_DIR "/fonts/arial.ttf"  );
+        resources.loadResource<sf::Texture>("main",  SOURCE_DIR "/textures/test.png");
 
         world.entity()
             .set(loadScript(SOURCE_DIR "/scripts/fps.lua", world))
@@ -36,9 +36,9 @@ struct MainScene : Engine::Scene
 
 struct App : Engine::Application
 {
-    App() : Application({ 1280, 720 })
+    App(const sf::Vector2u& size, const std::string& name) : Application(size)
     {   
-        this->name = "Test";
+        this->name = name;
     }
 
     void start(Engine::Core& core) override
@@ -49,5 +49,25 @@ struct App : Engine::Application
 
 Engine::Application* getApplication()
 {
-    return new App();
+    /* Extract window size info from a config script */
+    Lua::Runtime runtime(SOURCE_DIR "/scripts/config.lua");
+    auto window = [&]()
+    {
+        auto res = runtime.getGlobal<Lua::Table>("Window");
+        S2D_ASSERT(res, "Error loading the window information");
+        return res.value();
+    }();
+
+    const auto size = [&]()
+    {
+        const auto& size = window.get<Lua::Table>("size");
+        return sf::Vector2u({
+            (unsigned int)size.get<Lua::Number>("width"),
+            (unsigned int)size.get<Lua::Number>("height")
+        });
+    }();
+
+    const auto& name = window.get<Lua::String>("title");
+
+    return new App(size, name);
 }

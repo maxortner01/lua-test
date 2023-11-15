@@ -48,7 +48,6 @@ namespace S2D::Engine
     private:
         void render(Scene* scene);
 
-        double dt; // temp
         sf::RenderWindow window;
 
         std::stack<Scene*> _scenes;
