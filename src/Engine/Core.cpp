@@ -42,9 +42,6 @@ void Core::run()
         {
             if (!e.is_alive() || e.has<Dead>()) return;
 
-            S2D_ASSERT(script.runtime, "Script runtime is null!");
-            if (!script.initialized) { script.runtime->template runFunction<>("Start"); script.initialized = true; }
-
             // Execute the update function
             auto ent = Engine::Entity().asTable();
             ent.set("entity", e.raw_id());
@@ -55,6 +52,8 @@ void Core::run()
             _world.set("world", (uint64_t)world.c_ptr());
             _world.set("good", true);
 
+            S2D_ASSERT(script.runtime, "Script runtime is null!");
+            if (!script.initialized) { script.runtime->template runFunction<>("Start", _world, ent); script.initialized = true; }
             script.runtime->template runFunction<>("Update", _world, ent);
 
             // Check if it has a collider component and execute the collision function
@@ -148,6 +147,47 @@ void Core::render(Scene* scene)
                 t.setCharacterSize((unsigned int)text->character_size);
                 t.setFillColor(sf::Color::White);
                 window.draw(t);
+            }
+
+            /* Render Tilemap */
+            const auto* tilemap = e.get<const ComponentData<Name::Tilemap>>();
+            if (tilemap)
+            {
+                sf::RectangleShape rect;
+                rect.setSize(tilemap->tilesize);
+                rect.setOrigin(rect.getSize() / 2.f);
+                rect.setFillColor(sf::Color::White);
+
+                const auto& map = tilemap->tiles.map;
+                if (tilemap->spritesheet.texture_name.size())
+                {
+                    const auto* texture = scene->resources.getResource<sf::Texture>(tilemap->spritesheet.texture_name).value();
+                    rect.setTexture(texture);
+                }
+
+                for (const auto& p : map)
+                {
+                    const int32_t mask = 0xFFFF0000;
+                    int16_t x = ((p.first & mask) >> 16);
+                    int16_t y = (p.first & (~mask));
+                    const auto position = sf::Vector2f(
+                        x * tilemap->tilesize.x,
+                        y * tilemap->tilesize.y
+                    );
+
+                    sf::IntRect tex_rect;
+                    tex_rect.width  = tilemap->tilesize.x;
+                    tex_rect.height = tilemap->tilesize.y;
+                    tex_rect.left = p.second.texture_coords.x * tilemap->tilesize.x;
+                    tex_rect.top  = p.second.texture_coords.y * tilemap->tilesize.y;
+
+                    std::cout << tex_rect.left << ", " << tex_rect.top << "\n";
+                    std::cout << tex_rect.width << ", " << tex_rect.height << "\n";
+
+                    rect.setTextureRect(tex_rect);
+                    rect.setPosition(position);
+                    window.draw(rect);
+                }
             }
         }
     );

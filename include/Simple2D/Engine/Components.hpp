@@ -113,13 +113,25 @@ namespace S2D::Engine
     {
         struct Tile
         {
-            uint16_t type;
+            sf::Vector2u texture_coords;
+        };
+
+        struct Map
+        {
+            std::unordered_map<int32_t, Tile> map;
+
+            void setTile(int16_t x, int16_t y, const Tile& tile);
         };
 
         static constexpr Name Type = Name::Tilemap;
         struct Data
         {
-            Tile* tilemap;
+            Map tiles;
+            sf::Vector2f tilesize;
+            struct 
+            {
+                std::string texture_name;
+            } spritesheet;
         };
 
         static int setTile(Lua::State L);

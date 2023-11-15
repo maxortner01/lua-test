@@ -133,11 +133,24 @@ Component<Name::Text>::fromTable(
     data->character_size = table.get<Lua::Number>("characterSize");
 }
 
+void 
+Component<Name::Tilemap>::Map::setTile(
+    int16_t x, 
+    int16_t y, 
+    const Tile& tile)
+{
+    int32_t key = (x << 16) | y;
+    if (map.count(key)) map.at(key) = tile;
+    else map.insert(std::pair(key, tile));
+}
+
 int 
 Component<Name::Tilemap>::setTile(
     Lua::State L)
 {
-    const auto [ component_table ] = Lua::Lib::Base::extractArgs<Lua::Table>(L);
+    const auto [ component_table, x, y, cx, cy ] = 
+        Lua::Lib::Base::extractArgs<Lua::Table, Lua::Number, Lua::Number, Lua::Number, Lua::Number>(L);
+
     auto [ world, entity ] = Entity::extractWorldInfo(component_table);
 
     S2D_ASSERT(entity.is_alive(), "Entity is dead");
@@ -146,7 +159,9 @@ Component<Name::Tilemap>::setTile(
     S2D_ASSERT(WORLD_ID == (decltype(WORLD_ID))component_table.get<Lua::Number>("type"), "Component is not Tilemap");
     auto* tilemap = entity.get_mut<ComponentData<Name::Tilemap>>();
 
-    lua_pushboolean(L, false);
+    tilemap->tiles.setTile(x, y, { { (unsigned int)cx, (unsigned int)cy } });
+
+    lua_pushboolean(L, true);
 
     return 1;
 }
@@ -157,6 +172,17 @@ Component<Name::Tilemap>::getTable(
 {
     Lua::Table table;
     table.set("setTile", (Lua::Function)setTile);
+    
+    Lua::Table tilesize;
+    tilesize.set("width", data.tilesize.x);
+    tilesize.set("height", data.tilesize.y);
+    table.set("tilesize", tilesize);
+
+    Lua::Table spritesheet;
+    spritesheet.set("textureName", data.spritesheet.texture_name);
+
+    table.set("spriteSheet", spritesheet);
+
     return table;
 }
 
@@ -166,7 +192,12 @@ Component<Name::Tilemap>::fromTable(
     void* _data)
 {
     auto* data = reinterpret_cast<Data*>(_data);
+    const auto& tilesize = table.get<Lua::Table>("tilesize");
+    data->tilesize.x = tilesize.get<Lua::Number>("width");
+    data->tilesize.y = tilesize.get<Lua::Number>("height");
 
+    const auto& spritesheet = table.get<Lua::Table>("spriteSheet");
+    data->spritesheet.texture_name = spritesheet.get<Lua::String>("textureName");
 }
 
 void

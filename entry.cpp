@@ -22,9 +22,11 @@ struct MainScene : Engine::Scene
 
         resources.loadResource<sf::Font>   ("arial", SOURCE_DIR "/fonts/arial.ttf"  );
         resources.loadResource<sf::Texture>("main",  SOURCE_DIR "/textures/test.png");
+        resources.loadResource<sf::Texture>("tilemap",  SOURCE_DIR "/textures/tilemap.png");
 
         world.entity()
-            .set(ComponentData<Name::Tilemap>{ })
+            .set(ComponentData<Name::Transform>{ })
+            .set(ComponentData<Name::Tilemap>{ .tilesize = { 32.f, 32.f }, .spritesheet = { .texture_name = "tilemap" } })
             .set(loadScript(SOURCE_DIR "/scripts/tilemap.lua", world));
 
         world.entity()
