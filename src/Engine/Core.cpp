@@ -79,7 +79,7 @@ void Core::run()
         window.display();
 
         auto now = std::chrono::high_resolution_clock::now();
-        dt = std::chrono::duration_cast<std::chrono::microseconds>(now - tick).count() / 1e6;
+        Time::dt = std::chrono::duration_cast<std::chrono::microseconds>(now - tick).count() / 1e6;
         tick = now;
     }
 }
@@ -91,10 +91,7 @@ double Core::getDeltaTime() const
 
 Core::Core(const Application& app) :
     window(
-        sf::VideoMode(
-            //Display::get().size {  }
-            app.size
-        ),
+        sf::VideoMode(app.size),
         app.name
     )
 {   }
