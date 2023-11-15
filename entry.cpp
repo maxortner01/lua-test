@@ -24,6 +24,10 @@ struct MainScene : Engine::Scene
         resources.loadResource<sf::Texture>("main",  SOURCE_DIR "/textures/test.png");
 
         world.entity()
+            .set(ComponentData<Name::Tilemap>{ })
+            .set(loadScript(SOURCE_DIR "/scripts/tilemap.lua", world));
+
+        world.entity()
             .set(loadScript(SOURCE_DIR "/scripts/fps.lua", world))
             .set(ComponentData<Name::Transform>{ .position = { 100.f, 100.f, 0.f }, .rotation = 0.f })
             .set(ComponentData<Name::Text>{ .string = "Hello", .font = "arial", .character_size = 16 });
@@ -50,9 +54,9 @@ struct App : Engine::Application
 Engine::Application* getApplication()
 {
     /* Extract window size info from a config script */
-    Lua::Runtime runtime(SOURCE_DIR "/scripts/config.lua");
     auto window = [&]()
     {
+        Lua::Runtime runtime(SOURCE_DIR "/scripts/config.lua");
         auto res = runtime.getGlobal<Lua::Table>("Window");
         S2D_ASSERT(res, "Error loading the window information");
         return res.value();

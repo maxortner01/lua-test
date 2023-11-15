@@ -28,6 +28,7 @@ namespace S2D::Engine
         Rigidbody,
         Sprite,
         Text,
+        Tilemap,
         Count
     };
 
@@ -41,6 +42,7 @@ namespace S2D::Engine
         case Name::Rigidbody: return "Rigidbody";
         case Name::Sprite:    return "Sprite";
         case Name::Text:      return "Text";
+        case Name::Tilemap:   return "Tilemap";
         default: return "";
         }
     }
@@ -102,6 +104,25 @@ namespace S2D::Engine
             Lua::Number character_size;
         };
 
+        static Lua::Table getTable(const Data& data);
+        static void fromTable(const Lua::Table& table, void* _data);
+    };
+
+    template<>
+    struct Component<Name::Tilemap>
+    {
+        struct Tile
+        {
+            uint16_t type;
+        };
+
+        static constexpr Name Type = Name::Tilemap;
+        struct Data
+        {
+            Tile* tilemap;
+        };
+
+        static int setTile(Lua::State L);
         static Lua::Table getTable(const Data& data);
         static void fromTable(const Lua::Table& table, void* _data);
     };

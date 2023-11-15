@@ -2,6 +2,8 @@
 
 #include "../Lua.hpp"
 
+#include <flecs.h>
+
 namespace S2D::Engine
 {
 #ifdef DOCS
@@ -35,6 +37,11 @@ namespace LuaAPI
      */
     struct Entity : Lua::Lib::Base
     {
+        // Essentially, all Lua objects attached to the engine will have a 
+        // "world": id, "entity": id
+        static std::pair<flecs::world, flecs::entity>
+        extractWorldInfo(const Lua::Table& entity_or_component);
+
         static int getComponent(Lua::State L);
         static int setComponent(Lua::State L);
         static int destroy(Lua::State L);

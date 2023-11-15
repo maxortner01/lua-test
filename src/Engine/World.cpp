@@ -24,7 +24,7 @@ int World::createEntity(Lua::State L)
     }
 
     Lua::Table world_table(L);
-    flecs::world world((flecs::world_t*)*world_table.get<uint64_t*>("id"));
+    flecs::world world((flecs::world_t*)*world_table.get<uint64_t*>("world"));
 
     auto entity = world.entity();
 
@@ -59,7 +59,7 @@ int World::createEntity(Lua::State L)
 
     auto entity_table = Entity().asTable();
     entity_table.set("good", true);
-    entity_table.set("id", entity.raw_id());
+    entity_table.set("entity", entity.raw_id());
     entity_table.set("world", (uint64_t)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
     entity_table.toStack(L);
 

@@ -47,12 +47,12 @@ void Core::run()
 
             // Execute the update function
             auto ent = Engine::Entity().asTable();
-            ent.set("id", e.raw_id());
+            ent.set("entity", e.raw_id());
             ent.set("good", true);
             ent.set("world", (uint64_t)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
 
             auto _world = Engine::World().asTable();
-            _world.set("id", (uint64_t)world.c_ptr());
+            _world.set("world", (uint64_t)world.c_ptr());
             _world.set("good", true);
 
             script.runtime->template runFunction<>("Update", _world, ent);

@@ -7,17 +7,26 @@
 
 namespace S2D::Engine
 {
+
+    std::pair<flecs::world, flecs::entity>
+    Entity::extractWorldInfo(
+        const Lua::Table& entity_or_component)
+    {
+        const auto e_id  = *entity_or_component.get<uint64_t*>("entity");
+        const auto w_ptr = (flecs::world_t*)*entity_or_component.get<uint64_t*>("world");
+
+        return {
+            flecs::world(w_ptr),
+            flecs::entity(w_ptr, e_id)
+        };
+    }
+
     int Entity::getComponent(Lua::State L)
     {
         const auto [entity_table, component_id] = extractArgs<Lua::Table, Lua::Number>(L);
-
-        // Extract the entity id and the world pointer from the entity table
-        const auto e_id = *entity_table.get<uint64_t*>("id");
-        const auto world_ptr = (flecs::world_t*)*entity_table.get<uint64_t*>("world");
-
-        // Construct the world and the entity
-        flecs::world world(world_ptr);
-        flecs::entity entity(world_ptr, e_id);
+        const auto world_info = extractWorldInfo(entity_table);
+        const auto& world  = std::get<0>(world_info);
+        const auto& entity = std::get<1>(world_info);
 
         const std::size_t ID = component_id;
 
@@ -41,6 +50,8 @@ namespace S2D::Engine
                 table.fromTable(Component<component>::getTable(*(const ComponentData<component>*)comp));
                 table.set("good", true);
                 table.set("type", (Lua::Number)ID);
+                table.set("entity", entity.raw_id());
+                table.set("world", (uint64_t)world.c_ptr());
                 found = true;
             }
         });
@@ -65,15 +76,9 @@ namespace S2D::Engine
 
         S2D_ASSERT(component_table.get<Lua::Boolean>("good"), "Component is not good");
 
-        // Extract the entity id and the world pointer from the entity table
-        const auto id = *entity_table.get<uint64_t*>("id");
-        const auto world_ptr = (flecs::world_t*)*entity_table.get<uint64_t*>("world");
-
-        // Get the world
-        flecs::world world(world_ptr);
-
-        // Get the entity
-        flecs::entity entity(world, id);
+        const auto world_info = extractWorldInfo(entity_table);
+        const auto& world  = std::get<0>(world_info);
+        const auto& entity = std::get<1>(world_info);
 
         // Make sure the component is in the entity
         const auto component_id = component_table.get<Lua::Number>("type");
@@ -103,14 +108,10 @@ namespace S2D::Engine
 
     int Entity::destroy(Lua::State L)
     {
-        S2D_ASSERT(lua_gettop(L) == 1, "Lua argument size mismatch");
-        Lua::Table entity(L);
+        const auto [ entity_table ] = extractArgs<Lua::Table>(L);
+        auto [ world, entity ] = extractWorldInfo(entity_table);
 
-        const auto id = *entity.get<uint64_t*>("id");
-        const auto world_ptr = (flecs::world_t*)*entity.get<uint64_t*>("world");
-
-        flecs::entity e(world_ptr, id);
-        if (e.is_alive() && !e.has<Dead>()) e.add<Dead>();
+        if (entity.is_alive() && !entity.has<Dead>()) entity.add<Dead>();
 
         return 0;
     }
@@ -119,15 +120,10 @@ namespace S2D::Engine
     {
         const auto [entity_table, filename] = extractArgs<Lua::Table, Lua::String>(L);
         S2D_ASSERT(entity_table.get<Lua::Boolean>("good"), "Entity not good");
+        auto [ world, entity ] = extractWorldInfo(entity_table);
 
-        const auto id = *entity_table.get<uint64_t*>("id");
-        const auto world_ptr = (flecs::world_t*)*entity_table.get<uint64_t*>("world");
-
-        flecs::world world(world_ptr);
-        flecs::entity e(world_ptr, id);
-        S2D_ASSERT(e.is_alive(), "Entity is dead");
-
-        e.set(loadScript(filename, world));
+        S2D_ASSERT(entity.is_alive(), "Entity is dead");
+        entity.set(loadScript(filename, world));
 
         return 0;
     }

@@ -1,6 +1,8 @@
 #include <Simple2D/Engine/Components.hpp>
 #include <Simple2D/Engine/Time.hpp>
+#include <Simple2D/Engine/Entity.hpp>
 #include <Simple2D/Log/Library.hpp>
+#include <Simple2D/Log/Log.hpp>
 
 #include <flecs.h>
 
@@ -129,6 +131,42 @@ Component<Name::Text>::fromTable(
     data->string = table.get<Lua::String>("string");
     data->font   = table.get<Lua::String>("font");
     data->character_size = table.get<Lua::Number>("characterSize");
+}
+
+int 
+Component<Name::Tilemap>::setTile(
+    Lua::State L)
+{
+    const auto [ component_table ] = Lua::Lib::Base::extractArgs<Lua::Table>(L);
+    auto [ world, entity ] = Entity::extractWorldInfo(component_table);
+
+    S2D_ASSERT(entity.is_alive(), "Entity is dead");
+
+    const auto WORLD_ID = world.component<ComponentData<Name::Tilemap>>().raw_id();
+    S2D_ASSERT(WORLD_ID == (decltype(WORLD_ID))component_table.get<Lua::Number>("type"), "Component is not Tilemap");
+    auto* tilemap = entity.get_mut<ComponentData<Name::Tilemap>>();
+
+    lua_pushboolean(L, false);
+
+    return 1;
+}
+
+Lua::Table 
+Component<Name::Tilemap>::getTable(
+    const Data& data)
+{
+    Lua::Table table;
+    table.set("setTile", (Lua::Function)setTile);
+    return table;
+}
+
+void 
+Component<Name::Tilemap>::fromTable(
+    const Lua::Table& table, 
+    void* _data)
+{
+    auto* data = reinterpret_cast<Data*>(_data);
+
 }
 
 void
