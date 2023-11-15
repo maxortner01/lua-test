@@ -20,10 +20,8 @@ struct MainScene : Engine::Scene
     {
         using namespace Engine;
 
-        std::cout << "in\n";
-        assert(resources.loadResource<sf::Font>("arial", SOURCE_DIR "/fonts/arial.ttf"));
-        assert(resources.loadResource<sf::Texture>("main", SOURCE_DIR "/textures/test.png"));
-        std::cout << "out\n";
+        resources.loadResource<sf::Font>("arial", SOURCE_DIR "/fonts/arial.ttf");
+        resources.loadResource<sf::Texture>("main", SOURCE_DIR "/textures/test.png");
 
         world.entity()
             .set(loadScript(SOURCE_DIR "/scripts/fps.lua", world))
@@ -36,15 +34,20 @@ struct MainScene : Engine::Scene
     }
 };
 
-int main()
+struct App : Engine::Application
 {
-    auto& display = Engine::Display::get();
-    display.size = sf::Vector2u({ 1280U, 720U });
-    display.name = "Test";
+    App() : Application({ 1280, 720 })
+    {   
+        this->name = "Test";
+    }
 
-    auto& core = Engine::Core::get();
-    core.emplaceScene<MainScene>();
-    core.run();
+    void start(Engine::Core& core) override
+    {
+        core.emplaceScene<MainScene>();
+    }
+};
 
-    Engine::Core::destroy();
+Engine::Application* getApplication()
+{
+    return new App();
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "NoCopy.hpp"
+#include "../Def.hpp"
 
 #include <string>
 #include <cassert>
@@ -101,28 +102,28 @@ namespace S2D::Util
     template<typename T, typename E>
     T& Result<T, E>::value()
     {
-        assert(good());
+        S2D_ASSERT(good(), "Result not good!");
         return _val.value();
     }
 
     template<typename T, typename E>
     const T& Result<T, E>::value() const
     {
-        assert(good());
+        S2D_ASSERT(good(), "Result not good!");
         return _val.value();
     }
 
     template<typename T, typename E>
     const E& Result<T, E>::error() const
     {
-        assert(!good());
+        S2D_ASSERT(good(), "Result not good!");
         return _err.value();
     }
 
     template<typename E>
     const E& Result<void, E>::error() const
     {
-        assert(!good());
+        S2D_ASSERT(good(), "Result not good!");
         return _err.value();
     }
 

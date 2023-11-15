@@ -1,10 +1,5 @@
-#include <Simple2D/Engine/Core.hpp>
-#include <Simple2D/Engine/Components.hpp>
-#include <Simple2D/Engine/Entity.hpp>
-#include <Simple2D/Engine/World.hpp>
-#include <Simple2D/Engine/Resources.hpp>
-
-#include <iostream>
+#include <Simple2D/Engine.hpp>
+#include <Simple2D/Def.hpp>
 
 namespace S2D::Engine
 {
@@ -47,7 +42,7 @@ void Core::run()
         {
             if (!e.is_alive() || e.has<Dead>()) return;
 
-            assert(script.runtime);
+            S2D_ASSERT(script.runtime, "Script runtime is null!");
             if (!script.initialized) { script.runtime->template runFunction<>("Start"); script.initialized = true; }
 
             // Execute the update function
@@ -94,12 +89,13 @@ double Core::getDeltaTime() const
     return dt;
 }
 
-Core::Core() :
+Core::Core(const Application& app) :
     window(
         sf::VideoMode(
-            Display::get().size
+            //Display::get().size {  }
+            app.size
         ),
-        Display::get().name
+        app.name
     )
 {   }
 
@@ -147,7 +143,7 @@ void Core::render(Scene* scene)
             if (text)
             {
                 auto* font = scene->resources.getResource<sf::Font>(text->font).value();
-                assert(font);
+                S2D_ASSERT(font, "Font is null");
                 sf::Text t(*font, text->string);
                 t.setPosition(sf::Vector2f(
                     (int)transform.position.x,

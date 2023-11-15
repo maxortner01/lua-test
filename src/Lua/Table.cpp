@@ -1,7 +1,6 @@
 #include <Simple2D/Lua/Table.hpp>
 #include <Simple2D/Lua/TypeMap.hpp>
-
-#include <cassert>
+#include <Simple2D/Def.hpp>
 
 namespace S2D::Lua
 {
@@ -51,7 +50,7 @@ Table::Table(State L)
     lua_pushnil(L);
     while (lua_next(L, -2) != 0)
     {
-        assert(lua_type(L, -2) == LUA_TSTRING);
+        S2D_ASSERT(lua_type(L, -2) == LUA_TSTRING, "Lua type mismatch");
         
         std::string key = lua_tostring(L, -2);
         std::shared_ptr<void> value;
@@ -100,7 +99,7 @@ bool Table::hasValue(const std::string& name) const
 template<typename T>
 T& Table::get(const std::string& name)
 {
-    assert(dictionary.count(name));
+    S2D_ASSERT(dictionary.count(name), "Dictionary doesn't have key");
     return *static_cast<T*>(dictionary.at(name).data.get());
 }
 template Lua::Number&   Table::get(const std::string&);
@@ -113,7 +112,7 @@ template uint64_t*&     Table::get(const std::string&);
 template<typename T>
 const T& Table::get(const std::string& name) const
 {
-    assert(dictionary.count(name));
+    S2D_ASSERT(dictionary.count(name), "Dictionary doesn't have key");
     return *static_cast<T*>(dictionary.at(name).data.get());
 }
 template const Lua::Number&   Table::get(const std::string&) const;

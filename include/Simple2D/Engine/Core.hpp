@@ -10,6 +10,8 @@
 
 namespace S2D::Engine
 {
+    struct Application;
+
     struct Scene : Util::NoCopy
     {
         flecs::world world;
@@ -23,16 +25,14 @@ namespace S2D::Engine
         virtual void draw(sf::RenderTarget& target) {};
     };
 
-    struct Display : Util::Singleton<Display>
+    struct Display 
     {
         sf::Vector2u size;
         std::string name;
     };
 
-    struct Core : Util::Singleton<Core>
+    struct Core
     {
-        friend class Util::Singleton<Core>;
-
         Scene* getTopScene();
 
         template<typename T, typename... Args>
@@ -42,10 +42,10 @@ namespace S2D::Engine
 
         void run();
 
-    private:
-        Core();
+        Core(const Application& app);
         ~Core();
 
+    private:
         void render(Scene* scene);
 
         double dt; // temp

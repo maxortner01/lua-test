@@ -5,3 +5,5 @@ function Update(world, entity)
     text.string = "FPS: "..string.format("%.1f", 1.0 / Time.deltaTime())
     entity:setComponent(text)
 end
+
+

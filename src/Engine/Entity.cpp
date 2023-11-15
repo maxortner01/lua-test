@@ -1,6 +1,7 @@
 #include <Simple2D/Engine/Entity.hpp>
 #include <Simple2D/Engine/Components.hpp>
 #include <Simple2D/Log/Library.hpp>
+#include <Simple2D/Def.hpp>
 
 #include <flecs.h>
 
@@ -36,7 +37,7 @@ namespace S2D::Engine
             {
                 // Found
                 const void* comp = entity.get(id);
-                assert(comp);
+                S2D_ASSERT(comp, "Component is null");
                 table.fromTable(Component<component>::getTable(*(const ComponentData<component>*)comp));
                 table.set("good", true);
                 table.set("type", (Lua::Number)ID);
@@ -62,7 +63,7 @@ namespace S2D::Engine
 
         const auto [entity_table, component_table] = extractArgs<Lua::Table, Lua::Table>(L);
 
-        assert(component_table.get<Lua::Boolean>("good"));
+        S2D_ASSERT(component_table.get<Lua::Boolean>("good"), "Component is not good");
 
         // Extract the entity id and the world pointer from the entity table
         const auto id = *entity_table.get<uint64_t*>("id");
@@ -102,7 +103,7 @@ namespace S2D::Engine
 
     int Entity::destroy(Lua::State L)
     {
-        assert(lua_gettop(L) == 1);
+        S2D_ASSERT(lua_gettop(L) == 1, "Lua argument size mismatch");
         Lua::Table entity(L);
 
         const auto id = *entity.get<uint64_t*>("id");
@@ -117,14 +118,14 @@ namespace S2D::Engine
     int Entity::addScript(Lua::State L)
     {
         const auto [entity_table, filename] = extractArgs<Lua::Table, Lua::String>(L);
-        assert(entity_table.get<Lua::Boolean>("good"));
+        S2D_ASSERT(entity_table.get<Lua::Boolean>("good"), "Entity not good");
 
         const auto id = *entity_table.get<uint64_t*>("id");
         const auto world_ptr = (flecs::world_t*)*entity_table.get<uint64_t*>("world");
 
         flecs::world world(world_ptr);
         flecs::entity e(world_ptr, id);
-        assert(e.is_alive());
+        S2D_ASSERT(e.is_alive(), "Entity is dead");
 
         e.set(loadScript(filename, world));
 

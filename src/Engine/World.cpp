@@ -1,9 +1,9 @@
 #include <Simple2D/Engine/World.hpp>
 #include <Simple2D/Engine/Components.hpp>
 #include <Simple2D/Engine/Entity.hpp>
+#include <Simple2D/Def.hpp>
 
 #include <flecs.h>
-#include <iostream>
 
 namespace S2D::Engine
 {
@@ -19,7 +19,7 @@ int World::createEntity(Lua::State L)
 
     for (uint32_t i = 0; i < components - 1; i++)
     {
-        assert(TypeMap<Lua::Table>::check(L));
+        S2D_ASSERT(TypeMap<Lua::Table>::check(L), "Lua type mismatch");
         tables.emplace_back(L);
     }
 

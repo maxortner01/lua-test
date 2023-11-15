@@ -2,6 +2,7 @@
 
 #include "TypeMap.hpp"
 
+#include "../Def.hpp"
 #include "../Util.hpp"
 
 namespace S2D::Lua
@@ -52,15 +53,15 @@ namespace S2D::Lua::Lib
     std::tuple<Args...>
     Base::extractArgs(State L)
     {
-        assert(lua_gettop(L) == sizeof...(Args));
+        S2D_ASSERT(lua_gettop(L) == sizeof...(Args), "Lua arguments do not match expected args.");
         std::tuple<Args...> values;
         Util::CompileTime::static_for<sizeof...(Args)>([&](auto n) {
-            if (lua_isnil(L, -1)) assert(false);
+            S2D_ASSERT(!lua_isnil(L, -1), "Argument nil");
 
             const std::size_t I = n;
             const auto i = sizeof...(Args) - I - 1;
             using Type = Util::CompileTime::NthType<i, Args...>;
-            assert(Lua::CompileTime::TypeMap<Type>::check(L));
+            S2D_ASSERT(Lua::CompileTime::TypeMap<Type>::check(L), "Type mismatch");
             
             const auto count = lua_gettop(L);
             std::get<i>(values) = Lua::CompileTime::TypeMap<Type>::construct(L);

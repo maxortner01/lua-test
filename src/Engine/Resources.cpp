@@ -1,6 +1,6 @@
 #include <Simple2D/Engine/Resources.hpp>
+#include <Simple2D/Def.hpp>
 
-#include <iostream>
 #include <SFML/Graphics.hpp>
 
 namespace S2D::Engine
@@ -18,19 +18,15 @@ template<typename T>
 Resources::Result<void>
 Resources::loadResource(const std::string& name, const std::string& filename)
 {
-    std::cout << "IN\n";
-    const auto id = typeid(T).hash_code();
-    std::cout << "yo\n";
+    const auto id = typeid(T).hash_code(); 
     if (!resources.count(id)) resources.insert(std::pair(id, ResourceMap()));
-    std::cout << "yo\n";
     auto& types = resources.at(id);
     if (types.count(name)) return { Error::AlreadyExists };
     auto* resource = new T();
-    std::cout << resource << "\n";
-    assert(resource->loadFromFile(filename));
+    S2D_ASSERT(resource->loadFromFile(filename), "Resource failed to load");
     types.insert(std::pair(name, DataPoint{
         .ptr     = (void*)resource,
-        .deleter = [](void* ptr) { delete reinterpret_cast<T*>(ptr); std::cout << "deleted\n"; }
+        .deleter = [](void* ptr) { delete reinterpret_cast<T*>(ptr); }
     }));
     return { };
 }
@@ -41,11 +37,10 @@ template<typename T>
 Resources::Result<const T*>
 Resources::getResource(const std::string& name) const
 {
-    std::cout << "yo\n";
     const auto id = typeid(T).hash_code();
-    assert(resources.count(id));
+    S2D_ASSERT(resources.count(id), "Resource type does not exist");
     auto& types = resources.at(id);
-    assert(types.count(name));
+    S2D_ASSERT(types.count(name), "Resource does not exist");
     return static_cast<const T*>(types.at(name).ptr);
 }
 template typename Resources::Result<const sf::Font*> Resources::getResource<sf::Font>(const std::string&) const;

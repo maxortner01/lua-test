@@ -1,7 +1,7 @@
 #include <Simple2D/Log/Library.hpp>
 #include <Simple2D/Log/Log.hpp>
+#include <Simple2D/Def.hpp>
 
-#include <iostream>
 #include <fstream>
 #include <cassert>
 #include <filesystem>
@@ -13,8 +13,8 @@ int Library::log(Lua::State L)
 {
     using Map = Lua::CompileTime::TypeMap<Lua::String>;
 
-    assert(lua_gettop(L) == 1);
-    assert(Map::check(L));
+    S2D_ASSERT(lua_gettop(L) == 1, "Lua argument size mismatch");
+    S2D_ASSERT(Map::check(L), "Not a string");
 
     auto val = Map::construct(L);
 
@@ -27,8 +27,8 @@ int Library::error(Lua::State L)
 {
     using Map = Lua::CompileTime::TypeMap<Lua::String>;
 
-    assert(lua_gettop(L) == 1);
-    assert(Map::check(L));
+    S2D_ASSERT(lua_gettop(L) == 1, "Lua argument size mismatch");
+    S2D_ASSERT(Map::check(L), "Not a string");
 
     auto val = Map::construct(L);
 
@@ -39,8 +39,8 @@ int Library::error(Lua::State L)
 
 int Library::_assert(Lua::State L)
 {
-    assert(lua_gettop(L) == 1);
-    assert(lua_isboolean(L, -1));
+    S2D_ASSERT(lua_gettop(L) == 1, "Lua argument size mismatch");
+    S2D_ASSERT(lua_isboolean(L, -1), "Not a boolean");
 
     lua_Debug debug;
     lua_getstack(L, 1, &debug);
@@ -61,7 +61,7 @@ int Library::_assert(Lua::State L)
         // since assert returns void
         const auto line = [&]() {
             std::ifstream file(path);
-            assert(file);
+            S2D_ASSERT(file, "Error opening Lua file");
 
             std::string assert_line;
             uint32_t lineno = 0;
