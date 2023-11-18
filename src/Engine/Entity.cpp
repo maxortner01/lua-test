@@ -123,7 +123,10 @@ namespace S2D::Engine
         auto [ world, entity ] = extractWorldInfo(entity_table);
 
         S2D_ASSERT(entity.is_alive(), "Entity is dead");
-        entity.set(loadScript(filename, world));
+        if (!entity.has<Engine::Script>()) entity.set<Engine::Script>({});
+        auto* script = entity.get_mut<Engine::Script>();
+        loadScript(filename, world, *script);
+        //entity.set(loadScript(filename, world));
 
         return 0;
     }

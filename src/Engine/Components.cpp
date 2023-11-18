@@ -1,32 +1,71 @@
 #include <Simple2D/Engine/Components.hpp>
 #include <Simple2D/Engine/Time.hpp>
 #include <Simple2D/Engine/Entity.hpp>
+#include <Simple2D/Engine/Input.hpp>
+#include <Simple2D/Engine/Math.hpp>
+
 #include <Simple2D/Log/Library.hpp>
 #include <Simple2D/Log/Log.hpp>
+
+#include <Simple2D/Util.hpp>
 
 #include <flecs.h>
 
 namespace S2D::Engine
 {
 
-
-Script loadScript(const std::string& filename, flecs::world& world)
+void loadScript(const std::string& filename, flecs::world& world, Script& script)
 {
-    return Script {
-        .runtime = std::make_unique<Lua::Runtime>([&]()
+    script.runtime.push_back(std::pair(
+        std::make_unique<Lua::Runtime>([&]()
         {
             auto runtime = Lua::Runtime::create<
-                Log::Library, Time
+                Log::Library, Time, Engine::Input, Engine::Math
             >(filename);
 
-            Lua::Table globals;
-            registerComponents(globals, world);
-            runtime.setGlobal("Component", globals);
+            /* The component name enum */
+            Lua::Table component;
+            registerComponents(component, world);
+            runtime.setGlobal("Component", component);
+
+            /* The layer state enum */
+            Lua::Table LayerState;
+            LayerState.set<Lua::Number>("Solid",    (int)Component<Name::Tilemap>::LayerState::Solid);
+            LayerState.set<Lua::Number>("NotSolid", (int)Component<Name::Tilemap>::LayerState::NotSolid);
+            runtime.setGlobal("LayerState", LayerState);
+
+            /* The key state enum */
 
             return runtime;
-        }()),
-        .initialized = false
-    };
+        }()), 
+        false
+    ));
+}
+
+void
+setComponentFromTable(
+    const Lua::Table& table, 
+    void* _data, 
+    flecs::id_t component_id, 
+    flecs::world& world)
+{
+    using namespace Util::CompileTime;
+
+    bool found = false;
+    static_for<(int)Name::Count>([&](auto n)
+    {
+        if (found) return;
+
+        const std::size_t i = n;
+        const auto actual_id = world.component<ComponentData<(Name)i>>().raw_id();
+        if (actual_id == component_id)
+        {
+            found = true;
+            Component<(Name)i>::fromTable(table, _data);
+        }
+    });
+    
+    S2D_ASSERT(found, "Component doesn't exist");
 }
 
 /* Position */
@@ -42,6 +81,7 @@ Component<Name::Transform>::getTable(
     position.set("z", data.position.z);
     table.set("position", position);
     table.set("rotation", data.rotation);
+    table.set("scale", data.scale);
 
     return table;
 }
@@ -58,6 +98,7 @@ Component<Name::Transform>::fromTable(
     data->position.y = position.get<float>("y");
     data->position.z = position.get<float>("z");
     data->rotation = table.get<Lua::Number>("rotation");
+    data->scale = table.get<Lua::Number>("scale");
 }
 
 /* Rigidbody */
@@ -119,6 +160,7 @@ Component<Name::Text>::getTable(
     table.set("string", data.string);
     table.set("font",   data.font);
     table.set("characterSize", data.character_size);
+    table.set("textAlign", (Lua::Number)(int)data.align);
     return table;
 }
 
@@ -131,25 +173,39 @@ Component<Name::Text>::fromTable(
     data->string = table.get<Lua::String>("string");
     data->font   = table.get<Lua::String>("font");
     data->character_size = table.get<Lua::Number>("characterSize");
+    data->align = (TextAlign)(int)table.get<Lua::Number>("textAlign");
 }
 
 void 
 Component<Name::Tilemap>::Map::setTile(
     int16_t x, 
     int16_t y, 
+    uint32_t layer,
     const Tile& tile)
 {
+    if (!map.count(layer)) map.insert(std::pair(layer, std::pair(std::unordered_map<int32_t, Tile>(), LayerState::NotSolid)));
+    auto& L = map.at(layer).first;
     int32_t key = (x << 16) | y;
-    if (map.count(key)) map.at(key) = tile;
-    else map.insert(std::pair(key, tile));
+    if (L.count(key)) L.at(key) = tile;
+    else L.insert(std::pair(key, tile));
+}
+
+void 
+Component<Name::Tilemap>::Map::setLayerState(
+    uint32_t layer, 
+    LayerState state)
+{
+    if (!map.count(layer)) map.insert(std::pair(layer, std::pair(std::unordered_map<int32_t, Tile>(), state)));
+    auto& L = map.at(layer);
+    if (L.second != state) L.second = state;
 }
 
 int 
 Component<Name::Tilemap>::setTile(
     Lua::State L)
 {
-    const auto [ component_table, x, y, cx, cy ] = 
-        Lua::Lib::Base::extractArgs<Lua::Table, Lua::Number, Lua::Number, Lua::Number, Lua::Number>(L);
+    const auto [ component_table, layer, x, y, cx, cy ] = 
+        Lua::Lib::Base::extractArgs<Lua::Table, Lua::Number, Lua::Number, Lua::Number, Lua::Number, Lua::Number>(L);
 
     auto [ world, entity ] = Entity::extractWorldInfo(component_table);
 
@@ -159,7 +215,29 @@ Component<Name::Tilemap>::setTile(
     S2D_ASSERT(WORLD_ID == (decltype(WORLD_ID))component_table.get<Lua::Number>("type"), "Component is not Tilemap");
     auto* tilemap = entity.get_mut<ComponentData<Name::Tilemap>>();
 
-    tilemap->tiles.setTile(x, y, { { (unsigned int)cx, (unsigned int)cy } });
+    tilemap->tiles.setTile(x, y, layer, { { (unsigned int)cx, (unsigned int)cy } });
+
+    lua_pushboolean(L, true);
+
+    return 1;
+}
+
+int 
+Component<Name::Tilemap>::setLayerState(
+    Lua::State L)
+{
+    const auto [ component_table, layer, layer_state ] = 
+        Lua::Lib::Base::extractArgs<Lua::Table, Lua::Number, Lua::Number>(L);
+
+    auto [ world, entity ] = Entity::extractWorldInfo(component_table);
+
+    S2D_ASSERT(entity.is_alive(), "Entity is dead");
+
+    const auto WORLD_ID = world.component<ComponentData<Name::Tilemap>>().raw_id();
+    S2D_ASSERT(WORLD_ID == (decltype(WORLD_ID))component_table.get<Lua::Number>("type"), "Component is not Tilemap");
+    auto* tilemap = entity.get_mut<ComponentData<Name::Tilemap>>();
+
+    tilemap->tiles.setLayerState((uint32_t)layer, (LayerState)(int)layer_state);
 
     lua_pushboolean(L, true);
 
@@ -172,6 +250,7 @@ Component<Name::Tilemap>::getTable(
 {
     Lua::Table table;
     table.set("setTile", (Lua::Function)setTile);
+    table.set("setLayerState", (Lua::Function)setLayerState);
     
     Lua::Table tilesize;
     tilesize.set("width", data.tilesize.x);
@@ -196,8 +275,23 @@ Component<Name::Tilemap>::fromTable(
     data->tilesize.x = tilesize.get<Lua::Number>("width");
     data->tilesize.y = tilesize.get<Lua::Number>("height");
 
-    const auto& spritesheet = table.get<Lua::Table>("spriteSheet");
-    data->spritesheet.texture_name = spritesheet.get<Lua::String>("textureName");
+    const auto& spritesheet = table.get<Lua::Table>("spritesheet");
+    data->spritesheet.texture_name = spritesheet.get<Lua::String>("texture_name");
+}
+
+Lua::Table 
+Component<Name::Collider>::getTable(
+    const Data& data)
+{
+    return Lua::Table();
+}
+
+void 
+Component<Name::Collider>::fromTable(
+    const Lua::Table& table, 
+    void* _data)
+{
+    auto* data = reinterpret_cast<Data*>(_data);
 }
 
 void

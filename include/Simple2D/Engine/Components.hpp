@@ -16,11 +16,10 @@ namespace S2D::Engine
 
     struct Script
     {
-        std::unique_ptr<Lua::Runtime> runtime;
-        bool initialized;
+        std::vector<std::pair<std::shared_ptr<Lua::Runtime>, int>> runtime;
     };
 
-    Script loadScript(const std::string& filename, flecs::world& world);
+    void loadScript(const std::string& filename, flecs::world& world, Script& script);
 
     enum class Name
     {
@@ -29,6 +28,7 @@ namespace S2D::Engine
         Sprite,
         Text,
         Tilemap,
+        Collider,
         Count
     };
 
@@ -43,9 +43,17 @@ namespace S2D::Engine
         case Name::Sprite:    return "Sprite";
         case Name::Text:      return "Text";
         case Name::Tilemap:   return "Tilemap";
+        case Name::Collider:  return "Collider";
         default: return "";
         }
     }
+
+    void
+    setComponentFromTable(
+        const Lua::Table& table, 
+        void* _data, 
+        flecs::id_t component_id, 
+        flecs::world& world);
 
     template<Name T>
     struct Component;
@@ -57,6 +65,7 @@ namespace S2D::Engine
         struct Data
         {
             sf::Vector3f position;
+            float scale = 1.f;
             float rotation;
         };
 
@@ -93,12 +102,18 @@ namespace S2D::Engine
         static void fromTable(const Lua::Table& table, void* _data);
     };
 
+    enum class TextAlign
+    {
+        Left, Center, Right
+    };
+
     template<>
     struct Component<Name::Text>
     {
         static constexpr Name Type = Name::Text;
         struct Data
         {
+            TextAlign   align;
             Lua::String string;
             Lua::String font;
             Lua::Number character_size;
@@ -116,11 +131,20 @@ namespace S2D::Engine
             sf::Vector2u texture_coords;
         };
 
+        enum class LayerState
+        {
+            Solid, NotSolid
+        };
+
         struct Map
         {
-            std::unordered_map<int32_t, Tile> map;
+            std::unordered_map<
+                uint32_t, // Layer number
+                std::pair<std::unordered_map<int32_t, Tile>, LayerState> // Layer
+            > map;
 
-            void setTile(int16_t x, int16_t y, const Tile& tile);
+            void setTile(int16_t x, int16_t y, uint32_t layer, const Tile& tile);
+            void setLayerState(uint32_t layer, LayerState state);
         };
 
         static constexpr Name Type = Name::Tilemap;
@@ -135,9 +159,26 @@ namespace S2D::Engine
         };
 
         static int setTile(Lua::State L);
+        static int setLayerState(Lua::State L);
+
         static Lua::Table getTable(const Data& data);
         static void fromTable(const Lua::Table& table, void* _data);
     };
+
+    template<>
+    struct Component<Name::Collider>
+    {
+        static constexpr Name Type = Name::Collider;
+        struct Data
+        {
+            // Collision mesh
+            // AABB
+            int placeholder;
+        };
+
+        static Lua::Table getTable(const Data& data);
+        static void fromTable(const Lua::Table& table, void* _data);
+    };  
 
     template<Name T>
     using ComponentData = typename Component<T>::Data;

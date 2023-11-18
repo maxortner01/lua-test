@@ -28,6 +28,8 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/extern/flecs)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/sfml)
 
 set(ENGINE_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/Engine/Math.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/Input.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Resources.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Application.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Time.cpp

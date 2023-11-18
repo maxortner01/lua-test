@@ -2,6 +2,8 @@
 #include <Simple2D/Lua/TypeMap.hpp>
 #include <Simple2D/Def.hpp>
 
+#include <iostream>
+
 namespace S2D::Lua
 {
 
@@ -27,8 +29,8 @@ std::shared_ptr<void>
 Table::Data::emplace(const T& value)
 {
     std::shared_ptr<void> ptr = std::shared_ptr<void>(
-        std::malloc(sizeof(T)),
-        [](void* ptr) { std::free(ptr); }
+        new T(),
+        [](void* ptr) { delete reinterpret_cast<T*>(ptr); }
     );
     *static_cast<T*>(ptr.get()) = value;
     return ptr;
@@ -50,9 +52,16 @@ Table::Table(State L)
     lua_pushnil(L);
     while (lua_next(L, -2) != 0)
     {
-        S2D_ASSERT(lua_type(L, -2) == LUA_TSTRING, "Lua type mismatch");
+        const auto key = [&]()
+        {
+            switch (lua_type(L, -2))
+            {
+            case LUA_TSTRING: return std::string(lua_tostring(L, -2));
+            case LUA_TNUMBER: return std::to_string((int)lua_tonumber(L, -2));
+            default: S2D_ASSERT(false, "Lua type mismatch");
+            }
+        }();
         
-        std::string key = lua_tostring(L, -2);
         std::shared_ptr<void> value;
 
         const auto count = lua_gettop(L);

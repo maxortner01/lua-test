@@ -3,6 +3,7 @@
 #include "../Util.hpp"
 
 #include "Resources.hpp"
+#include "Components.hpp"
 
 #include <stack>
 #include <flecs.h>
@@ -14,11 +15,21 @@ namespace S2D::Engine
 
     struct Scene : Util::NoCopy
     {
+        // The container of entities
         flecs::world world;
+
+        // Whether or not the core should destroy this scene
         bool running = true;
+
+        // Where we load in the scene specific resources
         Resources resources;
 
-        Scene() = default;
+        // Important cached queries 
+        flecs::query<Script> scripts;
+        flecs::query<const ComponentData<Name::Transform>> transforms;
+        flecs::query<ComponentData<Name::Collider>> colliders;
+
+        Scene();
         virtual ~Scene() = default;
 
         virtual void start() { };
@@ -47,6 +58,7 @@ namespace S2D::Engine
 
     private:
         void render(Scene* scene);
+        void collide(Scene* scene);
 
         sf::RenderWindow window;
 
