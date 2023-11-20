@@ -24,10 +24,14 @@ namespace S2D::Engine
         // Where we load in the scene specific resources
         Resources resources;
 
-        // Important cached queries 
+        // Important cached queries for rendering
         flecs::query<Script> scripts;
-        flecs::query<const ComponentData<Name::Transform>> transforms;
-        flecs::query<ComponentData<Name::Collider>> colliders;
+        flecs::query<Transform, Rigidbody> rigidbodies;
+        flecs::query<const Transform> transforms;
+        flecs::query<const Collider, Transform, Rigidbody> colliders;
+        flecs::query<Dead> dead;
+
+        // a
 
         Scene();
         virtual ~Scene() = default;
@@ -36,12 +40,9 @@ namespace S2D::Engine
         virtual void draw(sf::RenderTarget& target) {};
     };
 
-    struct Display 
-    {
-        sf::Vector2u size;
-        std::string name;
-    };
-
+    /**
+     * @brief Represents the central executor of the game engine.
+     */
     struct Core
     {
         Scene* getTopScene();

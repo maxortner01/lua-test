@@ -18,9 +18,9 @@ namespace S2D::Log
 
         spdlog::logger* operator->() const;
 
-    public:
         Logger(const std::string& name);
-
+        
+    private:
         std::string _name;
         inline static std::unordered_map<std::string, std::shared_ptr<Logger>> loggers;
     };

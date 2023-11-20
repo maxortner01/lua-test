@@ -2,6 +2,8 @@
 
 #include "../Lua.hpp"
 
+#include "Mesh.hpp"
+
 #include <flecs.h>
 #include <SFML/Graphics.hpp>
 
@@ -79,9 +81,7 @@ namespace S2D::Engine
         static constexpr Name Type = Name::Rigidbody;
         struct Data
         {
-            struct {
-                float x, y;
-            } velocity;
+            sf::Vector2f velocity;
         };
 
         static Lua::Table getTable(const Data& data);
@@ -94,6 +94,7 @@ namespace S2D::Engine
         static constexpr Name Type = Name::Sprite;
         struct Data
         {
+            std::unique_ptr<Mesh> mesh;
             Lua::String texture;
             sf::Vector2u size;
         };
@@ -142,6 +143,7 @@ namespace S2D::Engine
                 uint32_t, // Layer number
                 std::pair<std::unordered_map<int32_t, Tile>, LayerState> // Layer
             > map;
+            bool changed;
 
             void setTile(int16_t x, int16_t y, uint32_t layer, const Tile& tile);
             void setLayerState(uint32_t layer, LayerState state);
@@ -150,6 +152,7 @@ namespace S2D::Engine
         static constexpr Name Type = Name::Tilemap;
         struct Data
         {
+            std::unique_ptr<Mesh> mesh;
             Map tiles;
             sf::Vector2f tilesize;
             struct 
@@ -173,7 +176,8 @@ namespace S2D::Engine
         {
             // Collision mesh
             // AABB
-            int placeholder;
+            Lua::Number collider_component;
+            std::shared_ptr<CollisionMesh> mesh;
         };
 
         static Lua::Table getTable(const Data& data);
@@ -182,4 +186,11 @@ namespace S2D::Engine
 
     template<Name T>
     using ComponentData = typename Component<T>::Data;
+
+    using Transform = ComponentData<Name::Transform>;
+    using Tilemap   = ComponentData<Name::Tilemap>;
+    using Text      = ComponentData<Name::Text>;
+    using Sprite    = ComponentData<Name::Sprite>;
+    using Collider  = ComponentData<Name::Collider>;
+    using Rigidbody = ComponentData<Name::Rigidbody>;
 }

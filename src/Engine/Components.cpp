@@ -147,8 +147,8 @@ Component<Name::Sprite>::fromTable(
 {
     auto* data = reinterpret_cast<Data*>(_data);
     const auto& size = table.get<Lua::Table>("size");
-    data->size.x = size.get<Lua::Number>("x");
-    data->size.y = size.get<Lua::Number>("y");
+    data->size.x = size.get<Lua::Number>("width");
+    data->size.y = size.get<Lua::Number>("height");
     data->texture = table.get<Lua::String>("texture");
 }
 
@@ -188,6 +188,7 @@ Component<Name::Tilemap>::Map::setTile(
     int32_t key = (x << 16) | y;
     if (L.count(key)) L.at(key) = tile;
     else L.insert(std::pair(key, tile));
+    changed = true;
 }
 
 void 
@@ -198,6 +199,7 @@ Component<Name::Tilemap>::Map::setLayerState(
     if (!map.count(layer)) map.insert(std::pair(layer, std::pair(std::unordered_map<int32_t, Tile>(), state)));
     auto& L = map.at(layer);
     if (L.second != state) L.second = state;
+    changed = true;
 }
 
 int 
@@ -283,7 +285,9 @@ Lua::Table
 Component<Name::Collider>::getTable(
     const Data& data)
 {
-    return Lua::Table();
+    Lua::Table table;
+    table.set<Lua::Number>("ColliderComponent", data.collider_component);
+    return table;
 }
 
 void 
@@ -292,6 +296,7 @@ Component<Name::Collider>::fromTable(
     void* _data)
 {
     auto* data = reinterpret_cast<Data*>(_data);
+    data->collider_component = table.get<Lua::Number>("ColliderComponent");
 }
 
 void

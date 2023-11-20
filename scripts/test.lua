@@ -33,6 +33,10 @@ function GetEntities()
                         spritesheet = { texture_name = "tilemap" },
                         tilesize = { width = 16, height = 16 }
                     }
+                },
+                {
+                    type = Component.Collider,
+                    value = { ColliderComponent = Component.Tilemap }
                 }
             },
             scripts = {
@@ -60,7 +64,38 @@ function GetEntities()
                 }
             },
             scripts = {
-                "/scripts/fps.lua",
+                "/scripts/fps.lua"
+            }
+        },
+        {
+            components = {
+                {
+                    type = Component.Transform,
+                    value = {
+                        position = { x = 175, y = 175, z = 1 },
+                        scale = 3,
+                        rotation = 0
+                    }
+                },
+                {
+                    type = Component.Sprite,
+                    value = {
+                        size = { width = 16, height = 16 },
+                        texture = ""
+                    }
+                },
+                {
+                    type = Component.Rigidbody,
+                    value = {
+                        velocity = { x = 108.42254, y = -84.4362346 }
+                    }
+                },
+                {
+                    type = Component.Collider,
+                    value = { ColliderComponent = Component.Sprite }
+                }
+            },
+            scripts = {
                 "/scripts/movement.lua"
             }
         }

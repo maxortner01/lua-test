@@ -20,7 +20,8 @@ spdlog::logger* Logger::operator->() const
 Logger::Logger(const std::string& name) :
     _name(name)
 {
-    spdlog::stdout_color_mt(name);
+    auto logger = spdlog::stdout_color_mt(name);
+    logger->set_level(spdlog::level::trace);
 }
 
 void Logger::destroy(const std::string& name)
