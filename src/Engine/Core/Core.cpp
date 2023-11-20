@@ -103,10 +103,6 @@ void Core::run()
         // THEN the draw method is called
         
         auto& world = top_scene->world;
-        top_scene->rigidbodies.each([&](Transform& transform, Rigidbody& rigidbody)
-        {
-            transform.position += sf::Vector3f(rigidbody.velocity.x, rigidbody.velocity.y, 0.f) * (float)Time::dt;
-        });
 
         top_scene->scripts.each([&](flecs::entity e, Script& script)
         {
@@ -146,8 +142,15 @@ void Core::run()
 
         world.progress();
 
-        collide(top_scene);
         render(top_scene);
+        
+        // Since colliders possibly change the velocity, we need to run collision check and *then* 
+        // do the rigidbody transformation
+        collide(top_scene);
+        top_scene->rigidbodies.each([&](Transform& transform, Rigidbody& rigidbody)
+        {
+            transform.position += sf::Vector3f(rigidbody.velocity.x, rigidbody.velocity.y, 0.f) * (float)Time::dt;
+        });
 
         top_scene->draw(window);
 

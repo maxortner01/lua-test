@@ -71,4 +71,4 @@ tilemap:setTile(
 )
 ```
 
-There are two types of states `LayerState.Solid` and `LayerState.NotSolid`, the default is the latter.
+There are two types of states `LayerState.Solid` and `LayerState.NotSolid`, the default is the latter. This specification is irrelevant unless the entity that has a tilemap also has a `Collider` component that specifies the tilemap as its source, in which case the `LayerState` for each layer is used to generate the correct collision mesh.

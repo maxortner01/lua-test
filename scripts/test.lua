@@ -87,7 +87,7 @@ function GetEntities()
                 {
                     type = Component.Rigidbody,
                     value = {
-                        velocity = { x = 108.42254, y = -84.4362346 }
+                        velocity = { x = 425.235235232, y = 295.3255 }
                     }
                 },
                 {

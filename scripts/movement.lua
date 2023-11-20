@@ -19,7 +19,7 @@ function Update(world, entity)
         velocity.y = velocity.y - 1
     end
 
-    local transform = entity:getComponent(Component.Transform)
+    local rigidbody = entity:getComponent(Component.Rigidbody)
     
     local magnitude = 200
     velocity = Math.normalize(velocity)
@@ -27,9 +27,11 @@ function Update(world, entity)
     velocity.y = velocity.y * magnitude
     velocity.z = velocity.z * magnitude
 
+    rigidbody.velocity.x = rigidbody.velocity.x + velocity.x * Time.deltaTime()
+    rigidbody.velocity.y = rigidbody.velocity.y + velocity.y * Time.deltaTime()
 
-    transform.position.x = transform.position.x + velocity.x * Time.deltaTime()
-    transform.position.y = transform.position.y + velocity.y * Time.deltaTime()
-    transform.position.z = transform.position.z + velocity.z * Time.deltaTime()
-    entity:setComponent(transform)
+    --transform.position.x = transform.position.x + velocity.x * Time.deltaTime()
+    --transform.position.y = transform.position.y + velocity.y * Time.deltaTime()
+    --transform.position.z = transform.position.z + velocity.z * Time.deltaTime()
+    entity:setComponent(rigidbody)
 end
