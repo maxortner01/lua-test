@@ -2,6 +2,8 @@
 
 #include "../Lua.hpp"
 
+#include <SFML/Graphics.hpp>
+
 namespace S2D::Engine
 {
     struct Input : Lua::Lib::Base
@@ -13,10 +15,32 @@ namespace S2D::Engine
             Release = 0b100
         };
 
-        inline static std::unordered_map<char, KeyState> global_state;
+        enum class Button
+        {
+            W, A, S, D,
+            LeftClick, RightClick
+        };  
+
+        inline static std::unordered_map<std::string, KeyState> global_state;
+        inline static sf::Vector2f mouse_position; // World position
+
+        static int getMousePosition(Lua::State L);
         static int getPressed(Lua::State L);
         static int getDown(Lua::State L);
         static int getReleased(Lua::State L);
         Input();
     };
+
+    #define KEY(name) case Input::Button::name: return #name
+
+    inline static const char* operator*(Input::Button b)
+    {
+        switch (b)
+        {
+        KEY(W); KEY(A); KEY(S); KEY(D);
+        KEY(LeftClick); KEY(RightClick);
+        }
+    }
+
+    #undef KEY
 }

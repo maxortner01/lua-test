@@ -126,7 +126,6 @@ namespace S2D::Engine
         if (!entity.has<Engine::Script>()) entity.set<Engine::Script>({});
         auto* script = entity.get_mut<Engine::Script>();
         loadScript(filename, world, *script);
-        //entity.set(loadScript(filename, world));
 
         return 0;
     }

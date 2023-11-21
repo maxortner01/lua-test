@@ -96,9 +96,12 @@ namespace S2D::Lua
         bool     good() const;
         operator bool() const;
 
+        const auto& filename() const { return _filename; }
+
     private:
         State L;
         bool _good;
+        std::string _filename;
     };
 
     template<typename... Libraries>

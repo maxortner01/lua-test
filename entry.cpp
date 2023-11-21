@@ -172,6 +172,7 @@ Engine::Application* getApplication()
     }();
 
     const auto& name = window.get<Lua::String>("title");
+    Engine::Script::SourceDir = std::string(SOURCE_DIR);
 
     return new App(size, name);
 }

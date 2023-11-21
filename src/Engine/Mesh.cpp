@@ -97,8 +97,8 @@ addBox(
     for (const auto& vertex : offsets)
     {
         collision->vertices.push_back({ 
-            vertex.x * size.x * scale + offset.x, 
-            vertex.y * size.y * scale + offset.y, 
+            (vertex.x * size.x + offset.x) * scale, 
+            (vertex.y * size.y + offset.y) * scale, 
             vertex.z + offset.z 
         });
     }
@@ -113,6 +113,7 @@ void TypeMesh<Sprite>::build()
 {
     INIT_BUILD(Sprite);
 
+    const auto scale = (entity.has<Transform>() ? entity.get<Transform>()->scale : 1.f);
     const auto* sprite = entity.get<Sprite>();
 
     // Forming a quad from two triangles
@@ -140,7 +141,7 @@ void TypeMesh<Sprite>::build()
     {
         collision->vertices.clear(); 
         collision->triangles.clear();
-        addBox(collision, sprite->size, { 0, 0, 0 }, 1.f);
+        addBox(collision, sprite->size, { 0, 0, 0 }, scale);
     }
     
     mesh.vertices.clear();
@@ -173,6 +174,7 @@ TypeMesh<Tilemap>::build()
 {
     INIT_BUILD(Tilemap);
 
+    const auto scale = (entity.has<Transform>() ? entity.get<Transform>()->scale : 1.f);
     const auto* tilemap = entity.get<Tilemap>();
     const auto& map = tilemap->tiles.map;
 
@@ -239,26 +241,18 @@ TypeMesh<Tilemap>::build()
             if (collision && p.second.second == Component<Name::Tilemap>::LayerState::Solid)
             {
                 // Push quad at this point
-                addBox(collision, (sf::Vector2u)tilemap->tilesize, { position.x, position.y, 0 }, 1.f);
+                addBox(collision, (sf::Vector2u)tilemap->tilesize, { position.x, position.y, 0 }, scale);
             }
             
             // Construct the vertices of the quad
             for (uint8_t i = 0; i < 6; i++)
             {
-                /*
-                if (collision && iterator % 3 == 0)
-                    collision->triangles.push_back({ iterator, iterator + 1, iterator + 2 });*/
-
                 auto& vertex = mesh.vertices[iterator++];
                 vertex.position.x = offsets[i].x * tilemap->tilesize.x + position.x;
                 vertex.position.y = offsets[i].y * tilemap->tilesize.y + position.y;
                 vertex.color = sf::Color::White;  
                 vertex.texCoords.x = tex_rect.left + tex_rect.width  * tex_coords[i].x;
                 vertex.texCoords.y = tex_rect.top + tex_rect.height * tex_coords[i].y;  
-
-                /*
-                if (collision && p.second.second == Component<Name::Tilemap>::LayerState::Solid)
-                    collision->vertices.push_back({ vertex.position.x, vertex.position.y, 0.f });*/
             }
         }
     }

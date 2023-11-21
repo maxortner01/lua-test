@@ -20,14 +20,16 @@ namespace S2D::Lua
 
 Runtime::Runtime(const std::string& filename) :
     L(luaL_newstate()),
-    _good(lua_check(L, luaL_dofile(L, filename.c_str())))
+    _good(lua_check(L, luaL_dofile(L, filename.c_str()))),
+    _filename(std::filesystem::path(filename).filename().c_str())
 {
     if (good()) luaL_openlibs(L);
 }
 
 Runtime::Runtime(Runtime&& r) :
     L(r.L),
-    _good(r._good)
+    _good(r._good),
+    _filename(r._filename)
 {
     r.L = nullptr;
 }

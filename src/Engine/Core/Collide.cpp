@@ -1,4 +1,7 @@
 #include <Simple2D/Engine/Core.hpp>
+#include <Simple2D/Engine/Entity.hpp>
+#include <Simple2D/Engine/World.hpp>
+
 #include <Simple2D/Log/Log.hpp>
 
 namespace S2D::Engine
@@ -21,7 +24,7 @@ void Core::collide(Scene* scene)
 
             S2D_ASSERT(!map.count(entity.raw_id()), "Something went wrong");
             auto transform_matrix = fcl::Transform3f::Identity();
-            transform_matrix.translation() = fcl::Vector3f(transform.position.x / transform.scale, transform.position.y / transform.scale, 0);
+            transform_matrix.translation() = fcl::Vector3f(transform.position.x, transform.position.y, 0);
             map.insert(std::pair(
                 entity.raw_id(),
                 std::make_unique<fcl::CollisionObjectf>(collider.mesh->model, transform_matrix)
@@ -60,7 +63,6 @@ void Core::collide(Scene* scene)
 
                     std::vector<sf::Vertex> lines;
 
-                    logger->info("Collision occured with {} contact points.", result.numContacts());
                     for (uint32_t i = 0; i < result.numContacts(); i++)
                     {
                         const auto& contact = result.getContact(i);
@@ -121,14 +123,38 @@ void Core::collide(Scene* scene)
                     // World space and pixel space are the same, so we want to neglect any collisions that are less
                     // than a pixel deep, otherwise we get caught up on too much
                     if (dot.length() <= 1e-1 || std::isnan(dot.x) || std::isnan(dot.y)) return;
-
-                    logger->info("Computed normal = ({}, {})", dot.x, dot.y);
                     
                     // Still not quite right... sometimes, it will invert the direction of the velocity as opposed to 
                     // reflecting it... not quite sure *why* or *when* this happens.
-                    const auto e_loss = 1.f;
+                    const auto e_loss = 0.2f;
                     transform_a.position += sf::Vector3f(dot.x, dot.y, 0) * 1.5f;
                     rigid_body_a.velocity = e_loss * (rigid_body_a.velocity - 2.f * (rigid_body_a.velocity.dot(dot.normalized())) * dot.normalized());
+
+                    if (entity_a.has<Script>())
+                    {
+                        auto* scripts = entity_a.get_mut<Script>();
+                        for (auto& script : scripts->runtime)
+                        {
+                            // Execute the update function
+                            auto ent = Engine::Entity().asTable();
+                            ent.set("entity", entity_a.raw_id());
+                            ent.set("good", true);
+                            ent.set("world", (uint64_t)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
+
+                            auto _world = Engine::World().asTable();
+                            _world.set("world", (uint64_t)world.c_ptr());
+                            _world.set("good", true);
+
+                            Lua::Table collision;
+
+                            const auto res = script.first->runFunction<>("Collide", _world, ent, collision);
+                            if (!res && res.error().code() != Lua::Runtime::ErrorCode::NotFunction)
+                                Log::Logger::instance("engine")->error("Lua Collide(...) error ({}) in \"{}\": {}",
+                                    (int)res.error().code(),
+                                    script.first->filename(),
+                                    res.error().message());
+                        }
+                    }
                 }
             });
         });

@@ -87,7 +87,9 @@ function GetEntities()
                 {
                     type = Component.Rigidbody,
                     value = {
-                        velocity = { x = 425.235235232, y = 295.3255 }
+                        velocity   = { x = 0, y = 0 },
+                        addedForce = { x = 0, y = 0 },
+                        linearDrag = 0.5
                     }
                 },
                 {
@@ -96,7 +98,8 @@ function GetEntities()
                 }
             },
             scripts = {
-                "/scripts/movement.lua"
+                "/scripts/movement.lua",
+                "/scripts/combat.lua"
             }
         }
     }

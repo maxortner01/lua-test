@@ -34,7 +34,10 @@ void loadScript(const std::string& filename, flecs::world& world, Script& script
             LayerState.set<Lua::Number>("NotSolid", (int)Component<Name::Tilemap>::LayerState::NotSolid);
             runtime.setGlobal("LayerState", LayerState);
 
-            /* The key state enum */
+            /* Directory */
+            Lua::Table Directory;
+            Directory.set<Lua::String>("Source", Script::SourceDir);
+            runtime.setGlobal("Directory", Directory);
 
             return runtime;
         }()), 
@@ -107,10 +110,18 @@ Component<Name::Rigidbody>::getTable(
     const ComponentData<Name::Rigidbody>& data)
 {
     Lua::Table table;
+    
     Lua::Table velocity;
     velocity.set("x", data.velocity.x);
     velocity.set("y", data.velocity.y);
     table.set("velocity", velocity);
+
+    Lua::Table added_force;
+    added_force.set("x", data.added_force.x);
+    added_force.set("y", data.added_force.y);
+    table.set("addedForce", added_force);
+
+    table.set("linearDrag", data.linear_drag);
     return table;
 }
 
@@ -123,6 +134,12 @@ Component<Name::Rigidbody>::fromTable(
     const auto& velocity = table.get<Lua::Table>("velocity");
     data->velocity.x = velocity.get<float>("x");
     data->velocity.y = velocity.get<float>("y");
+
+    const auto& added_force = table.get<Lua::Table>("addedForce");
+    data->added_force.x = added_force.get<Lua::Number>("x");
+    data->added_force.y = added_force.get<Lua::Number>("y");
+
+    data->linear_drag = table.get<Lua::Number>("linearDrag");
 }
 
 Lua::Table 

@@ -116,14 +116,14 @@ namespace S2D::Util
     template<typename T, typename E>
     const E& Result<T, E>::error() const
     {
-        S2D_ASSERT(good(), "Result not good!");
+        S2D_ASSERT(_err.has_value(), "Result is good!");
         return _err.value();
     }
 
     template<typename E>
     const E& Result<void, E>::error() const
     {
-        S2D_ASSERT(good(), "Result not good!");
+        S2D_ASSERT(_err.has_value(), "Result is good!");
         return _err.value();
     }
 

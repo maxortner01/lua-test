@@ -19,6 +19,7 @@ namespace S2D::Engine
     struct Script
     {
         std::vector<std::pair<std::shared_ptr<Lua::Runtime>, int>> runtime;
+        inline static std::string SourceDir;
     };
 
     void loadScript(const std::string& filename, flecs::world& world, Script& script);
@@ -81,6 +82,8 @@ namespace S2D::Engine
         static constexpr Name Type = Name::Rigidbody;
         struct Data
         {
+            Lua::Number linear_drag;
+            sf::Vector2f added_force;
             sf::Vector2f velocity;
         };
 

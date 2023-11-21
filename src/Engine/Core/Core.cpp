@@ -5,6 +5,8 @@
 #include <Simple2D/Engine/Time.hpp>
 #include <Simple2D/Engine/Application.hpp>
 
+#include <Simple2D/Log/Log.hpp>
+
 namespace S2D::Engine
 {
 
@@ -39,8 +41,8 @@ Scene* Core::getTopScene()
     return _scenes.top();
 }
 
-#define ITEM(x) case sf::Keyboard::Key::x: return #x[0];
-char getSFMLKey(const sf::Keyboard::Key& key)
+#define ITEM(x) case sf::Keyboard::Key::x: return #x;
+std::string getSFMLKey(const sf::Keyboard::Key& key)
 {
     switch (key)
     {
@@ -48,7 +50,17 @@ char getSFMLKey(const sf::Keyboard::Key& key)
     ITEM(A)
     ITEM(S)
     ITEM(D)
-    default: return ' ';
+    default: return "";
+    }
+}
+
+std::string getSFMLMouse(const sf::Mouse::Button& button)
+{
+    switch (button)
+    {
+    case sf::Mouse::Button::Left:  return *Input::Button::LeftClick;
+    case sf::Mouse::Button::Right: return *Input::Button::RightClick;
+    default: return "";
     }
 }
 
@@ -62,7 +74,7 @@ void Core::run()
 
         // Change all KeyState::Pressed to KeyState::Down
         // Erase all KeyState::Released
-        std::vector<char> released;
+        std::vector<std::string> released;
         for (auto& p : Input::global_state)
         {
             if (p.second == Input::KeyState::Press) p.second = Input::KeyState::Down;
@@ -84,6 +96,16 @@ void Core::run()
             else if (event.type == sf::Event::KeyReleased)
             {
                 const auto code = getSFMLKey(event.key.code);
+                if (Input::global_state.count(code)) Input::global_state.at(code) = Input::KeyState::Release;
+            }
+            else if (event.type == sf::Event::MouseButtonPressed)
+            {
+                const auto code = getSFMLMouse(event.mouseButton.button);
+                if (!Input::global_state.count(code)) Input::global_state.insert(std::pair(code, Input::KeyState::Press));
+            }
+            else if (event.type == sf::Event::MouseButtonReleased)
+            {
+                const auto code = getSFMLMouse(event.mouseButton.button);
                 if (Input::global_state.count(code)) Input::global_state.at(code) = Input::KeyState::Release;
             }
         }
@@ -118,12 +140,27 @@ void Core::run()
             _world.set("world", (uint64_t)world.c_ptr());
             _world.set("good", true);
 
+            #define CHECK_FUNCTION(name) \
+                const auto ret = script.first->template runFunction<>(name, _world, ent);               \
+                if (!ret && ret.error().code() != Lua::Runtime::ErrorCode::NotFunction)                 \
+                    Log::Logger::instance("engine")->error("Lua Update(...) error ({}) in \"{}\": {}",  \
+                        (int)ret.error().code(),                                                        \
+                        script.first->filename(),                                                       \
+                        ret.error().message())                                                          
+
+
             for (auto& script : script.runtime)
             {
                 S2D_ASSERT(script.first, "Script runtime is null!");
-                if (!script.second) { script.first->template runFunction<>("Start", _world, ent); script.second = true; }
-                script.first->template runFunction<>("Update", _world, ent);
+                if (!script.second) 
+                { 
+                    CHECK_FUNCTION("Start");
+                    script.second = true; 
+                }
+                CHECK_FUNCTION("Update");
             }
+
+            #undef CHECK_FUNCTION
 
             // Check if it has a collider component and execute the collision function
         });
@@ -149,6 +186,7 @@ void Core::run()
         collide(top_scene);
         top_scene->rigidbodies.each([&](Transform& transform, Rigidbody& rigidbody)
         {
+            rigidbody.velocity += (rigidbody.added_force - rigidbody.linear_drag * rigidbody.velocity) * (float)Time::dt;
             transform.position += sf::Vector3f(rigidbody.velocity.x, rigidbody.velocity.y, 0.f) * (float)Time::dt;
         });
 
@@ -156,10 +194,14 @@ void Core::run()
 
         window.display();
 
+        // Set dt
         auto now = std::chrono::high_resolution_clock::now();
         Time::dt = std::chrono::duration_cast<std::chrono::microseconds>(now - tick).count() / 1e6;
         if (Time::dt > 1.0) Time::dt = 1.0;
         tick = now;
+
+        // Set mouse position
+        Input::mouse_position = (sf::Vector2f)sf::Mouse::getPosition(window);
     }
 }
 

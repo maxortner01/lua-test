@@ -60,8 +60,9 @@ void RenderComponent(
                 auto& collider_point = collider_points[iterator++];
                 collider_point.position = sf::Vector2f(vertex[0], vertex[1]);
                 collider_point.color = sf::Color::Red;
+                collider_point.color.a = 50;
 
-                collider_point.position += sf::Vector2f(transform.position.x / transform.scale, transform.position.y / transform.scale);
+                collider_point.position += sf::Vector2f(transform.position.x, transform.position.y);
             }
         }
 
@@ -128,6 +129,11 @@ void RenderComponent(
 
     // [Debug] Draw the collider mesh
     const auto* collider = e.get<Collider>();
+    if (collider && !collider->mesh) 
+    {
+        sprite->mesh->build();
+    }
+    
     if (collider)
     {
         sf::VertexArray collider_points(sf::PrimitiveType::Triangles, collider->mesh->triangles.size() * 3);
@@ -141,22 +147,11 @@ void RenderComponent(
                 auto& collider_point = collider_points[iterator++];
                 collider_point.position = sf::Vector2f(vertex[0], vertex[1]);
                 collider_point.color = sf::Color::Red;
+                collider_point.color.a = 50;
 
-                collider_point.position += sf::Vector2f(transform.position.x / transform.scale, transform.position.y / transform.scale);
+                collider_point.position += sf::Vector2f(transform.position.x, transform.position.y);
             }
         }
-
-        /*
-        for (uint32_t i = 0; i < collider_points.getVertexCount(); i++)
-        {
-            auto& vertex = collider_points[i];
-            const auto& collider_point = collider->mesh->vertices[i];
-            vertex.position = sf::Vector2f(collider_point[0], collider_point[1]);
-            vertex.color = sf::Color::Red;
-
-            //vertex.position *= transform.scale;
-            vertex.position += sf::Vector2f(transform.position.x / transform.scale, transform.position.y / transform.scale);
-        }*/
 
         target.draw(collider_points);
     }
