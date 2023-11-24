@@ -8,7 +8,7 @@ function Update(world, entity)
         y = player_transform.position.y - camera_transform.position.y
     }
 
-    local factor = 1.5 * Time.deltaTime()
+    local factor = 2.5 * Time.deltaTime()
     camera_transform.position.x = camera_transform.position.x + diff.x * factor
     camera_transform.position.y = camera_transform.position.y + diff.y * factor
     entity:setComponent(camera_transform)

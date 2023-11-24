@@ -1,4 +1,5 @@
 #include <Simple2D/Engine/Core.hpp>
+#include <Simple2D/Engine/SurfaceLib.hpp>
 
 #include <Simple2D/Log/Log.hpp>
 
@@ -37,7 +38,7 @@ void RenderComponent(
     {
         auto& vertex = vertices[i];
         vertex.position *= transform.scale;
-        vertex.position += sf::Vector2f(transform.position.x, transform.position.y) - camera_pos;
+        vertex.position += sf::Vector2f(transform.position.x, transform.position.y) - camera_pos + (sf::Vector2f)target.getSize() / 2.f;
     }
     
     target.draw(vertices, states);
@@ -80,6 +81,11 @@ void RenderComponent(
     auto* font = scene->resources.getResource<sf::Font>(text->font).value();
     S2D_ASSERT(font, "Font is null");
 
+    auto camera_pos = sf::Vector2f(
+        camera.has<Transform>() ? camera.get<Transform>()->position.x : 0.f,
+        camera.has<Transform>() ? camera.get<Transform>()->position.y : 0.f
+    );
+
     int max_height = std::numeric_limits<int>::min();
     for (const auto& c : text->string)
     {
@@ -91,7 +97,7 @@ void RenderComponent(
     t.setPosition(sf::Vector2f(
         (int)transform.position.x,
         (int)transform.position.y
-    ));
+    ) - camera_pos + (sf::Vector2f)target.getSize() / 2.f);
     t.setOrigin(sf::Vector2f(
         (int)t.getLocalBounds().left /*+ (int)(t.getLocalBounds().width / 2.f)*/,
         (int)t.getLocalBounds().top + (int)(max_height / 2.f)
@@ -131,7 +137,7 @@ void RenderComponent(
         vertex.position.x *= sprite->size.x;
         vertex.position.y *= sprite->size.y;
 
-        vertex.position += sf::Vector2f(transform.position.x, transform.position.y) - camera_pos;
+        vertex.position += sf::Vector2f(transform.position.x, transform.position.y) - camera_pos + (sf::Vector2f)target.getSize() / 2.f;
     }
 
     target.draw(vertices, states);
@@ -165,10 +171,9 @@ void RenderComponent(
     }
 }
 
-void Core::render(Scene* scene)
-{   
-    const auto camera = scene->world.filter<const Camera>().first();
-
+static void 
+render_entities(Scene* scene, sf::RenderTarget& window, flecs::entity camera)
+{
     scene->transforms.each(
         [&](flecs::entity e, const ComponentData<Name::Transform>& transform)
         {
@@ -182,6 +187,100 @@ void Core::render(Scene* scene)
             if (e.has<Tilemap>()) RenderComponent(scene, e, camera, transform, e.get_mut<Tilemap>(), window);
         }
     );
+}
+
+void Core::render(Scene* scene)
+{   
+    auto& log = Log::Logger::instance("engine");
+
+    sf::RenderTexture* current_target = nullptr;
+    const auto& targets  = scene->renderpass->targets;
+    const auto& commands = scene->renderpass->commands;
+
+    #define GET_PARAMS(cmd) auto* params = (CommandParameters<cmd>*)command.second.get();
+
+    for (const auto& command : commands)
+    {
+        switch (command.first)
+        {
+        case Command::BindSurface:
+        {
+            GET_PARAMS(Command::BindSurface);
+            if (targets.count(params->name)) current_target = targets.at(params->name).get();
+            else log->error("Requesting target that doesn't exist");
+            break;
+        }
+        case Command::Clear:
+        {
+            if (!current_target)
+            {
+                log->error("Attempting to clear null surface");
+                break;
+            }
+
+            GET_PARAMS(Command::Clear);
+            current_target->clear(params->color);
+
+            break;
+        }
+        case Command::RenderEntities:
+        {
+            if (!current_target)
+            {
+                log->error("Attempting to render entities to null surface");
+                break;
+            }
+
+            const auto camera = scene->world.filter<const Camera>().first();
+            render_entities(scene, *current_target, camera);
+
+            break;
+        }
+        case Command::BlitSurface:
+        {
+            if (!current_target)
+            {
+                log->error("Attempting to blit null surface to window");
+                break;
+            }
+
+            GET_PARAMS(Command::BlitSurface);
+            sf::RectangleShape blit;
+            blit.setPosition(params->position);
+            blit.setSize(params->size);
+
+            current_target->display();
+            const auto& tex = current_target->getTexture();
+            blit.setTexture(&tex);
+            window.draw(blit);
+
+            break;
+        }
+        case Command::RenderUI:
+        {
+            if (!current_target)
+            {
+                log->error("Attempting to render UI on null surface");
+                break;
+            }
+            
+            GET_PARAMS(Command::RenderUI);
+            auto& runtime = params->runtime;
+
+            // We pass a surface to the runtime which contains the current scene
+            // this way the function can access the scene and its resources
+            // We also pass a pointer to the current surface
+            auto surface = SurfaceLib().asTable();
+            surface.set<uint64_t>("scene", (uint64_t)scene);
+            surface.set<uint64_t>("surface", (uint64_t)current_target);
+            
+            runtime->runFunction<>("RenderUI", surface);
+
+            break;
+        }
+        default: break;
+        }
+    }
 }
 
 }

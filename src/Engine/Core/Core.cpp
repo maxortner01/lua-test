@@ -125,6 +125,7 @@ void Core::run()
         // THEN the draw method is called
         
         auto& world = top_scene->world;
+        auto camera = world.filter<const Camera>().first();
 
         top_scene->scripts.each([&](flecs::entity e, Script& script)
         {
@@ -201,8 +202,15 @@ void Core::run()
         tick = now;
 
         // Set mouse position
-        // Need to do this relative to the camera...
-        Input::mouse_position = (sf::Vector2f)sf::Mouse::getPosition(window);
+        sf::Vector2f camera_pos;
+        if (camera.is_alive() && camera.has<Transform>())
+        {
+            const auto* transform = camera.get<Transform>();
+            camera_pos = sf::Vector2f(transform->position.x, transform->position.y);
+        }
+
+        // Won't need this hacky stuff once we start using shaders and pass camera transform info to them
+        Input::mouse_position = (sf::Vector2f)sf::Mouse::getPosition(window) + camera_pos - (sf::Vector2f)window.getSize() / 2.f;
     }
 }
 

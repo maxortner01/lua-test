@@ -21,7 +21,8 @@ namespace S2D::Lua
 Runtime::Runtime(const std::string& filename) :
     L(luaL_newstate()),
     _good(lua_check(L, luaL_dofile(L, filename.c_str()))),
-    _filename(std::filesystem::path(filename).filename().c_str())
+    _filename(std::filesystem::path(filename).filename().c_str()),
+    _last_modified(std::filesystem::last_write_time(std::filesystem::path(filename)))
 {
     if (good()) luaL_openlibs(L);
 }

@@ -64,6 +64,8 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/extern/sfml)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/fcl)
 
 set(ENGINE_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/Engine/SurfaceLib.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/LuaScene.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Mesh.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Math.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Input.cpp

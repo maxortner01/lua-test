@@ -14,33 +14,39 @@
 namespace S2D::Engine
 {
 
+std::unique_ptr<Lua::Runtime>
+loadRuntime(const std::string& filename, flecs::world& world)
+{
+    return std::make_unique<Lua::Runtime>([&]()
+    {
+        auto runtime = Lua::Runtime::create<
+            Log::Library, Time, Engine::Input, Engine::Math
+        >(filename);
+
+        /* The component name enum */
+        Lua::Table component;
+        registerComponents(component, world);
+        runtime.setGlobal("Component", component);
+
+        /* The layer state enum */
+        Lua::Table LayerState;
+        LayerState.set<Lua::Number>("Solid",    (int)Component<Name::Tilemap>::LayerState::Solid);
+        LayerState.set<Lua::Number>("NotSolid", (int)Component<Name::Tilemap>::LayerState::NotSolid);
+        runtime.setGlobal("LayerState", LayerState);
+
+        /* Directory */
+        Lua::Table Directory;
+        Directory.set<Lua::String>("Source", Script::SourceDir);
+        runtime.setGlobal("Directory", Directory);
+
+        return runtime;
+    }());
+}
+
 void loadScript(const std::string& filename, flecs::world& world, Script& script)
 {
     script.runtime.push_back(std::pair(
-        std::make_unique<Lua::Runtime>([&]()
-        {
-            auto runtime = Lua::Runtime::create<
-                Log::Library, Time, Engine::Input, Engine::Math
-            >(filename);
-
-            /* The component name enum */
-            Lua::Table component;
-            registerComponents(component, world);
-            runtime.setGlobal("Component", component);
-
-            /* The layer state enum */
-            Lua::Table LayerState;
-            LayerState.set<Lua::Number>("Solid",    (int)Component<Name::Tilemap>::LayerState::Solid);
-            LayerState.set<Lua::Number>("NotSolid", (int)Component<Name::Tilemap>::LayerState::NotSolid);
-            runtime.setGlobal("LayerState", LayerState);
-
-            /* Directory */
-            Lua::Table Directory;
-            Directory.set<Lua::String>("Source", Script::SourceDir);
-            runtime.setGlobal("Directory", Directory);
-
-            return runtime;
-        }()), 
+        loadRuntime(filename, world), 
         false
     ));
 }

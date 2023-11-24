@@ -3,13 +3,13 @@ function GetResources()
         textures = {
             {
                 name = "tilemap",
-                location = "/textures/Dungeon_Tileset.png"
+                location = Directory.Source.."/textures/Dungeon_Tileset.png"
             }
         },
         fonts = {
             {
                 name = "arial",
-                location = "/fonts/arial.ttf"
+                location = Directory.Source.."/fonts/arial.ttf"
             }
         }
     }
@@ -40,31 +40,7 @@ function GetEntities()
                 }
             },
             scripts = {
-                "/scripts/tilemap.lua"
-            }
-        },
-        {
-            components = {
-                {
-                    type = Component.Transform,
-                    value = {
-                        position = { x = 10, y = 20, z = 0 },
-                        scale = 1,
-                        rotation = 0
-                    }
-                },
-                {
-                    type = Component.Text,
-                    value = {
-                        font = "arial",
-                        string = "",
-                        characterSize = 16,
-                        textAlign = 0
-                    }
-                }
-            },
-            scripts = {
-                "/scripts/fps.lua"
+                Directory.Source.."/scripts/tilemap.lua"
             }
         },
         {
@@ -99,8 +75,8 @@ function GetEntities()
                 }
             },
             scripts = {
-                "/scripts/movement.lua",
-                "/scripts/combat.lua"
+                Directory.Source.."/scripts/movement.lua",
+                Directory.Source.."/scripts/combat.lua"
             }
         },
         {
@@ -122,7 +98,7 @@ function GetEntities()
                 }
             },
             scripts = {
-                "/scripts/camera.lua"
+                Directory.Source.."/scripts/camera.lua"
             }
         }
     }

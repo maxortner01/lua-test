@@ -9,3 +9,4 @@
 #include "Engine/World.hpp"
 #include "Engine/Time.hpp"
 #include "Engine/Input.hpp"
+#include "Engine/LuaScene.hpp"

@@ -2,6 +2,7 @@
 
 #include "../Util.hpp"
 
+#include "Renderpass.hpp"
 #include "Resources.hpp"
 #include "Components.hpp"
 
@@ -31,13 +32,14 @@ namespace S2D::Engine
         flecs::query<const Collider, Transform, Rigidbody> colliders;
         flecs::query<Dead> dead;
 
-        // a
+        std::unique_ptr<Renderpass> renderpass;
 
         Scene();
         virtual ~Scene() = default;
 
-        virtual void start() { };
-        virtual void draw(sf::RenderTarget& target) {};
+        virtual void start() { }
+        virtual void draw(sf::RenderTarget& target) { }
+        virtual void constructPass(RenderpassBuilder& builder) { }
     };
 
     /**
@@ -73,6 +75,10 @@ namespace S2D::Engine
         T* scene = new T(std::forward<Args>(args)...);
 
         scene->start();
+
+        RenderpassBuilder builder;
+        scene->constructPass(builder);
+        scene->renderpass = builder.build();
 
         _scenes.push(scene);
         return *scene;

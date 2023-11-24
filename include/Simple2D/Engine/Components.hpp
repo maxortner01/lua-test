@@ -22,7 +22,11 @@ namespace S2D::Engine
         inline static std::string SourceDir;
     };
 
-    void loadScript(const std::string& filename, flecs::world& world, Script& script);
+    std::unique_ptr<Lua::Runtime>
+    loadRuntime(const std::string& filename, flecs::world& world);
+
+    void 
+    loadScript(const std::string& filename, flecs::world& world, Script& script);
 
     enum class Name
     {

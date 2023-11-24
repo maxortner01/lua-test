@@ -1,11 +1,13 @@
 #pragma once
 
-#include <iostream>
+#include <filesystem>
 
 #include "../Util.hpp"
 
 #include "Lib.hpp"
 #include "TypeMap.hpp"
+
+#define LUA_HOT_RELOAD
 
 namespace S2D::Lua
 {
@@ -68,6 +70,10 @@ namespace S2D::Lua
         Result<T>
         getGlobal(const std::string& name);
 
+        // TODO: Need to load globals in datastructure so that the file can be hot-reloaded
+        // when the lua state is reloaded, the globals that have been loaded in need to be 
+        // transferred
+
         /**
          * @brief Set a global variable from a value to a name
          * @tparam T Type of the global variable (supported types in Lua namespace)
@@ -102,6 +108,10 @@ namespace S2D::Lua
         State L;
         bool _good;
         std::string _filename;
+
+#   ifdef LUA_HOT_RELOAD
+        std::filesystem::file_time_type _last_modified;
+#   endif
     };
 
     template<typename... Libraries>
