@@ -138,9 +138,30 @@ int World::createEntity(Lua::State L)
     return 0;
 }
 
+int World::getEntity(Lua::State L)
+{
+    const auto [ world_table, name ] = extractArgs<Lua::Table, Lua::String>(L);
+
+    S2D_ASSERT(world_table.hasValue("world"), "World table is messed up");
+    flecs::world world((flecs::world_t*)*world_table.get<uint64_t*>("world"));
+
+    auto entity = world.lookup(name.c_str());
+    S2D_ASSERT(entity.is_alive(), "Entity is dead :(");
+
+    auto ent = Engine::Entity().asTable();
+    ent.set("entity", entity.raw_id());
+    ent.set("good", true);
+    ent.set("world", (uint64_t)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
+    S2D_ASSERT(!lua_gettop(L), "Unknown args");
+
+    ent.toStack(L);
+    return 1;
+}
+
 World::World() : Lua::Lib::Base("World",
     {
-        { "createEntity", World::createEntity }
+        { "createEntity", World::createEntity },
+        { "getEntity",    World::getEntity    }
     })
 {   }
 

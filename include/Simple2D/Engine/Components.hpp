@@ -32,6 +32,7 @@ namespace S2D::Engine
         Text,
         Tilemap,
         Collider,
+        Camera,
         Count
     };
 
@@ -47,6 +48,7 @@ namespace S2D::Engine
         case Name::Text:      return "Text";
         case Name::Tilemap:   return "Tilemap";
         case Name::Collider:  return "Collider";
+        case Name::Camera:    return "Camera";
         default: return "";
         }
     }
@@ -97,7 +99,7 @@ namespace S2D::Engine
         static constexpr Name Type = Name::Sprite;
         struct Data
         {
-            std::unique_ptr<Mesh> mesh;
+            std::shared_ptr<RawMesh> mesh;
             Lua::String texture;
             sf::Vector2u size;
         };
@@ -155,7 +157,7 @@ namespace S2D::Engine
         static constexpr Name Type = Name::Tilemap;
         struct Data
         {
-            std::unique_ptr<Mesh> mesh;
+            std::unique_ptr<RawMesh> mesh;
             Map tiles;
             sf::Vector2f tilesize;
             struct 
@@ -177,15 +179,30 @@ namespace S2D::Engine
         static constexpr Name Type = Name::Collider;
         struct Data
         {
-            // Collision mesh
-            // AABB
             Lua::Number collider_component;
-            std::shared_ptr<CollisionMesh> mesh;
+            std::unique_ptr<CollisionMesh> mesh;
         };
 
         static Lua::Table getTable(const Data& data);
         static void fromTable(const Lua::Table& table, void* _data);
     };  
+
+    template<>
+    struct Component<Name::Camera>
+    {
+        static constexpr Name Type = Name::Camera;
+        struct Data
+        {
+            Lua::Number FOV;
+            enum class Projection
+            {
+                Orthographic, Perspective
+            } projection;
+        };
+
+        static Lua::Table getTable(const Data& data);
+        static void fromTable(const Lua::Table& table, void* _data);
+    };
 
     template<Name T>
     using ComponentData = typename Component<T>::Data;
@@ -196,4 +213,5 @@ namespace S2D::Engine
     using Sprite    = ComponentData<Name::Sprite>;
     using Collider  = ComponentData<Name::Collider>;
     using Rigidbody = ComponentData<Name::Rigidbody>;
+    using Camera    = ComponentData<Name::Camera>;    
 }

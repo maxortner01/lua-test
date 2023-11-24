@@ -5,266 +5,290 @@
 
 namespace S2D::Engine
 {
+#define REQUIRE(expr) if (!(expr)) return
 
-Mesh::Mesh(flecs::entity _entity) :
-    entity(_entity)
-{
-    //S2D_ASSERT(!meshes.count(entity.raw_id()), "Already a mesh on this entity");
-    //meshes.insert(std::pair(entity.raw_id(), this));
-    Log::Logger::instance("engine")->info("Loading mesh");
-}
-
-Mesh::~Mesh()
-{
-    //S2D_ASSERT(meshes.count(entity.raw_id()) && meshes.at(entity.raw_id()) == this, "Something is wrong");
-    //meshes.erase(entity.raw_id());
-    Log::Logger::instance("engine")->info("Destroying mesh");
-}
-
-#define INIT_BUILD(type) \
-    if (!entity.is_alive()) return;                                                         \
-    S2D_ASSERT(entity.has<type>(), "Entity doesn't have the component for this mesh!");     \
-    Log::Logger::instance("engine")->trace("Generating vertex information for {}", #type);  \
-    mesh.vertices.clear();                                                                  \
-    if (entity.has<Collider>()) {                                                           \
-        const auto* collider = entity.get<Collider>();                                      \
-        if (collider->collider_component == entity.world().component<type>().raw_id()) {    \
-            Log::Logger::instance("engine")->trace("Building collider mesh for {}", #type); \
-            auto& mesh = entity.get_mut<Collider>()->mesh;                                  \
-            if (!mesh) mesh = std::make_shared<CollisionMesh>();                            \
-            this->collision = mesh;                                                         \
-        }                                                                                   \
-    }                                                                                       \
-
-#define MAKE_COLLISION_MODEL(type) \
+#define MAKE_COLLISION_MODEL(type, collision) \
     if (!collision ||                                                                       \
         (collision && !collision->vertices.size()) ||                                       \
         (collision && !collision->triangles.size())) return;                                \
     collision->vertices.shrink_to_fit();                                                    \
     collision->triangles.shrink_to_fit();                                                   \
-    if (collision->model) delete collision->model.get();                                    \
     Log::Logger::instance("engine")->trace("Generating collision model for {}", #type);     \
-    collision->model = std::make_shared<fcl::BVHModel<fcl::OBBRSSf>>();                     \
+    collision->model = std::make_shared<CollisionMesh::Model>();                            \
     collision->model->beginModel();                                                         \
     collision->model->addSubModel(collision->vertices, collision->triangles);               \
-    collision->model->endModel();                                                           
+    collision->model->endModel();    
 
-static void 
-addBox(
-    std::shared_ptr<CollisionMesh>& collision,
-    sf::Vector2u size,
-    sf::Vector3f offset,
-    float scale)
-{
-    const std::vector<sf::Vector3f> offsets = {
-        { -0.5, -0.5,  0.5 },
-        {  0.5, -0.5,  0.5 },
-        { -0.5,  0.5,  0.5 },
-        {  0.5,  0.5,  0.5 },
-        { -0.5, -0.5, -0.5 },
-        {  0.5, -0.5, -0.5 },
-        { -0.5,  0.5, -0.5 },
-        {  0.5,  0.5, -0.5 }
-    };
-
-    const std::vector<fcl::Triangle> indices = {
-        //Top
-        { 2, 6, 7 },
-        { 2, 3, 7 },
-
-        //Bottom
-        { 0, 4, 5 },
-        { 0, 1, 5 },
-
-        //Left
-        { 0, 2, 6 },
-        { 0, 4, 6 },
-
-        //Right
-        { 1, 3, 7 },
-        { 1, 5, 7 },
-
-        //Front
-        { 0, 2, 3 },
-        { 0, 1, 3 },
-
-        //Back
-        { 4, 6, 7 },
-        { 4, 5, 7 }
-    };
-
-    std::size_t init_offset = collision->vertices.size();
-    for (const auto& vertex : offsets)
+    static void 
+    addBox(
+        std::unique_ptr<CollisionMesh>& collision,
+        sf::Vector2u size,
+        sf::Vector3f offset,
+        float scale)
     {
-        collision->vertices.push_back({ 
-            (vertex.x * size.x + offset.x) * scale, 
-            (vertex.y * size.y + offset.y) * scale, 
-            vertex.z + offset.z 
-        });
-    }
+        const std::vector<sf::Vector3f> offsets = {
+            { -0.5, -0.5,  0.5 },
+            {  0.5, -0.5,  0.5 },
+            { -0.5,  0.5,  0.5 },
+            {  0.5,  0.5,  0.5 },
+            { -0.5, -0.5, -0.5 },
+            {  0.5, -0.5, -0.5 },
+            { -0.5,  0.5, -0.5 },
+            {  0.5,  0.5, -0.5 }
+        };
 
-    for (const auto& triangle : indices)
-        collision->triangles.push_back({ init_offset + triangle[0], init_offset + triangle[1], init_offset + triangle[2] });
-}
+        const std::vector<fcl::Triangle> indices = {
+            //Top
+            { 2, 6, 7 },
+            { 2, 3, 7 },
 
-/* Sprite */
-template<>
-void TypeMesh<Sprite>::build()
-{
-    INIT_BUILD(Sprite);
+            //Bottom
+            { 0, 4, 5 },
+            { 0, 1, 5 },
 
-    const auto scale = (entity.has<Transform>() ? entity.get<Transform>()->scale : 1.f);
-    const auto* sprite = entity.get<Sprite>();
+            //Left
+            { 0, 2, 6 },
+            { 0, 4, 6 },
 
-    // Forming a quad from two triangles
-    const sf::Vector2f offsets[] = {
-        { -0.5f,  0.5f },
-        {  0.5f, -0.5f },
-        { -0.5f, -0.5f },
+            //Right
+            { 1, 3, 7 },
+            { 1, 5, 7 },
 
-        {  0.5f, -0.5f },
-        { -0.5f,  0.5f },
-        {  0.5f,  0.5f }
-    };
+            //Front
+            { 0, 2, 3 },
+            { 0, 1, 3 },
 
-    const sf::Vector2f tex_coords[] = {
-        { 0, 1 },
-        { 1, 0 },
-        { 0, 0 },
+            //Back
+            { 4, 6, 7 },
+            { 4, 5, 7 }
+        };
 
-        { 1, 0 },
-        { 0, 1 },
-        { 1, 1 }
-    };
-
-    if (collision) 
-    {
-        collision->vertices.clear(); 
-        collision->triangles.clear();
-        addBox(collision, sprite->size, { 0, 0, 0 }, scale);
-    }
-    
-    mesh.vertices.clear();
-
-    mesh.vertices.resize(6);
-    mesh.vertices.setPrimitiveType(sf::PrimitiveType::Triangles);
-
-    for (uint32_t i = 0; i < 6; i++)
-    {
-        auto& vertex = mesh.vertices[i];
-        vertex.position  = sf::Vector2f(offsets[i].x * sprite->size.x, offsets[i].y * sprite->size.y);
-        vertex.texCoords = tex_coords[i];
-        vertex.color = sf::Color::White;
-    }
-
-    MAKE_COLLISION_MODEL(Sprite);
-}
-
-template<>
-TypeMesh<Sprite>::TypeMesh(flecs::entity e) :
-    Mesh(e)
-{
-    build();
-}
-
-/* Tilemap */
-template<>
-void
-TypeMesh<Tilemap>::build()
-{
-    INIT_BUILD(Tilemap);
-
-    const auto scale = (entity.has<Transform>() ? entity.get<Transform>()->scale : 1.f);
-    const auto* tilemap = entity.get<Tilemap>();
-    const auto& map = tilemap->tiles.map;
-
-    if (collision) { collision->vertices.clear(); collision->triangles.clear(); }
-    
-    // Initialize the vertex array and render states
-    const auto total_tiles = [&]()
-    {
-        uint32_t count = 0;
-        for (const auto& p : map)
-            for (const auto& t : p.second.first)
-                count++;
-        return count;
-    }();
-
-    uint32_t iterator = 0;
-    mesh.vertices.resize(total_tiles * 6);
-    mesh.vertices.setPrimitiveType(sf::PrimitiveType::Triangles);
-
-    //if (collision) { collision->vertices.reserve(total_tiles * 6); collision->triangles.reserve(total_tiles * 2); }
-
-    for (const auto& p : map)
-    {
-        for (const auto& t : p.second.first)
+        std::size_t init_offset = collision->vertices.size();
+        for (const auto& vertex : offsets)
         {
-            // Extract the coordinate info from the key
-            const int32_t mask = 0xFFFF0000;
-            int16_t x = ((t.first & mask) >> 16);
-            int16_t y = (t.first & (~mask));
-            const auto position = sf::Vector2f(
-                x * tilemap->tilesize.x,
-                y * tilemap->tilesize.y
-            );
+            collision->vertices.push_back({ 
+                (vertex.x * size.x + offset.x) * scale, 
+                (vertex.y * size.y + offset.y) * scale, 
+                vertex.z + offset.z 
+            });
+        }
 
-            // Construct the texture rectangle from the tile information
-            sf::IntRect tex_rect;
-            tex_rect.width  = tilemap->tilesize.x;
-            tex_rect.height = tilemap->tilesize.y;
-            tex_rect.left = t.second.texture_coords.x * tilemap->tilesize.x;
-            tex_rect.top  = t.second.texture_coords.y * tilemap->tilesize.y;
+        for (const auto& triangle : indices)
+            collision->triangles.push_back({ init_offset + triangle[0], init_offset + triangle[1], init_offset + triangle[2] });
+    }
 
-            // Forming a quad from two triangles
-            const sf::Vector2f offsets[] = {
-                { -0.5f,  0.5f },
-                {  0.5f, -0.5f },
-                { -0.5f, -0.5f },
+    static void constructSprite(sf::VertexArray& vertices)
+    {
+        // Forming a quad from two triangles
+        const sf::Vector2f offsets[] = {
+            { -0.5f,  0.5f },
+            {  0.5f, -0.5f },
+            { -0.5f, -0.5f },
 
-                {  0.5f, -0.5f },
-                { -0.5f,  0.5f },
-                {  0.5f,  0.5f }
-            };
+            {  0.5f, -0.5f },
+            { -0.5f,  0.5f },
+            {  0.5f,  0.5f }
+        };
 
-            const sf::Vector2i tex_coords[] = {
-                { 0, 1 },
-                { 1, 0 },
-                { 0, 0 },
+        const sf::Vector2f tex_coords[] = {
+            { 0, 1 },
+            { 1, 0 },
+            { 0, 0 },
 
-                { 1, 0 },
-                { 0, 1 },
-                { 1, 1 }
-            };
+            { 1, 0 },
+            { 0, 1 },
+            { 1, 1 }
+        };
 
-            // Possibly... Now we need to push cubes to the collider mesh, not quads
-            if (collision && p.second.second == Component<Name::Tilemap>::LayerState::Solid)
-            {
-                // Push quad at this point
-                addBox(collision, (sf::Vector2u)tilemap->tilesize, { position.x, position.y, 0 }, scale);
-            }
-            
-            // Construct the vertices of the quad
-            for (uint8_t i = 0; i < 6; i++)
-            {
-                auto& vertex = mesh.vertices[iterator++];
-                vertex.position.x = offsets[i].x * tilemap->tilesize.x + position.x;
-                vertex.position.y = offsets[i].y * tilemap->tilesize.y + position.y;
-                vertex.color = sf::Color::White;  
-                vertex.texCoords.x = tex_rect.left + tex_rect.width  * tex_coords[i].x;
-                vertex.texCoords.y = tex_rect.top + tex_rect.height * tex_coords[i].y;  
-            }
+        vertices.clear();
+
+        vertices.resize(6);
+        vertices.setPrimitiveType(sf::PrimitiveType::Triangles);
+
+        for (uint32_t i = 0; i < 6; i++)
+        {
+            auto& vertex = vertices[i];
+            vertex.position  = sf::Vector2f(offsets[i].x, offsets[i].y);
+            vertex.texCoords = tex_coords[i];
+            vertex.color = sf::Color::White;
         }
     }
 
-    MAKE_COLLISION_MODEL(Tilemap);
-}
+    //static void constructTilemap()
 
-template<>
-TypeMesh<Tilemap>::TypeMesh(flecs::entity entity) :
-    Mesh(entity)
-{
-    build();
-}
+    template<>
+    void MeshBuilder<Sprite>::checkAndBuild(flecs::entity e)
+    {
+        // Would much rather this be stored in the scene somehow
+        static std::shared_ptr<RawMesh> data;
 
+        // Make sure the entity has a sprite
+        REQUIRE(e.has<Sprite>());
+        auto* sprite = e.get_mut<Sprite>();
+        auto* collider = e.get_mut<Collider>();
+
+        // If the sprite's mesh hasn't been generated, go ahead and generate it
+        if (!sprite->mesh)
+        {
+            if (!data)
+            {
+                Log::Logger::instance("engine")->info("building sprite");
+                data = std::make_shared<RawMesh>();
+                constructSprite(data->vertices);
+            }
+            sprite->mesh = data;
+        }
+
+        // Set flag to re-build the collider mesh when transform is changed (?)
+        // If the collider's mesh hasn't been initialized go ahead and construct it
+        if (collider && !collider->mesh)
+        {
+            Log::Logger::instance("engine")->info("building sprite collider");
+            collider->mesh = std::make_unique<CollisionMesh>();
+
+            // Grab the scale for the collision model
+            const auto scale = (e.has<Transform>()?e.get<Transform>()->scale:1.f);
+
+            // Generate the collision mesh
+            collider->mesh->vertices.clear(); 
+            collider->mesh->triangles.clear();
+            addBox(collider->mesh, sprite->size, { 0, 0, 0 }, scale);
+            
+            MAKE_COLLISION_MODEL(Sprite, collider->mesh);
+        }
+    }
+
+    template<>
+    void MeshBuilder<Tilemap>::checkAndBuild(flecs::entity e)
+    {
+        REQUIRE(e.has<Tilemap>());
+        auto* tilemap = e.get_mut<Tilemap>();
+        auto* collider = e.get_mut<Collider>();
+
+        const auto tilemap_changed = tilemap->tiles.changed;
+        tilemap->tiles.changed = false;
+
+        bool build_mesh = false, build_collider = false;
+        // If the tilemap has been changed, destroy the mesh and start over
+        if (tilemap_changed)
+        {
+            auto* ptr = tilemap->mesh.release();
+            delete ptr;
+
+            build_mesh = true;
+        }
+
+        if (!tilemap->mesh)
+        {
+            // Construct the mesh
+            tilemap->mesh = std::make_unique<RawMesh>();
+            build_mesh = true;
+        }
+
+        // If the tilemap has been changed, destroy the collision mesh and start over
+        if (tilemap_changed)
+        {
+            auto* ptr = collider->mesh.release();
+            delete ptr;
+
+            build_collider = true;
+        }
+
+        if (!collider->mesh)
+        {
+            // Construct the collision mesh
+            collider->mesh = std::make_unique<CollisionMesh>();
+
+            build_collider = true;
+        }
+
+        if (!build_collider && !build_mesh) return;
+
+        if (build_collider) Log::Logger::instance("engine")->info("building tilemap collider");
+
+        const auto& map = tilemap->tiles.map;
+
+        // Now we build the mesh
+        Log::Logger::instance("engine")->info("building tilemap");
+
+        // Initialize the vertex array and render states
+        const auto total_tiles = [&]()
+        {
+            uint32_t count = 0;
+            for (const auto& p : map)
+                for (const auto& t : p.second.first)
+                    count++;
+            return count;
+        }();
+
+        uint32_t iterator = 0;
+        tilemap->mesh->vertices.resize(total_tiles * 6);
+        tilemap->mesh->vertices.setPrimitiveType(sf::PrimitiveType::Triangles);
+
+        const auto scale = (e.has<Transform>()?e.get<Transform>()->scale:1.f);
+
+        for (const auto& p : map)
+        {
+            for (const auto& t : p.second.first)
+            {
+                // Extract the coordinate info from the key
+                const int32_t mask = 0xFFFF0000;
+                int16_t x = ((t.first & mask) >> 16);
+                int16_t y = (t.first & (~mask));
+                const auto position = sf::Vector2f(
+                    x * tilemap->tilesize.x,
+                    y * tilemap->tilesize.y
+                );
+
+                // Construct the texture rectangle from the tile information
+                sf::IntRect tex_rect;
+                tex_rect.width  = tilemap->tilesize.x;
+                tex_rect.height = tilemap->tilesize.y;
+                tex_rect.left = t.second.texture_coords.x * tilemap->tilesize.x;
+                tex_rect.top  = t.second.texture_coords.y * tilemap->tilesize.y;
+
+                // Forming a quad from two triangles
+                const sf::Vector2f offsets[] = {
+                    { -0.5f,  0.5f },
+                    {  0.5f, -0.5f },
+                    { -0.5f, -0.5f },
+
+                    {  0.5f, -0.5f },
+                    { -0.5f,  0.5f },
+                    {  0.5f,  0.5f }
+                };
+
+                const sf::Vector2i tex_coords[] = {
+                    { 0, 1 },
+                    { 1, 0 },
+                    { 0, 0 },
+
+                    { 1, 0 },
+                    { 0, 1 },
+                    { 1, 1 }
+                };
+
+                // Possibly... Now we need to push cubes to the collider mesh, not quads
+                if (collider && p.second.second == Component<Name::Tilemap>::LayerState::Solid)
+                {
+                    // Push quad at this point
+                    addBox(collider->mesh, (sf::Vector2u)tilemap->tilesize, { position.x, position.y, 0 }, scale);
+                }
+                
+                // Construct the vertices of the quad
+                for (uint8_t i = 0; i < 6; i++)
+                {
+                    auto& vertex = tilemap->mesh->vertices[iterator++];
+                    vertex.position.x = offsets[i].x * tilemap->tilesize.x + position.x;
+                    vertex.position.y = offsets[i].y * tilemap->tilesize.y + position.y;
+                    vertex.color = sf::Color::White;  
+                    vertex.texCoords.x = tex_rect.left + tex_rect.width  * tex_coords[i].x;
+                    vertex.texCoords.y = tex_rect.top + tex_rect.height * tex_coords[i].y;  
+                }
+            }
+        }
+
+        REQUIRE(e.has<Collider>());
+        MAKE_COLLISION_MODEL(Tilemap, collider->mesh);
+    }
 }

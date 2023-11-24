@@ -201,6 +201,7 @@ void Core::run()
         tick = now;
 
         // Set mouse position
+        // Need to do this relative to the camera...
         Input::mouse_position = (sf::Vector2f)sf::Mouse::getPosition(window);
     }
 }

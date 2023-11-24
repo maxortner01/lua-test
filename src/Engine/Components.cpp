@@ -316,6 +316,26 @@ Component<Name::Collider>::fromTable(
     data->collider_component = table.get<Lua::Number>("ColliderComponent");
 }
 
+Lua::Table 
+Component<Name::Camera>::getTable(
+    const Data& data)
+{
+    Lua::Table table;
+    table.set("FOV", data.FOV);
+    table.set("projection", (Lua::Number)(int)data.projection);
+    return table;
+}
+
+void 
+Component<Name::Camera>::fromTable(
+    const Lua::Table& table, 
+    void* _data)
+{
+    auto* data = reinterpret_cast<Data*>(_data);
+    data->FOV = table.get<Lua::Number>("FOV");
+    data->projection = (Camera::Projection)(int)table.get<Lua::Number>("projection");
+}
+
 void
 registerComponents(Lua::Table& table, flecs::world& world)
 {

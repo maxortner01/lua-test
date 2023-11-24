@@ -68,6 +68,7 @@ function GetEntities()
             }
         },
         {
+            name = "Player",
             components = {
                 {
                     type = Component.Transform,
@@ -100,6 +101,28 @@ function GetEntities()
             scripts = {
                 "/scripts/movement.lua",
                 "/scripts/combat.lua"
+            }
+        },
+        {
+            components = {
+                {
+                    type = Component.Transform,
+                    value = {
+                        position = { x = 0, y = 0, z = 0 },
+                        scale = 1,
+                        rotation = 0
+                    }
+                },
+                {
+                    type = Component.Camera,
+                    value = {
+                        FOV = 90,
+                        projection = 0
+                    }
+                }
+            },
+            scripts = {
+                "/scripts/camera.lua"
             }
         }
     }

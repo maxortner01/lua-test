@@ -1,28 +1,25 @@
 #include <Simple2D/Engine/Core.hpp>
 
+#include <Simple2D/Log/Log.hpp>
+
 namespace S2D::Engine
 {
 
 void RenderComponent(
     Scene* scene,
     flecs::entity e,
+    flecs::entity camera,
     const Transform& transform,
     Tilemap* tilemap,
     sf::RenderTarget& target)
 {
     // Construct or re-construct the mesh for the tilemap
-    if (!tilemap->mesh)
-    {
-        tilemap->mesh = std::unique_ptr<Mesh>(
-            new TypeMesh<Tilemap>(e)
-        );
-        tilemap->tiles.changed = false;
-    }
-    else if (tilemap->tiles.changed)
-    {
-        tilemap->mesh->build();
-        tilemap->tiles.changed = false;
-    }
+    MeshBuilder<Tilemap>::checkAndBuild(e);
+
+    auto camera_pos = sf::Vector2f(
+        camera.has<Transform>() ? camera.get<Transform>()->position.x : 0.f,
+        camera.has<Transform>() ? camera.get<Transform>()->position.y : 0.f
+    );
 
     sf::RenderStates states;
 
@@ -35,15 +32,17 @@ void RenderComponent(
     }
     
     // This work will be done in the shader...
-    auto vertices = tilemap->mesh->mesh.vertices;
+    auto vertices = tilemap->mesh->vertices;
     for (uint32_t i = 0; i < vertices.getVertexCount(); i++)
     {
         auto& vertex = vertices[i];
         vertex.position *= transform.scale;
-        vertex.position += sf::Vector2f(transform.position.x, transform.position.y);
+        vertex.position += sf::Vector2f(transform.position.x, transform.position.y) - camera_pos;
     }
     
     target.draw(vertices, states);
+
+    return;
 
     // Debug: Render the collision mesh
     const auto* collider = e.get<Collider>();
@@ -73,6 +72,7 @@ void RenderComponent(
 void RenderComponent(
     Scene* scene,
     flecs::entity e,
+    flecs::entity camera,
     const Transform& transform,
     Text* text,
     sf::RenderTarget& target)
@@ -105,6 +105,7 @@ void RenderComponent(
 void RenderComponent(
     Scene* scene,
     flecs::entity e,
+    flecs::entity camera,
     const Transform& transform,
     Sprite* sprite,
     sf::RenderTarget& target)
@@ -113,26 +114,33 @@ void RenderComponent(
     if (sprite->texture.size())
         states.texture = scene->resources.getResource<sf::Texture>(sprite->texture).value();
 
-    if (!sprite->mesh)
-        sprite->mesh = std::unique_ptr<Mesh>(new TypeMesh<Sprite>(e));
+    MeshBuilder<Sprite>::checkAndBuild(e);
 
+    auto camera_pos = sf::Vector2f(
+        camera.has<Transform>() ? camera.get<Transform>()->position.x : 0.f,
+        camera.has<Transform>() ? camera.get<Transform>()->position.y : 0.f
+    );
+
+    S2D_ASSERT(sprite->mesh, "Error generating mesh");
     // This work will be done in the shader...
-    auto vertices = sprite->mesh->mesh.vertices;
+    auto vertices = sprite->mesh->vertices;
     for (uint32_t i = 0; i < vertices.getVertexCount(); i++)
     {
         auto& vertex = vertices[i];
         vertex.position *= transform.scale;
-        vertex.position += sf::Vector2f(transform.position.x, transform.position.y);
+        vertex.position.x *= sprite->size.x;
+        vertex.position.y *= sprite->size.y;
+
+        vertex.position += sf::Vector2f(transform.position.x, transform.position.y) - camera_pos;
     }
 
     target.draw(vertices, states);
 
+    return;
+
     // [Debug] Draw the collider mesh
     const auto* collider = e.get<Collider>();
-    if (collider && !collider->mesh) 
-    {
-        sprite->mesh->build();
-    }
+    S2D_ASSERT(collider && collider->mesh, "Error generating mesh");
     
     if (collider)
     {
@@ -159,17 +167,19 @@ void RenderComponent(
 
 void Core::render(Scene* scene)
 {   
+    const auto camera = scene->world.filter<const Camera>().first();
+
     scene->transforms.each(
         [&](flecs::entity e, const ComponentData<Name::Transform>& transform)
         {
             /* Render Sprite */
-            if (e.has<Sprite>()) RenderComponent(scene, e, transform, e.get_mut<Sprite>(), window);
+            if (e.has<Sprite>()) RenderComponent(scene, e, camera, transform, e.get_mut<Sprite>(), window);
 
             /* Render Text */
-            if (e.has<Text>()) RenderComponent(scene, e, transform, e.get_mut<Text>(), window);
+            if (e.has<Text>()) RenderComponent(scene, e, camera, transform, e.get_mut<Text>(), window);
 
             /* Render Tilemap */
-            if (e.has<Tilemap>()) RenderComponent(scene, e, transform, e.get_mut<Tilemap>(), window);
+            if (e.has<Tilemap>()) RenderComponent(scene, e, camera, transform, e.get_mut<Tilemap>(), window);
         }
     );
 }

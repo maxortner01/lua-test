@@ -9,7 +9,7 @@ function Start(world, entity)
     local right_wall  = { x = 5, y = 1 }
     local bottom_wall = { x = 1, y = 4 }
 
-    local size = 10
+    local size = 15
     for y = 0, size do
         for x = 0, size do
             if x == 0 and y < size then

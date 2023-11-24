@@ -123,6 +123,7 @@ namespace S2D::Engine
         auto [ world, entity ] = extractWorldInfo(entity_table);
 
         S2D_ASSERT(entity.is_alive(), "Entity is dead");
+        // TODO: Need to figure out why this set crashes in XCODE
         if (!entity.has<Engine::Script>()) entity.set<Engine::Script>({});
         auto* script = entity.get_mut<Engine::Script>();
         loadScript(filename, world, *script);

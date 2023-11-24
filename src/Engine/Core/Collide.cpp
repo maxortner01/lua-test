@@ -91,7 +91,7 @@ void Core::collide(Scene* scene)
                                 
                             rect.setFillColor(sf::Color::White);
                             rect.setPosition(sf::Vector2f(contact.pos[0], contact.pos[1]));
-                            window.draw(rect);
+                            //window.draw(rect);
 
                             lines.push_back(sf::Vertex(rect.getPosition(), sf::Color::Green));
                             lines.push_back(sf::Vertex(rect.getPosition() + sf::Vector2f(contact.normal[0], contact.normal[1]) * 5.f * contact.penetration_depth, sf::Color::Green));
@@ -118,7 +118,7 @@ void Core::collide(Scene* scene)
                     sf::VertexArray array(sf::PrimitiveType::Lines, lines.size());
                     for (uint32_t i = 0; i < lines.size(); i++)
                         array[i] = lines[i];
-                    window.draw(array);
+                    //window.draw(array);
 
                     // World space and pixel space are the same, so we want to neglect any collisions that are less
                     // than a pixel deep, otherwise we get caught up on too much
