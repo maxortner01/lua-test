@@ -128,16 +128,29 @@ void RenderComponent(
     );
 
     S2D_ASSERT(sprite->mesh, "Error generating mesh");
+
+    sf::Transform sf_transform;
+    sf_transform.translate(sf::Vector2f(transform.position.x, transform.position.y));
+    sf_transform.rotate(sf::degrees(transform.rotation));
+    sf_transform.scale(sf::Vector2f(transform.scale, transform.scale));
+
     // This work will be done in the shader...
     auto vertices = sprite->mesh->vertices;
     for (uint32_t i = 0; i < vertices.getVertexCount(); i++)
     {
         auto& vertex = vertices[i];
-        vertex.position *= transform.scale;
         vertex.position.x *= sprite->size.x;
         vertex.position.y *= sprite->size.y;
 
-        vertex.position += sf::Vector2f(transform.position.x, transform.position.y) - camera_pos + (sf::Vector2f)target.getSize() / 2.f;
+        if (states.texture)
+        {
+            vertex.texCoords.x *= states.texture->getSize().x;
+            vertex.texCoords.y *= states.texture->getSize().x;
+        }
+
+        //vertex.position += sf::Vector2f(transform.position.x, transform.position.y) - camera_pos + (sf::Vector2f)target.getSize() / 2.f;
+        vertex.position = sf_transform.transformPoint(vertex.position);
+        vertex.position -= camera_pos - (sf::Vector2f)target.getSize() / 2.f;
     }
 
     target.draw(vertices, states);

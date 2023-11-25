@@ -125,7 +125,7 @@ namespace S2D::Engine
         // Make sure the entity has a sprite
         REQUIRE(e.has<Sprite>());
         auto* sprite = e.get_mut<Sprite>();
-        auto* collider = e.get_mut<Collider>();
+        auto* collider = (e.has<Collider>()?e.get_mut<Collider>():nullptr);
 
         // If the sprite's mesh hasn't been generated, go ahead and generate it
         if (!sprite->mesh)
@@ -163,7 +163,7 @@ namespace S2D::Engine
     {
         REQUIRE(e.has<Tilemap>());
         auto* tilemap = e.get_mut<Tilemap>();
-        auto* collider = e.get_mut<Collider>();
+        auto* collider = (e.has<Collider>()?e.get_mut<Collider>():nullptr);
 
         const auto tilemap_changed = tilemap->tiles.changed;
         tilemap->tiles.changed = false;

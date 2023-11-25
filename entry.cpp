@@ -24,13 +24,7 @@ struct MainScene : Engine::LuaScene
     {
         using namespace S2D::Engine;
 
-        Log::Logger::instance("game")->info("Constructing pass");
-
-        // Should make command into a template and the argument be a 
-        // corresponding data structure to specify information
-        // For example, clear gets a color, newsurface gets dimensions, etc.
-        // We store it in a vector of std::pair<Command, std::unique_ptr<void>>, where
-        // the .second is the corresponding data
+        Log::Logger::instance("engine")->info("Constructing pass");
 
         builder.resource<Resource::Surface>({ "main", { 1280, 720 } });
 

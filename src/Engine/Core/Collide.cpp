@@ -23,13 +23,14 @@ void Core::collide(Scene* scene)
             if (!collider.mesh || (collider.mesh && !collider.mesh->model)) return;
 
             S2D_ASSERT(!map.count(entity.raw_id()), "Something went wrong");
+
+            // Need to add rotation to this
             auto transform_matrix = fcl::Transform3f::Identity();
             transform_matrix.translation() = fcl::Vector3f(transform.position.x, transform.position.y, 0);
             map.insert(std::pair(
                 entity.raw_id(),
                 std::make_unique<fcl::CollisionObjectf>(collider.mesh->model, transform_matrix)
             ));
-            map.at(entity.raw_id())->setUserData((void*)entity.raw_id());
         });
 
     scene->colliders.each(
@@ -91,7 +92,7 @@ void Core::collide(Scene* scene)
                                 
                             rect.setFillColor(sf::Color::White);
                             rect.setPosition(sf::Vector2f(contact.pos[0], contact.pos[1]));
-                            //window.draw(rect);
+                            window.draw(rect);
 
                             lines.push_back(sf::Vertex(rect.getPosition(), sf::Color::Green));
                             lines.push_back(sf::Vertex(rect.getPosition() + sf::Vector2f(contact.normal[0], contact.normal[1]) * 5.f * contact.penetration_depth, sf::Color::Green));
@@ -118,7 +119,7 @@ void Core::collide(Scene* scene)
                     sf::VertexArray array(sf::PrimitiveType::Lines, lines.size());
                     for (uint32_t i = 0; i < lines.size(); i++)
                         array[i] = lines[i];
-                    //window.draw(array);
+                    window.draw(array);
 
                     // World space and pixel space are the same, so we want to neglect any collisions that are less
                     // than a pixel deep, otherwise we get caught up on too much
