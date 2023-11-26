@@ -1,4 +1,4 @@
-#include <Simple2D/Engine/SurfaceLib.hpp>
+#include <Simple2D/Engine/LuaLib/Surface.hpp>
 #include <Simple2D/Engine/Core.hpp>
 
 #include <Simple2D/Log/Log.hpp>
@@ -7,7 +7,7 @@
 
 namespace S2D::Engine
 {
-    int SurfaceLib::drawText(Lua::State L)
+    int Surface::drawText(Lua::State L)
     {
         const auto [ surface_table, x, y, size, text, font ] = 
             extractArgs<Lua::Table, Lua::Number, Lua::Number, Lua::Number, Lua::String, Lua::String>(L);
@@ -31,9 +31,9 @@ namespace S2D::Engine
         return 0;
     }
     
-    SurfaceLib::SurfaceLib() : Base("Surface",
+    Surface::Surface() : Base("Surface",
         {
-            { "drawText", SurfaceLib::drawText }    
+            { "drawText", Surface::drawText }    
         })
     {   }
 }

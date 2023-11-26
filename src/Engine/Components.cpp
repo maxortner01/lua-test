@@ -1,8 +1,9 @@
 #include <Simple2D/Engine/Components.hpp>
-#include <Simple2D/Engine/Time.hpp>
-#include <Simple2D/Engine/Entity.hpp>
-#include <Simple2D/Engine/Input.hpp>
-#include <Simple2D/Engine/Math.hpp>
+
+#include <Simple2D/Engine/LuaLib/Time.hpp>
+#include <Simple2D/Engine/LuaLib/Entity.hpp>
+#include <Simple2D/Engine/LuaLib/Input.hpp>
+#include <Simple2D/Engine/LuaLib/Math.hpp>
 
 #include <Simple2D/Log/Library.hpp>
 #include <Simple2D/Log/Log.hpp>
@@ -339,7 +340,24 @@ Component<Name::Camera>::fromTable(
 {
     auto* data = reinterpret_cast<Data*>(_data);
     data->FOV = table.get<Lua::Number>("FOV");
-    data->projection = (Camera::Projection)(int)table.get<Lua::Number>("projection");
+    data->projection = (Projection)(int)table.get<Lua::Number>("projection");
+}
+
+Lua::Table 
+Component<Name::CustomMesh>::getTable(
+    const Data& data)
+{
+    Lua::Table table;
+    
+    return table;
+}
+
+void 
+Component<Name::CustomMesh>::fromTable(
+    const Lua::Table& table, 
+    void* _data)
+{
+    auto* data = reinterpret_cast<Data*>(_data);
 }
 
 void

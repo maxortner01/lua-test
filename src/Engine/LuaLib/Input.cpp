@@ -1,4 +1,4 @@
-#include <Simple2D/Engine/Input.hpp>
+#include <Simple2D/Engine/LuaLib/Input.hpp>
 
 namespace S2D::Engine
 {

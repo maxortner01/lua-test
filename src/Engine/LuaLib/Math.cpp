@@ -1,4 +1,4 @@
-#include <Simple2D/Engine/Math.hpp>
+#include <Simple2D/Engine/LuaLib/Math.hpp>
 
 namespace S2D::Engine
 {

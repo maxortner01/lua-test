@@ -1,8 +1,10 @@
 #include <Simple2D/Engine/Core.hpp>
-#include <Simple2D/Engine/Input.hpp>
-#include <Simple2D/Engine/Entity.hpp>
-#include <Simple2D/Engine/World.hpp>
-#include <Simple2D/Engine/Time.hpp>
+
+#include <Simple2D/Engine/LuaLib/Input.hpp>
+#include <Simple2D/Engine/LuaLib/Entity.hpp>
+#include <Simple2D/Engine/LuaLib/World.hpp>
+#include <Simple2D/Engine/LuaLib/Time.hpp>
+
 #include <Simple2D/Engine/Application.hpp>
 
 #include <Simple2D/Log/Log.hpp>

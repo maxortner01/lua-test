@@ -7,6 +7,18 @@
 #include <flecs.h>
 #include <SFML/Graphics.hpp>
 
+#define COMPONENT_DEFINITION(name, contents)                            \
+    template<> struct Component<Name::name>                             \
+    {                                                                   \
+        static constexpr Name Type = Name::name;                        \
+        struct Data                                                     \
+        {                                                               \
+            contents                                                    \
+        };                                                              \
+        static Lua::Table getTable(const Data& data);                   \
+        static void fromTable(const Lua::Table& table, void* _data);    \
+    }   
+
 namespace S2D::Engine
 {
     /**
@@ -37,6 +49,7 @@ namespace S2D::Engine
         Tilemap,
         Collider,
         Camera,
+        CustomMesh,
         Count
     };
 
@@ -46,13 +59,14 @@ namespace S2D::Engine
     {
         switch (name)
         {
-        case Name::Transform: return "Transform";
-        case Name::Rigidbody: return "Rigidbody";
-        case Name::Sprite:    return "Sprite";
-        case Name::Text:      return "Text";
-        case Name::Tilemap:   return "Tilemap";
-        case Name::Collider:  return "Collider";
-        case Name::Camera:    return "Camera";
+        case Name::Transform:  return "Transform";
+        case Name::Rigidbody:  return "Rigidbody";
+        case Name::Sprite:     return "Sprite";
+        case Name::Text:       return "Text";
+        case Name::Tilemap:    return "Tilemap";
+        case Name::Collider:   return "Collider";
+        case Name::Camera:     return "Camera";
+        case Name::CustomMesh: return "CustomMesh";
         default: return "";
         }
     }
@@ -67,71 +81,35 @@ namespace S2D::Engine
     template<Name T>
     struct Component;
 
-    template<>
-    struct Component<Name::Transform>
-    {
-        static constexpr Name Type = Name::Transform;
-        struct Data
-        {
-            sf::Vector3f position;
-            float scale = 1.f;
-            float rotation;
-        };
+    COMPONENT_DEFINITION(Transform,
+        sf::Vector3f position;
+        float scale = 1.f;
+        float rotation;
+    );
 
-        static Lua::Table getTable(const Data& data);
-        static void fromTable(const Lua::Table& table, void* _data);
-    };
+    COMPONENT_DEFINITION(Rigidbody,
+        Lua::Number linear_drag;
+        sf::Vector2f added_force;
+        sf::Vector2f velocity;
+    );
 
-    template<>
-    struct Component<Name::Rigidbody>
-    {
-        static constexpr Name Type = Name::Rigidbody;
-        struct Data
-        {
-            Lua::Number linear_drag;
-            sf::Vector2f added_force;
-            sf::Vector2f velocity;
-        };
-
-        static Lua::Table getTable(const Data& data);
-        static void fromTable(const Lua::Table& table, void* _data);
-    };
-
-    template<>
-    struct Component<Name::Sprite>
-    {
-        static constexpr Name Type = Name::Sprite;
-        struct Data
-        {
-            std::shared_ptr<RawMesh> mesh;
-            Lua::String texture;
-            sf::Vector2u size;
-        };
-
-        static Lua::Table getTable(const Data& data);
-        static void fromTable(const Lua::Table& table, void* _data);
-    };
+    COMPONENT_DEFINITION(Sprite,
+        std::shared_ptr<RawMesh> mesh;
+        Lua::String texture;
+        sf::Vector2u size;
+    );
 
     enum class TextAlign
     {
         Left, Center, Right
     };
 
-    template<>
-    struct Component<Name::Text>
-    {
-        static constexpr Name Type = Name::Text;
-        struct Data
-        {
-            TextAlign   align;
-            Lua::String string;
-            Lua::String font;
-            Lua::Number character_size;
-        };
-
-        static Lua::Table getTable(const Data& data);
-        static void fromTable(const Lua::Table& table, void* _data);
-    };
+    COMPONENT_DEFINITION(Text,
+        TextAlign   align;
+        Lua::String string;
+        Lua::String font;
+        Lua::Number character_size;
+    );
 
     template<>
     struct Component<Name::Tilemap>
@@ -177,36 +155,24 @@ namespace S2D::Engine
         static void fromTable(const Lua::Table& table, void* _data);
     };
 
-    template<>
-    struct Component<Name::Collider>
+    COMPONENT_DEFINITION(Collider,
+        Lua::Number collider_component;
+        std::unique_ptr<CollisionMesh> mesh;    
+    );
+
+    enum class Projection
     {
-        static constexpr Name Type = Name::Collider;
-        struct Data
-        {
-            Lua::Number collider_component;
-            std::unique_ptr<CollisionMesh> mesh;
-        };
-
-        static Lua::Table getTable(const Data& data);
-        static void fromTable(const Lua::Table& table, void* _data);
-    };  
-
-    template<>
-    struct Component<Name::Camera>
-    {
-        static constexpr Name Type = Name::Camera;
-        struct Data
-        {
-            Lua::Number FOV;
-            enum class Projection
-            {
-                Orthographic, Perspective
-            } projection;
-        };
-
-        static Lua::Table getTable(const Data& data);
-        static void fromTable(const Lua::Table& table, void* _data);
+        Orthographic, Perspective
     };
+
+    COMPONENT_DEFINITION(Camera,
+        Lua::Number FOV;
+        Projection projection;
+    );
+
+    COMPONENT_DEFINITION(CustomMesh,
+        std::unique_ptr<RawMesh> mesh;
+    );
 
     template<Name T>
     using ComponentData = typename Component<T>::Data;

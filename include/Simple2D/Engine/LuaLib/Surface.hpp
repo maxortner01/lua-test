@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../Lua.hpp"
+#include "../../Lua.hpp"
 
 namespace S2D::Engine
 {
-    struct SurfaceLib : Lua::Lib::Base
+    struct Surface : Lua::Lib::Base
     {
         static int drawText(Lua::State L);
-        SurfaceLib();
+        Surface();
     };
 }

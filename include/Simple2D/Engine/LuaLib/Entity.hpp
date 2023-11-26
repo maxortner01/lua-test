@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Lua.hpp"
+#include "../../Lua.hpp"
 
 #include <flecs.h>
 

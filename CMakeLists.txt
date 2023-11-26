@@ -58,28 +58,31 @@ set(LUA_SOURCES
 add_library(simple2d-lua SHARED ${LUA_SOURCES})
 
 # ENGINE
+set(BUILD_TESTING OFF)
+
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/spdlog)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/flecs)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/sfml)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/fcl)
 
 set(ENGINE_SOURCES
-    ${CMAKE_SOURCE_DIR}/src/Engine/SurfaceLib.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/LuaScene.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Mesh.cpp
-    ${CMAKE_SOURCE_DIR}/src/Engine/Math.cpp
-    ${CMAKE_SOURCE_DIR}/src/Engine/Input.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Resources.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Application.cpp
-    ${CMAKE_SOURCE_DIR}/src/Engine/Time.cpp
-    ${CMAKE_SOURCE_DIR}/src/Engine/World.cpp
+
+    ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/Surface.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/Math.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/Input.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/Time.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/World.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/Entity.cpp
 
     ${CMAKE_SOURCE_DIR}/src/Engine/Core/Core.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Core/Collide.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Core/Render.cpp
 
     ${CMAKE_SOURCE_DIR}/src/Engine/Components.cpp
-    ${CMAKE_SOURCE_DIR}/src/Engine/Entity.cpp
     ${CMAKE_SOURCE_DIR}/src/Log/Library.cpp
     ${CMAKE_SOURCE_DIR}/src/Log/Log.cpp)
 

@@ -1,4 +1,4 @@
-#include <Simple2D/Engine/Time.hpp>
+#include <Simple2D/Engine/LuaLib/Time.hpp>
 #include <Simple2D/Engine/Core.hpp>
 #include <Simple2D/Def.hpp>
 

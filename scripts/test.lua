@@ -3,7 +3,11 @@ function GetResources()
         textures = {
             {
                 name = "tilemap",
-                location = Directory.Source.."/textures/Dungeon_Tileset.png"
+                location = Directory.Source.."/textures/GRASS+.png"
+            },
+            {
+                name = "mask",
+                location = Directory.Source.."/textures/grass_mask.png"
             }
         },
         fonts = {
@@ -40,8 +44,44 @@ function GetEntities()
                 }
             },
             scripts = {
-                Directory.Source.."/scripts/tilemap.lua"
+                Directory.Source.."/scripts/yard.lua"
             }
+        },
+        {
+            components = {
+                {
+                    type = Component.Transform,
+                    value = {
+                        position = { x = 100 + 20 * 16 * 3 / 2.0, y = 100 + 20 * 16 * 3 / 2.0, z = 0 },
+                        scale = 3,
+                        rotation = 0
+                    }
+                },
+                {
+                    type = Component.Sprite,
+                    value = {
+                        size = { width = 16 * 20, height = 16 * 20 },
+                        texture = "mask"
+                    }
+                }
+            }
+        },
+        {
+            components = {
+                {
+                    type = Component.Transform,
+                    value = {
+                        position = { x = 100, y = 100, z = 0 },
+                        scale = 1,
+                        rotation = 0
+                    }
+                },
+                {
+                    type = Component.CustomMesh,
+                    value = {}
+                }
+            },
+            scripts = { Directory.Source.."/scripts/grass.lua" }
         },
         {
             name = "Player",
@@ -66,7 +106,7 @@ function GetEntities()
                     value = {
                         velocity   = { x = 0, y = 0 },
                         addedForce = { x = 0, y = 0 },
-                        linearDrag = 0.5
+                        linearDrag = 10
                     }
                 },
                 {
@@ -75,8 +115,7 @@ function GetEntities()
                 }
             },
             scripts = {
-                Directory.Source.."/scripts/movement.lua",
-                Directory.Source.."/scripts/combat.lua"
+                Directory.Source.."/scripts/mower.lua"
             }
         },
         {

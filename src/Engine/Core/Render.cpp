@@ -1,5 +1,6 @@
 #include <Simple2D/Engine/Core.hpp>
-#include <Simple2D/Engine/SurfaceLib.hpp>
+
+#include <Simple2D/Engine/LuaLib/Surface.hpp>
 
 #include <Simple2D/Log/Log.hpp>
 
@@ -17,10 +18,15 @@ void RenderComponent(
     // Construct or re-construct the mesh for the tilemap
     MeshBuilder<Tilemap>::checkAndBuild(e);
 
-    auto camera_pos = sf::Vector2f(
+    sf::Transform model, view;
+    model.translate(sf::Vector2f(transform.position.x, transform.position.y));
+    model.rotate(sf::degrees(transform.rotation));
+    model.scale(sf::Vector2f(transform.scale, transform.scale));
+
+    view.translate(-1.f * sf::Vector2f(
         camera.has<Transform>() ? camera.get<Transform>()->position.x : 0.f,
         camera.has<Transform>() ? camera.get<Transform>()->position.y : 0.f
-    );
+    ));
 
     sf::RenderStates states;
 
@@ -37,8 +43,10 @@ void RenderComponent(
     for (uint32_t i = 0; i < vertices.getVertexCount(); i++)
     {
         auto& vertex = vertices[i];
-        vertex.position *= transform.scale;
-        vertex.position += sf::Vector2f(transform.position.x, transform.position.y) - camera_pos + (sf::Vector2f)target.getSize() / 2.f;
+        
+        vertex.position = model.transformPoint(vertex.position);
+        vertex.position = view.transformPoint(vertex.position);
+        vertex.position += (sf::Vector2f)target.getSize() / 2.f;
     }
     
     target.draw(vertices, states);
@@ -129,10 +137,12 @@ void RenderComponent(
 
     S2D_ASSERT(sprite->mesh, "Error generating mesh");
 
-    sf::Transform sf_transform;
-    sf_transform.translate(sf::Vector2f(transform.position.x, transform.position.y));
-    sf_transform.rotate(sf::degrees(transform.rotation));
-    sf_transform.scale(sf::Vector2f(transform.scale, transform.scale));
+    sf::Transform model, view;
+    model.translate(sf::Vector2f(transform.position.x, transform.position.y));
+    model.rotate(sf::degrees(transform.rotation));
+    model.scale(sf::Vector2f(transform.scale, transform.scale));
+
+    view.translate(-1.f * camera_pos);
 
     // This work will be done in the shader...
     auto vertices = sprite->mesh->vertices;
@@ -148,9 +158,9 @@ void RenderComponent(
             vertex.texCoords.y *= states.texture->getSize().x;
         }
 
-        //vertex.position += sf::Vector2f(transform.position.x, transform.position.y) - camera_pos + (sf::Vector2f)target.getSize() / 2.f;
-        vertex.position = sf_transform.transformPoint(vertex.position);
-        vertex.position -= camera_pos - (sf::Vector2f)target.getSize() / 2.f;
+        vertex.position = model.transformPoint(vertex.position);
+        vertex.position = view.transformPoint(vertex.position);
+        vertex.position += (sf::Vector2f)target.getSize() / 2.f;
     }
 
     target.draw(vertices, states);
@@ -283,7 +293,7 @@ void Core::render(Scene* scene)
             // We pass a surface to the runtime which contains the current scene
             // this way the function can access the scene and its resources
             // We also pass a pointer to the current surface
-            auto surface = SurfaceLib().asTable();
+            auto surface = Surface().asTable();
             surface.set<uint64_t>("scene", (uint64_t)scene);
             surface.set<uint64_t>("surface", (uint64_t)current_target);
             

@@ -1,4 +1,5 @@
-#include <Simple2D/Engine/Entity.hpp>
+#include <Simple2D/Engine/LuaLib/Entity.hpp>
+
 #include <Simple2D/Engine/Components.hpp>
 #include <Simple2D/Log/Library.hpp>
 #include <Simple2D/Def.hpp>
