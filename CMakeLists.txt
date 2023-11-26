@@ -71,6 +71,7 @@ set(ENGINE_SOURCES
     ${CMAKE_SOURCE_DIR}/src/Engine/Resources.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Application.cpp
 
+    ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/MeshLib.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/Surface.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/Math.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/Input.cpp

@@ -177,11 +177,12 @@ namespace S2D::Engine
     template<Name T>
     using ComponentData = typename Component<T>::Data;
 
-    using Transform = ComponentData<Name::Transform>;
-    using Tilemap   = ComponentData<Name::Tilemap>;
-    using Text      = ComponentData<Name::Text>;
-    using Sprite    = ComponentData<Name::Sprite>;
-    using Collider  = ComponentData<Name::Collider>;
-    using Rigidbody = ComponentData<Name::Rigidbody>;
-    using Camera    = ComponentData<Name::Camera>;    
+    using Transform  = ComponentData<Name::Transform>;
+    using Tilemap    = ComponentData<Name::Tilemap>;
+    using Text       = ComponentData<Name::Text>;
+    using Sprite     = ComponentData<Name::Sprite>;
+    using Collider   = ComponentData<Name::Collider>;
+    using Rigidbody  = ComponentData<Name::Rigidbody>;
+    using Camera     = ComponentData<Name::Camera>;    
+    using CustomMesh = ComponentData<Name::CustomMesh>;    
 }

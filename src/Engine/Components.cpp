@@ -4,6 +4,7 @@
 #include <Simple2D/Engine/LuaLib/Entity.hpp>
 #include <Simple2D/Engine/LuaLib/Input.hpp>
 #include <Simple2D/Engine/LuaLib/Math.hpp>
+#include <Simple2D/Engine/LuaLib/MeshLib.hpp>
 
 #include <Simple2D/Log/Library.hpp>
 #include <Simple2D/Log/Log.hpp>
@@ -39,6 +40,13 @@ loadRuntime(const std::string& filename, flecs::world& world)
         Lua::Table Directory;
         Directory.set<Lua::String>("Source", Script::SourceDir);
         runtime.setGlobal("Directory", Directory);
+
+        /* Mesh constants */
+        Lua::Table primitive_type;
+        primitive_type.set("Lines", (Lua::Number)(int)Primitive::Lines);
+        primitive_type.set("Points", (Lua::Number)(int)Primitive::Points);
+        primitive_type.set("Triangles", (Lua::Number)(int)Primitive::Triangles);
+        runtime.setGlobal("PrimitiveType", primitive_type);
 
         return runtime;
     }());
@@ -347,8 +355,7 @@ Lua::Table
 Component<Name::CustomMesh>::getTable(
     const Data& data)
 {
-    Lua::Table table;
-    
+    auto table = MeshLib().asTable();
     return table;
 }
 

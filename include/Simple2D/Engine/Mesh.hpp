@@ -6,9 +6,14 @@
 
 namespace S2D::Engine
 {
+    enum class Primitive
+    {
+        Points, Triangles, Lines
+    };
 
     struct RawMesh
     {
+        Primitive primitive = Primitive::Triangles;
         sf::VertexArray vertices;
     };
 

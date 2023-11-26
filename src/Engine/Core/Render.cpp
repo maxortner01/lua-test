@@ -194,6 +194,48 @@ void RenderComponent(
     }
 }
 
+void RenderComponent(
+    Scene* scene,
+    flecs::entity e,
+    flecs::entity camera,
+    const Transform& transform,
+    CustomMesh* mesh,
+    sf::RenderTarget& target)
+{
+    if (!mesh->mesh) return;
+
+    auto& logger = Log::Logger::instance("engine");
+
+    sf::Transform model, view;
+    model.translate(sf::Vector2f(transform.position.x, transform.position.y));
+    model.scale(sf::Vector2f(transform.scale, transform.scale));
+    model.rotate(sf::degrees(transform.rotation));
+
+    view.translate(-1.f * sf::Vector2f(
+        camera.has<Transform>() ? camera.get<Transform>()->position.x : 0.f,
+        camera.has<Transform>() ? camera.get<Transform>()->position.y : 0.f
+    ));
+
+    auto vertices = mesh->mesh->vertices;
+    switch (mesh->mesh->primitive)
+    {
+    case Primitive::Lines:     vertices.setPrimitiveType(sf::PrimitiveType::Lines);     break;
+    case Primitive::Points:    vertices.setPrimitiveType(sf::PrimitiveType::Points);    break;
+    case Primitive::Triangles: vertices.setPrimitiveType(sf::PrimitiveType::Triangles); break;
+    }
+
+    for (uint32_t i = 0; i < vertices.getVertexCount(); i++)
+    {
+        auto& vertex = vertices[i];
+
+        vertex.position = model.transformPoint(vertex.position);
+        vertex.position = view.transformPoint(vertex.position);
+        vertex.position += (sf::Vector2f)target.getSize() / 2.f;
+    }
+
+    target.draw(vertices);
+}
+
 static void 
 render_entities(Scene* scene, sf::RenderTarget& window, flecs::entity camera)
 {
@@ -208,6 +250,9 @@ render_entities(Scene* scene, sf::RenderTarget& window, flecs::entity camera)
 
             /* Render Tilemap */
             if (e.has<Tilemap>()) RenderComponent(scene, e, camera, transform, e.get_mut<Tilemap>(), window);
+
+            /* Render Custom Mesh */
+            if (e.has<CustomMesh>()) RenderComponent(scene, e, camera, transform, e.get_mut<CustomMesh>(), window);
         }
     );
 }
