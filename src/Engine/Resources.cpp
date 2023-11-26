@@ -34,6 +34,28 @@ template typename Resources::Result<void> Resources::loadResource<sf::Font>(cons
 template typename Resources::Result<void> Resources::loadResource<sf::Texture>(const std::string&, const std::string&);
 template typename Resources::Result<void> Resources::loadResource<sf::Image>(const std::string&, const std::string&);
 
+template<>
+Resources::Result<void>
+Resources::loadResource<sf::Shader>(const std::string& name, const std::string& filename, sf::Shader::Type type)
+{
+    const auto id = typeid(sf::Shader).hash_code();
+    if (!resources.count(id)) resources.insert(std::pair(id, ResourceMap()));
+    auto& types = resources.at(id);
+    sf::Shader* res = nullptr;
+    if (types.count(name)) res = (sf::Shader*)types.at(name).ptr;
+    else 
+    {
+        res = new sf::Shader();
+        types.insert(std::pair(name, DataPoint {
+            .ptr     = (void*)res,
+            .deleter = [](void* ptr) { delete reinterpret_cast<sf::Shader*>(ptr); }
+        }));
+    }
+    S2D_ASSERT(res, "Error loading resource");
+    S2D_ASSERT(res->loadFromFile(std::filesystem::path(filename), type), "Error loading shader from file");
+    return { };
+}
+
 template<typename T>
 Resources::Result<const T*>
 Resources::getResource(const std::string& name) const

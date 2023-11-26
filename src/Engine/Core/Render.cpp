@@ -222,6 +222,7 @@ void RenderComponent(
     case Primitive::Lines:     vertices.setPrimitiveType(sf::PrimitiveType::Lines);     break;
     case Primitive::Points:    vertices.setPrimitiveType(sf::PrimitiveType::Points);    break;
     case Primitive::Triangles: vertices.setPrimitiveType(sf::PrimitiveType::Triangles); break;
+    case Primitive::Count: return;
     }
 
     for (uint32_t i = 0; i < vertices.getVertexCount(); i++)
@@ -237,22 +238,33 @@ void RenderComponent(
 }
 
 static void 
-render_entities(Scene* scene, sf::RenderTarget& window, flecs::entity camera)
+render_entity(
+    Scene* scene, 
+    sf::RenderTarget& target, 
+    const Transform& transform,
+    flecs::entity camera, 
+    flecs::entity e)
+{
+    /* Render Sprite */
+    if (e.has<Sprite>()) RenderComponent(scene, e, camera, transform, e.get_mut<Sprite>(), target);
+
+    /* Render Text */
+    if (e.has<Text>()) RenderComponent(scene, e, camera, transform, e.get_mut<Text>(), target);
+
+    /* Render Tilemap */
+    if (e.has<Tilemap>()) RenderComponent(scene, e, camera, transform, e.get_mut<Tilemap>(), target);
+
+    /* Render Custom Mesh */
+    if (e.has<CustomMesh>()) RenderComponent(scene, e, camera, transform, e.get_mut<CustomMesh>(), target);
+}
+
+static void 
+render_entities(Scene* scene, sf::RenderTarget& target, flecs::entity camera)
 {
     scene->transforms.each(
-        [&](flecs::entity e, const ComponentData<Name::Transform>& transform)
+        [&](flecs::entity e, const Transform& transform)
         {
-            /* Render Sprite */
-            if (e.has<Sprite>()) RenderComponent(scene, e, camera, transform, e.get_mut<Sprite>(), window);
-
-            /* Render Text */
-            if (e.has<Text>()) RenderComponent(scene, e, camera, transform, e.get_mut<Text>(), window);
-
-            /* Render Tilemap */
-            if (e.has<Tilemap>()) RenderComponent(scene, e, camera, transform, e.get_mut<Tilemap>(), window);
-
-            /* Render Custom Mesh */
-            if (e.has<CustomMesh>()) RenderComponent(scene, e, camera, transform, e.get_mut<CustomMesh>(), window);
+            render_entity(scene, target, transform, camera, e);
         }
     );
 }
@@ -264,6 +276,8 @@ void Core::render(Scene* scene)
     sf::RenderTexture* current_target = nullptr;
     const auto& targets  = scene->renderpass->targets;
     const auto& commands = scene->renderpass->commands;
+
+    const auto camera = scene->world.filter<const Camera>().first();
 
     #define GET_PARAMS(cmd) auto* params = (CommandParameters<cmd>*)command.second.get();
 
@@ -299,8 +313,51 @@ void Core::render(Scene* scene)
                 break;
             }
 
-            const auto camera = scene->world.filter<const Camera>().first();
-            render_entities(scene, *current_target, camera);
+            GET_PARAMS(Command::RenderEntities);
+
+            auto camera_to_use = (params->camera_name.size() ? scene->world.lookup(params->camera_name.c_str()) : camera);
+            if (!camera_to_use)
+            {
+                log->error("Error using camera while rendering entities");
+                break;
+            }
+
+            render_entities(scene, *current_target, camera_to_use);
+
+            break;
+        }
+        case Command::RenderEntity:
+        {
+            GET_PARAMS(Command::RenderEntity);
+
+            if (!current_target)
+            {
+                log->error("Attempting to render entity \"{}\" to null surface", params->entity_name);
+                break;
+            }
+
+            auto entity = scene->world.lookup(params->entity_name.c_str());
+            if (!entity) 
+            {
+                log->error("Entity \"{}\" doesn't exist", params->entity_name);
+                break;
+            }
+
+            const auto* transform = entity.get<Transform>();
+            if (!transform)
+            {
+                log->error("Entity \"{}\" doesn't have a transform", params->entity_name);
+                break;
+            }
+
+            auto camera_to_use = (params->camera_name.size() ? scene->world.lookup(params->camera_name.c_str()) : camera);
+            if (!camera_to_use)
+            {
+                log->error("Error using camera while rendering entity \"{}\"", params->entity_name);
+                break;
+            }
+
+            render_entity(scene, *current_target, *transform, camera_to_use, entity);
 
             break;
         }

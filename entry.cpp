@@ -20,6 +20,49 @@ struct MainScene : Engine::LuaScene
         LuaScene(filename)
     {   }
 
+    void poststart() override
+    {
+        auto e = world.lookup("Mesh");
+        S2D_ASSERT(e, "Entity not real");
+        S2D_ASSERT(e.has<Engine::CustomMesh>(), "Entity missing mesh component");
+        auto* mesh = e.get_mut<Engine::CustomMesh>();
+
+        if (!mesh->mesh) mesh->mesh = std::make_unique<Engine::RawMesh>();
+        mesh->mesh->primitive = Engine::Primitive::Points;
+
+        const auto* image = [&]()
+        {
+            const auto res = resources.getResource<sf::Image>("mask");
+            S2D_ASSERT(res, "Mask image missing");
+            return res.value();
+        }();
+
+        // Random number between -1 and 1
+        const auto random = []() 
+        {
+            return (double)rand() / (double)std::numeric_limits<int>::max();
+        };
+    
+        for (uint32_t y = 0; y < image->getSize().y; y++)
+        {
+            for (uint32_t x = 0; x < image->getSize().x; x++)
+            {
+                auto color = image->getPixel({ x, y });
+
+                if (abs(random()) > color.a / 255.f ) continue;
+
+                sf::Vertex vertex;
+                vertex.position = sf::Vector2f(
+                    x + random() * 0.9,
+                    y + random() * 0.9
+                );
+                vertex.color = sf::Color::Red;
+
+                mesh->mesh->vertices.append(vertex);
+            }
+        }
+    }
+
     void constructPass(Engine::RenderpassBuilder& builder) override
     {
         using namespace S2D::Engine;
@@ -27,12 +70,23 @@ struct MainScene : Engine::LuaScene
         Log::Logger::instance("engine")->info("Constructing pass");
 
         builder.resource<Resource::Surface>({ "main", { 1280, 720 } });
+        builder.resource<Resource::Surface>({ "mow", { 1280, 720 } });
+        builder.resource<Resource::Surface>({ "UI", { 1280, 720 } });
 
         builder.command<Command::BindSurface>({ "main" });
         builder.command<Command::Clear>({ { 0, 0, 0, 255 } });
-        builder.command<Command::RenderEntities>({});
+        builder.command<Command::RenderEntities>({ "MainCamera" });
+
+        builder.command<Command::BindSurface>({ "mow" });
+        builder.command<Command::RenderEntity>({ "Player", "MowCamera" });
+        builder.command<Command::RenderEntity>({ "Mesh", "MowCamera" });
+        builder.command<Command::BlitSurface>({ { 0.f, 0.f }, { 1280.f, 720.f } });
+
+        builder.command<Command::BindSurface>({ "UI" });
+        builder.command<Command::Clear>({ { 0, 0, 0, 0 } });
         builder.command<Command::RenderUI>({ loadRuntime(SOURCE_DIR "/scripts/ui.lua", world) });
         builder.command<Command::BlitSurface>({ { 0.f, 0.f }, { 1280.f, 720.f } });
+
     }
 };
 

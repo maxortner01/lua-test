@@ -5,6 +5,17 @@
 
 namespace S2D::Engine
 {
+    const char* operator*(Primitive p)
+    {
+        switch (p)
+        {
+        case Primitive::Lines:     return "Lines";
+        case Primitive::Points:    return "Points";
+        case Primitive::Triangles: return "Triangles";
+        default: return "";
+        }
+    }
+
 #define REQUIRE(expr) if (!(expr)) return
 
 #define MAKE_COLLISION_MODEL(type, collision) \

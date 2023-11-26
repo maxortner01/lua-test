@@ -34,6 +34,20 @@ namespace S2D::Engine
         inline static std::string SourceDir;
     };
 
+    // Assumes the _Enum has a ::Count member and that there is a *operator overload
+    // That gives the name
+    template<typename _Enum>
+    void globalEnum(Lua::Runtime& runtime, const std::string& name)
+    {
+        using namespace Util::CompileTime;
+
+        Lua::Table table;
+        for (uint32_t i = 0; i < (int)_Enum::Count; i++)
+            table.set(*(_Enum)i, (Lua::Number)(int)i);
+
+        runtime.setGlobal(name, table);
+    }
+
     std::unique_ptr<Lua::Runtime>
     loadRuntime(const std::string& filename, flecs::world& world);
 
@@ -162,8 +176,10 @@ namespace S2D::Engine
 
     enum class Projection
     {
-        Orthographic, Perspective
+        Orthographic, Perspective, Count
     };
+
+    const char* operator*(Projection p);
 
     COMPONENT_DEFINITION(Camera,
         Lua::Number FOV;

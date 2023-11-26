@@ -11,7 +11,9 @@ namespace S2D::Engine
 
         using Scene::constructPass;
 
+        virtual void prestart() {}
         void start() override;
+        virtual void poststart() {}
 
     private:
         void load_entities(const Lua::Table& entities);

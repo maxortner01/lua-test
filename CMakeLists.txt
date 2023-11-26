@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 project(main)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_MACOSX_RPATH OFF)
 
 find_package(Lua REQUIRED)
 
@@ -59,6 +60,7 @@ add_library(simple2d-lua SHARED ${LUA_SOURCES})
 
 # ENGINE
 set(BUILD_TESTING OFF)
+set(BUILD_SHARED_LIBS TRUE)
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/spdlog)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/flecs)
@@ -98,6 +100,11 @@ add_executable(main entry.cpp)
 
 target_compile_definitions(main PUBLIC -DSOURCE_DIR="${CMAKE_SOURCE_DIR}")
 target_link_libraries(main PUBLIC simple2d-lua simple2d-engine flecs)
+
+install(
+    TARGETS main simple2d-engine simple2d-lua flecs spdlog fcl sfml-graphics sfml-system sfml-window 
+    DESTINATION ${CMAKE_SOURCE_DIR}/game
+)
 
 #set_target_properties(simple2d-engine simple2d-lua main
 #    PROPERTIES

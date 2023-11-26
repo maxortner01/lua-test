@@ -15,6 +15,7 @@ namespace S2D::Engine
         Clear,
         BindSurface,
         RenderEntities,
+        RenderEntity,
         RenderUI,
         BlitSurface,
         Count
@@ -44,7 +45,14 @@ namespace S2D::Engine
     template<>
     struct CommandParameters<Command::RenderEntities>
     {  
-        int _temp;
+        std::string camera_name;
+    };
+
+    template<>
+    struct CommandParameters<Command::RenderEntity>
+    {
+        std::string entity_name;
+        std::string camera_name;
     };
 
     template<>

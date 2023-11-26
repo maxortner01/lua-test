@@ -6,8 +6,10 @@ namespace S2D::Engine
 {
     enum class ResourceType
     {
-        Texture, Font, Image
+        Texture, Font, Image, Count
     };
+
+    const char* operator*(ResourceType r);
 
     struct ResLib : Lua::Lib::Base
     {

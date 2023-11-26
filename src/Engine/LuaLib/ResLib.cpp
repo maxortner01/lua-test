@@ -11,6 +11,17 @@
 namespace S2D::Engine
 {
 
+const char* operator*(ResourceType r)
+{
+    switch (r)
+    {
+    case ResourceType::Font:    return "Font";
+    case ResourceType::Image:   return "Image";
+    case ResourceType::Texture: return "Texture";
+    default: return "";
+    }
+}
+
 int
 ResLib::getResource(Lua::State L)
 {
@@ -54,9 +65,8 @@ ResLib::getResource(Lua::State L)
         
         return 0;
     }
+    default: return 0;
     }
-
-    return 0;
 }
 
 ResLib::ResLib() : Base("Resources",

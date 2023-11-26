@@ -81,6 +81,66 @@ Table::Table(State L)
     lua_pop(L, 1);
 }
 
+template<typename T>
+void 
+Table::each(std::function<void(uint32_t, T&)> lambda)
+{
+    uint32_t i = 1;
+    while (hasValue(std::to_string(i)))
+    {
+        auto& val = get<T>(std::to_string(i));
+        lambda(i++, val);
+    }
+}
+template void Table::each(std::function<void(uint32_t, Lua::Number&)>);
+template void Table::each(std::function<void(uint32_t, Lua::String&)>);
+template void Table::each(std::function<void(uint32_t, Lua::Boolean&)>);
+template void Table::each(std::function<void(uint32_t, Lua::Function&)>);
+template void Table::each(std::function<void(uint32_t, Lua::Table&)>);
+template void Table::each(std::function<void(uint32_t, uint64_t*&)>);
+
+template<typename T>
+void 
+Table::each(std::function<void(uint32_t, const T&)> lambda) const
+{
+    uint32_t i = 1;
+    while (hasValue(std::to_string(i)))
+    {
+        const auto& val = get<T>(std::to_string(i));
+        lambda(i++, val);
+    }
+}
+template void Table::each(std::function<void(uint32_t, const Lua::Number&)>) const;
+template void Table::each(std::function<void(uint32_t, const Lua::String&)>) const;
+template void Table::each(std::function<void(uint32_t, const Lua::Boolean&)>) const;
+template void Table::each(std::function<void(uint32_t, const Lua::Function&)>) const;
+template void Table::each(std::function<void(uint32_t, const Lua::Table&)>) const;
+template void Table::each(std::function<void(uint32_t, uint64_t* const&)>) const;
+
+template<typename T>
+void Table::try_get(const std::string& name, std::function<void(T&)> lambda)
+{
+    if (hasValue(name)) lambda(get<T>(name));
+}
+template void Table::try_get(const std::string&, std::function<void(Lua::Number&)>);
+template void Table::try_get(const std::string&, std::function<void(Lua::String&)>);
+template void Table::try_get(const std::string&, std::function<void(Lua::Boolean&)>);
+template void Table::try_get(const std::string&, std::function<void(Lua::Function&)>);
+template void Table::try_get(const std::string&, std::function<void(Lua::Table&)>);
+template void Table::try_get(const std::string&, std::function<void(uint64_t*&)>);
+
+template<typename T>
+void Table::try_get(const std::string& name, std::function<void(const T&)> lambda) const
+{
+    if (hasValue(name)) lambda(get<T>(name));
+}
+template void Table::try_get(const std::string&, std::function<void(const Lua::Number&)>) const;
+template void Table::try_get(const std::string&, std::function<void(const Lua::String&)>) const;
+template void Table::try_get(const std::string&, std::function<void(const Lua::Boolean&)>) const;
+template void Table::try_get(const std::string&, std::function<void(const Lua::Function&)>) const;
+template void Table::try_get(const std::string&, std::function<void(const Lua::Table&)>) const;
+template void Table::try_get(const std::string&, std::function<void(uint64_t* const&)>) const;
+
 void
 Table::fromTable(const Table& table)
 {

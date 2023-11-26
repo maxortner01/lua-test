@@ -8,8 +8,10 @@ namespace S2D::Engine
 {
     enum class Primitive
     {
-        Points, Triangles, Lines
+        Points, Triangles, Lines, Count
     };
+
+    const char* operator*(Primitive p);
 
     struct RawMesh
     {

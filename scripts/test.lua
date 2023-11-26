@@ -21,6 +21,13 @@ function GetResources()
                 name = "mask",
                 location = Directory.Source.."/textures/grass_mask.png"
             }
+        },
+        shaders = {
+            {
+                name = "test",
+                vertex   = Directory.Source.."/shaders/vertex.glsl",
+                fragment = Directory.Source.."/shaders/fragment.glsl"
+            }
         }
     }
 end
@@ -73,6 +80,7 @@ function GetEntities()
             }
         },
         {
+            name = "Mesh",
             components = {
                 {
                     type = Component.Transform,
@@ -86,8 +94,7 @@ function GetEntities()
                     type = Component.CustomMesh,
                     value = {}
                 }
-            },
-            scripts = { Directory.Source.."/scripts/grass.lua" }
+            }
         },
         {
             name = "Player",
@@ -125,6 +132,7 @@ function GetEntities()
             }
         },
         {
+            name = "MainCamera",
             components = {
                 {
                     type = Component.Transform,
@@ -138,12 +146,32 @@ function GetEntities()
                     type = Component.Camera,
                     value = {
                         FOV = 90,
-                        projection = 0
+                        projection = ProjectionType.Orthographic
                     }
                 }
             },
             scripts = {
                 Directory.Source.."/scripts/camera.lua"
+            }
+        },
+        {
+            name = "MowCamera",
+            components = {
+                {
+                    type = Component.Transform,
+                    value = {
+                        position = { x = 320 * 3 / 2.0, y = 320 * 3 / 2.0, z = 0 },
+                        scale = 1,
+                        rotation = 0
+                    }
+                },
+                {
+                    type = Component.Camera,
+                    value = {
+                        FOV = 90,
+                        projection = ProjectionType.Orthographic
+                    }
+                }
             }
         }
     }

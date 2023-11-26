@@ -2,6 +2,7 @@
 
 #include "../Util.hpp"
 
+#include <SFML/Graphics.hpp>
 #include <unordered_map>
 
 namespace S2D::Engine
@@ -27,6 +28,11 @@ namespace S2D::Engine
         template<typename T>
         Result<void>
         loadResource(const std::string& name, const std::string& filename);
+
+        // Only works for T = sf::Shader
+        template<typename T>
+        Result<void>
+        loadResource(const std::string& name, const std::string& filename, sf::Shader::Type type);
 
         template<typename T>
         Result<const T*>

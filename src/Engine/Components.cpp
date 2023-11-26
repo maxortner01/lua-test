@@ -42,19 +42,9 @@ loadRuntime(const std::string& filename, flecs::world& world)
         Directory.set<Lua::String>("Source", Script::SourceDir);
         runtime.setGlobal("Directory", Directory);
 
-        /* Mesh constants */
-        Lua::Table primitive_type;
-        primitive_type.set("Lines", (Lua::Number)(int)Primitive::Lines);
-        primitive_type.set("Points", (Lua::Number)(int)Primitive::Points);
-        primitive_type.set("Triangles", (Lua::Number)(int)Primitive::Triangles);
-        runtime.setGlobal("PrimitiveType", primitive_type);
-
-        /* Resource Types */
-        Lua::Table resource_type;
-        resource_type.set("Texture", (Lua::Number)(int)ResourceType::Texture);
-        resource_type.set("Image",   (Lua::Number)(int)ResourceType::Image);
-        resource_type.set("Font",    (Lua::Number)(int)ResourceType::Font);
-        runtime.setGlobal("ResourceType", resource_type);
+        globalEnum<Primitive>   (runtime, "PrimitiveType");
+        globalEnum<ResourceType>(runtime, "ResourceType");
+        globalEnum<Projection>  (runtime, "ProjectionType");
 
         return runtime;
     }());
@@ -337,6 +327,16 @@ Component<Name::Collider>::fromTable(
 {
     auto* data = reinterpret_cast<Data*>(_data);
     data->collider_component = table.get<Lua::Number>("ColliderComponent");
+}
+
+const char* operator*(Projection p)
+{
+    switch (p)
+    {
+    case Projection::Orthographic: return "Orthographic";
+    case Projection::Perspective:  return "Perspective";
+    default: return "";
+    }
 }
 
 Lua::Table 

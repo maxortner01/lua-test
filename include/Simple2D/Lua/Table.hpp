@@ -52,6 +52,18 @@ namespace S2D::Lua
         Table(State L);
         ~Table() = default;
 
+        template<typename T>
+        void each(std::function<void(uint32_t, T&)> lambda);
+
+        template<typename T>
+        void each(std::function<void(uint32_t, const T&)> lambda) const;
+
+        template<typename T>
+        void try_get(const std::string& name, std::function<void(T&)> lambda);
+
+        template<typename T>
+        void try_get(const std::string& name, std::function<void(const T&)> lambda) const;
+
         /**
          * @brief Make the entries equivalent to another table
          * @param table Table to get the entries from
