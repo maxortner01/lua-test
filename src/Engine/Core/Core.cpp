@@ -1,5 +1,6 @@
 #include <Simple2D/Engine/Core.hpp>
 
+#include <Simple2D/Engine/LuaLib/ResLib.hpp>
 #include <Simple2D/Engine/LuaLib/Input.hpp>
 #include <Simple2D/Engine/LuaLib/Entity.hpp>
 #include <Simple2D/Engine/LuaLib/World.hpp>
@@ -140,7 +141,9 @@ void Core::run()
             ent.set("world", (uint64_t)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
 
             auto _world = Engine::World().asTable();
+            _world.superimpose(Engine::ResLib().asTable());
             _world.set("world", (uint64_t)world.c_ptr());
+            _world.set("scene", (uint64_t)top_scene);
             _world.set("good", true);
 
             #define CHECK_FUNCTION(name) \

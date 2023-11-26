@@ -15,6 +15,12 @@ function GetResources()
                 name = "arial",
                 location = Directory.Source.."/fonts/arial.ttf"
             }
+        },
+        images = {
+            {
+                name = "mask",
+                location = Directory.Source.."/textures/grass_mask.png"
+            }
         }
     }
 end
@@ -72,7 +78,7 @@ function GetEntities()
                     type = Component.Transform,
                     value = {
                         position = { x = 100, y = 100, z = 0 },
-                        scale = 1,
+                        scale = 3,
                         rotation = 0
                     }
                 },

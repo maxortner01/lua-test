@@ -82,6 +82,20 @@ LuaScene::load_resources(const Lua::Table& resources)
             this->resources.loadResource<sf::Font>(name, filename);
         }
     }
+
+    if (resources.hasValue("images"))
+    {
+        const auto& images = resources.get<Lua::Table>("images");
+
+        uint32_t i = 1;
+        while (images.hasValue(std::to_string(i)))
+        {
+            const auto& image    = images.get<Lua::Table>(std::to_string(i++));
+            const auto& name     = image.get<Lua::String>("name");
+            const auto& filename = image.get<Lua::String>("location");
+            this->resources.loadResource<sf::Image>(name, filename);
+        }
+    }
 }
 
 void 

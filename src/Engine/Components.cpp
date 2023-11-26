@@ -5,6 +5,7 @@
 #include <Simple2D/Engine/LuaLib/Input.hpp>
 #include <Simple2D/Engine/LuaLib/Math.hpp>
 #include <Simple2D/Engine/LuaLib/MeshLib.hpp>
+#include <Simple2D/Engine/LuaLib/ResLib.hpp>
 
 #include <Simple2D/Log/Library.hpp>
 #include <Simple2D/Log/Log.hpp>
@@ -47,6 +48,13 @@ loadRuntime(const std::string& filename, flecs::world& world)
         primitive_type.set("Points", (Lua::Number)(int)Primitive::Points);
         primitive_type.set("Triangles", (Lua::Number)(int)Primitive::Triangles);
         runtime.setGlobal("PrimitiveType", primitive_type);
+
+        /* Resource Types */
+        Lua::Table resource_type;
+        resource_type.set("Texture", (Lua::Number)(int)ResourceType::Texture);
+        resource_type.set("Image",   (Lua::Number)(int)ResourceType::Image);
+        resource_type.set("Font",    (Lua::Number)(int)ResourceType::Font);
+        runtime.setGlobal("ResourceType", resource_type);
 
         return runtime;
     }());

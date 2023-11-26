@@ -32,6 +32,7 @@ Resources::loadResource(const std::string& name, const std::string& filename)
 }
 template typename Resources::Result<void> Resources::loadResource<sf::Font>(const std::string&, const std::string&);
 template typename Resources::Result<void> Resources::loadResource<sf::Texture>(const std::string&, const std::string&);
+template typename Resources::Result<void> Resources::loadResource<sf::Image>(const std::string&, const std::string&);
 
 template<typename T>
 Resources::Result<const T*>
@@ -45,5 +46,6 @@ Resources::getResource(const std::string& name) const
 }
 template typename Resources::Result<const sf::Font*> Resources::getResource<sf::Font>(const std::string&) const;
 template typename Resources::Result<const sf::Texture*> Resources::getResource<sf::Texture>(const std::string&) const;
+template typename Resources::Result<const sf::Image*> Resources::getResource<sf::Image>(const std::string&) const;
 
 }

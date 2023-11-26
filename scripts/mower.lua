@@ -6,7 +6,7 @@ function Update(world, entity)
 
     local rotation = {
         amount = 0,
-        mag = 0.01
+        mag = 0.05
     }
 
     if Input.getDown("D") then
