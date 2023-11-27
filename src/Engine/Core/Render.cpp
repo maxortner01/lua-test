@@ -204,6 +204,55 @@ void RenderComponent(
 {
     if (!mesh->mesh) return;
 
+    sf::RenderStates states;
+
+    const auto* shader_component = e.get<ShaderComp>();
+    if (shader_component)
+    {
+        states.shader = [&]()
+        {
+            auto res = scene->resources.getResource<sf::Shader>(shader_component->name);
+            S2D_ASSERT(res, "Error loading shader");
+
+            auto* shader = res.value();
+            if (camera.has<Transform>()) shader->setUniform("camera_pos", camera.get<Transform>()->position);
+            shader->setUniform("target_size", (sf::Vector2f)target.getSize());
+
+            // Load the resources
+            // How can we load them into an array in SFML?
+            // Don't think we can
+            for (const auto& p : shader_component->textures)
+            {
+                switch (p.first)
+                {
+                case TexSource::Renderpass:
+                {
+                    S2D_ASSERT(scene->renderpass->targets.count(p.second), "Renderpass doesn't contain requested resource");
+                    const auto& pass = scene->renderpass->targets.at(p.second);
+                    pass->display();
+                    shader->setUniform("size", (sf::Vector2f)pass->getSize());
+                    shader->setUniform("texture", pass->getTexture());
+
+                    return shader;
+                }
+                case TexSource::Resources:
+                {
+                    const auto resource = scene->resources.getResource<sf::Texture>(p.second);
+                    S2D_ASSERT(resource, "Failed to load resource!");
+                    shader->setUniform("size", (sf::Vector2f)resource.value()->getSize());
+                    shader->setUniform("texture", *resource.value());
+                    return shader;
+                }
+                default: break;
+                }
+            }
+
+            return shader;
+        }();
+
+
+    }
+
     auto& logger = Log::Logger::instance("engine");
 
     sf::Transform model, view;
@@ -229,12 +278,13 @@ void RenderComponent(
     {
         auto& vertex = vertices[i];
 
+
         vertex.position = model.transformPoint(vertex.position);
         vertex.position = view.transformPoint(vertex.position);
         vertex.position += (sf::Vector2f)target.getSize() / 2.f;
     }
 
-    target.draw(vertices);
+    target.draw(vertices, states);
 }
 
 static void 

@@ -69,5 +69,21 @@ Resources::getResource(const std::string& name) const
 template typename Resources::Result<const sf::Font*> Resources::getResource<sf::Font>(const std::string&) const;
 template typename Resources::Result<const sf::Texture*> Resources::getResource<sf::Texture>(const std::string&) const;
 template typename Resources::Result<const sf::Image*> Resources::getResource<sf::Image>(const std::string&) const;
+template typename Resources::Result<const sf::Shader*> Resources::getResource<sf::Shader>(const std::string&) const;
+
+template<typename T>
+Resources::Result<T*>
+Resources::getResource(const std::string& name)
+{
+    const auto id = typeid(T).hash_code();
+    S2D_ASSERT(resources.count(id), "Resource type does not exist");
+    auto& types = resources.at(id);
+    S2D_ASSERT(types.count(name), "Resource does not exist");
+    return static_cast<T*>(types.at(name).ptr);
+}
+template typename Resources::Result<sf::Font*> Resources::getResource<sf::Font>(const std::string&);
+template typename Resources::Result<sf::Texture*> Resources::getResource<sf::Texture>(const std::string&);
+template typename Resources::Result<sf::Image*> Resources::getResource<sf::Image>(const std::string&);
+template typename Resources::Result<sf::Shader*> Resources::getResource<sf::Shader>(const std::string&);
 
 }

@@ -24,7 +24,7 @@ function GetResources()
         },
         shaders = {
             {
-                name = "test",
+                name = "grass_shader",
                 vertex   = Directory.Source.."/shaders/vertex.glsl",
                 fragment = Directory.Source.."/shaders/fragment.glsl"
             }
@@ -34,6 +34,7 @@ end
 
 function GetEntities()
     return {
+        --[[
         {
             components = {
                 {
@@ -59,7 +60,8 @@ function GetEntities()
             scripts = {
                 Directory.Source.."/scripts/yard.lua"
             }
-        },
+        },--]]
+        --[[
         {
             components = {
                 {
@@ -78,7 +80,7 @@ function GetEntities()
                     }
                 }
             }
-        },
+        },--]]
         {
             name = "Mesh",
             components = {
@@ -93,6 +95,12 @@ function GetEntities()
                 {
                     type = Component.CustomMesh,
                     value = {}
+                },
+                {
+                    type = Component.Shader,
+                    value = {
+                        name = "grass_shader"
+                    }
                 }
             }
         },

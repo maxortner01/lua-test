@@ -27,6 +27,11 @@ struct MainScene : Engine::LuaScene
         S2D_ASSERT(e.has<Engine::CustomMesh>(), "Entity missing mesh component");
         auto* mesh = e.get_mut<Engine::CustomMesh>();
 
+        e.get_mut<Engine::ShaderComp>()->textures.push_back(std::pair(
+            Engine::TexSource::Renderpass,
+            "mow"
+        ));
+
         if (!mesh->mesh) mesh->mesh = std::make_unique<Engine::RawMesh>();
         mesh->mesh->primitive = Engine::Primitive::Points;
 
@@ -73,13 +78,13 @@ struct MainScene : Engine::LuaScene
         builder.resource<Resource::Surface>({ "mow", { 1280, 720 } });
         builder.resource<Resource::Surface>({ "UI", { 1280, 720 } });
 
-        builder.command<Command::BindSurface>({ "main" });
-        builder.command<Command::Clear>({ { 0, 0, 0, 255 } });
-        builder.command<Command::RenderEntities>({ "MainCamera" });
 
         builder.command<Command::BindSurface>({ "mow" });
         builder.command<Command::RenderEntity>({ "Player", "MowCamera" });
-        builder.command<Command::RenderEntity>({ "Mesh", "MowCamera" });
+        
+        builder.command<Command::BindSurface>({ "main" });
+        builder.command<Command::Clear>({ { 0, 0, 0, 255 } });
+        builder.command<Command::RenderEntities>({ "MainCamera" });
         builder.command<Command::BlitSurface>({ { 0.f, 0.f }, { 1280.f, 720.f } });
 
         builder.command<Command::BindSurface>({ "UI" });

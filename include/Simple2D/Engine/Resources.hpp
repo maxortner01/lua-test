@@ -38,6 +38,10 @@ namespace S2D::Engine
         Result<const T*>
         getResource(const std::string& name) const;
 
+        template<typename T>
+        Result<T*>
+        getResource(const std::string& name);
+
     private:
         using ResourceMap = std::unordered_map<std::string, DataPoint>;
         std::unordered_map<std::size_t, ResourceMap> resources;

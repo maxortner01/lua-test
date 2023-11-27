@@ -375,6 +375,24 @@ Component<Name::CustomMesh>::fromTable(
     auto* data = reinterpret_cast<Data*>(_data);
 }
 
+Lua::Table 
+Component<Name::Shader>::getTable(
+    const Data& data)
+{
+    Lua::Table table;
+    table.set("name", data.name);
+    return table;
+}
+
+void 
+Component<Name::Shader>::fromTable(
+    const Lua::Table& table, 
+    void* _data)
+{
+    auto* data = reinterpret_cast<Data*>(_data);
+    data->name = table.get<Lua::String>("name");
+}
+
 void
 registerComponents(Lua::Table& table, flecs::world& world)
 {

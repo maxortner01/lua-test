@@ -64,6 +64,7 @@ namespace S2D::Engine
         Collider,
         Camera,
         CustomMesh,
+        Shader,
         Count
     };
 
@@ -81,6 +82,7 @@ namespace S2D::Engine
         case Name::Collider:   return "Collider";
         case Name::Camera:     return "Camera";
         case Name::CustomMesh: return "CustomMesh";
+        case Name::Shader:     return "Shader";
         default: return "";
         }
     }
@@ -190,6 +192,19 @@ namespace S2D::Engine
         std::unique_ptr<RawMesh> mesh;
     );
 
+    // If the resource we reference from a shader is in the current renderpass
+    // or if its in the scene's resource
+    enum class TexSource
+    {
+        Resources, Renderpass, Count
+    };
+
+    using ResList = std::vector<std::pair<TexSource, Lua::String>>;
+    COMPONENT_DEFINITION(Shader,
+        Lua::String name;
+        ResList textures;
+    );
+
     template<Name T>
     using ComponentData = typename Component<T>::Data;
 
@@ -201,4 +216,5 @@ namespace S2D::Engine
     using Rigidbody  = ComponentData<Name::Rigidbody>;
     using Camera     = ComponentData<Name::Camera>;    
     using CustomMesh = ComponentData<Name::CustomMesh>;    
+    using ShaderComp = ComponentData<Name::Shader>;
 }
