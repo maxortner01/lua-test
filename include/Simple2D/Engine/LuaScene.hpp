@@ -10,6 +10,7 @@ namespace S2D::Engine
         LuaScene(const std::string& config_file);
 
         using Scene::constructPass;
+        using Scene::update;
 
         virtual void prestart() {}
         void start() override;

@@ -339,6 +339,31 @@ const char* operator*(Projection p)
     }
 }
 
+sf::Vector2f 
+toScreenSpace(
+    flecs::entity camera, 
+    const sf::Vector2f& world_point)
+{
+    const auto* transform = camera.get<Transform>();
+    const auto* cam = camera.get<Camera>();
+    S2D_ASSERT(transform, "Camera must have transform");
+    S2D_ASSERT(cam, "Camera missing camera component");
+
+    sf::Transform view;
+    view.translate(-1.f * sf::Vector2f(transform->position.x, transform->position.y));
+
+    const auto transformed = view.transformPoint(world_point);
+    return transformed + (sf::Vector2f)cam->size / 2.f;
+}
+
+sf::Vector2f 
+toWorldSpace(
+    flecs::entity camera, 
+    const sf::Vector2f& screen_point)
+{
+
+}
+
 Lua::Table 
 Component<Name::Camera>::getTable(
     const Data& data)
@@ -346,6 +371,12 @@ Component<Name::Camera>::getTable(
     Lua::Table table;
     table.set("FOV", data.FOV);
     table.set("projection", (Lua::Number)(int)data.projection);
+
+    Lua::Table size;
+    size.set("width",  (Lua::Number)data.size.x);
+    size.set("height", (Lua::Number)data.size.y);
+    table.set("size", size);
+
     return table;
 }
 
@@ -357,6 +388,10 @@ Component<Name::Camera>::fromTable(
     auto* data = reinterpret_cast<Data*>(_data);
     data->FOV = table.get<Lua::Number>("FOV");
     data->projection = (Projection)(int)table.get<Lua::Number>("projection");
+
+    const auto& size = table.get<Lua::Table>("size");
+    data->size.x = size.get<Lua::Number>("width");
+    data->size.y = size.get<Lua::Number>("height");
 }
 
 Lua::Table 

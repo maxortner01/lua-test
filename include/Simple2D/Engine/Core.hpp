@@ -38,7 +38,7 @@ namespace S2D::Engine
         virtual ~Scene() = default;
 
         virtual void start() { }
-        virtual void draw(sf::RenderTarget& target) { }
+        virtual void update() { }
         virtual void constructPass(RenderpassBuilder& builder) { }
     };
 
@@ -77,6 +77,14 @@ namespace S2D::Engine
         scene->start();
 
         RenderpassBuilder builder;
+
+        // here is where we go through the cameras
+        scene->world.template filter<const Camera>().each(
+            [&](flecs::entity e, const Camera& camera)
+            {
+                builder.resource<Resource::Surface>({ std::string(e.name().c_str()), camera.size });
+            });
+
         scene->constructPass(builder);
         scene->renderpass = builder.build();
 

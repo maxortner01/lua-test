@@ -183,9 +183,13 @@ namespace S2D::Engine
 
     const char* operator*(Projection p);
 
+    sf::Vector2f toScreenSpace(flecs::entity camera, const sf::Vector2f& world_point);
+    sf::Vector2f toWorldSpace(flecs::entity camera, const sf::Vector2f& screen_point);
+
     COMPONENT_DEFINITION(Camera,
         Lua::Number FOV;
         Projection projection;
+        sf::Vector2u size;
     );
 
     COMPONENT_DEFINITION(CustomMesh,

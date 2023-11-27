@@ -126,7 +126,16 @@ void RenderComponent(
 {
     sf::RenderStates states;
     if (sprite->texture.size())
-        states.texture = scene->resources.getResource<sf::Texture>(sprite->texture).value();
+    {
+        auto* texture = [&]() 
+        {
+            const auto res = scene->resources.getResource<sf::Texture>(sprite->texture);
+            S2D_ASSERT(res, "Error loading texture");
+            return res.value();
+        }();
+        texture->setSmooth(false);
+        states.texture = texture;
+    }
 
     MeshBuilder<Sprite>::checkAndBuild(e);
 
@@ -155,7 +164,7 @@ void RenderComponent(
         if (states.texture)
         {
             vertex.texCoords.x *= states.texture->getSize().x;
-            vertex.texCoords.y *= states.texture->getSize().x;
+            vertex.texCoords.y *= states.texture->getSize().y;
         }
 
         vertex.position = model.transformPoint(vertex.position);
@@ -277,7 +286,6 @@ void RenderComponent(
     for (uint32_t i = 0; i < vertices.getVertexCount(); i++)
     {
         auto& vertex = vertices[i];
-
 
         vertex.position = model.transformPoint(vertex.position);
         vertex.position = view.transformPoint(vertex.position);

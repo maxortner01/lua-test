@@ -8,6 +8,14 @@ function GetResources()
             {
                 name = "mask",
                 location = Directory.Source.."/textures/grass_mask.png"
+            },
+            {
+                name = "mower_top",
+                location = Directory.Source.."/textures/mower_top.png"
+            },
+            {
+                name = "mower_bottom",
+                location = Directory.Source.."/textures/mower_bottom.png"
             }
         },
         fonts = {
@@ -105,12 +113,12 @@ function GetEntities()
             }
         },
         {
-            name = "Player",
+            name = "PlayerTop",
             components = {
                 {
                     type = Component.Transform,
                     value = {
-                        position = { x = 175, y = 175, z = 1 },
+                        position = { x = 175, y = 175, z = 2 },
                         scale = 3,
                         rotation = 0
                     }
@@ -118,8 +126,8 @@ function GetEntities()
                 {
                     type = Component.Sprite,
                     value = {
-                        size = { width = 16, height = 16 },
-                        texture = ""
+                        size = { width = 24, height = 42 },
+                        texture = "mower_top"
                     }
                 },
                 {
@@ -140,6 +148,29 @@ function GetEntities()
             }
         },
         {
+            name = "PlayerBottom",
+            components = {
+                {
+                    type = Component.Transform,
+                    value = {
+                        position = { x = 175, y = 175, z = 1 },
+                        scale = 3,
+                        rotation = 0
+                    }
+                },
+                {
+                    type = Component.Sprite,
+                    value = {
+                        size = { width = 24, height = 42 },
+                        texture = "mower_bottom"
+                    }
+                }
+            },
+            scripts = {
+                Directory.Source.."/scripts/mower_bottom.lua"
+            }
+        },
+        {
             name = "MainCamera",
             components = {
                 {
@@ -154,7 +185,8 @@ function GetEntities()
                     type = Component.Camera,
                     value = {
                         FOV = 90,
-                        projection = ProjectionType.Orthographic
+                        projection = ProjectionType.Orthographic,
+                        size = { width = 1280, height = 720 }
                     }
                 }
             },
@@ -177,7 +209,8 @@ function GetEntities()
                     type = Component.Camera,
                     value = {
                         FOV = 90,
-                        projection = ProjectionType.Orthographic
+                        projection = ProjectionType.Orthographic,
+                        size = { width = 1280, height = 720 }
                     }
                 }
             }

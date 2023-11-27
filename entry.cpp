@@ -29,7 +29,7 @@ struct MainScene : Engine::LuaScene
 
         e.get_mut<Engine::ShaderComp>()->textures.push_back(std::pair(
             Engine::TexSource::Renderpass,
-            "mow"
+            "MowCamera"
         ));
 
         if (!mesh->mesh) mesh->mesh = std::make_unique<Engine::RawMesh>();
@@ -74,15 +74,12 @@ struct MainScene : Engine::LuaScene
 
         Log::Logger::instance("engine")->info("Constructing pass");
 
-        builder.resource<Resource::Surface>({ "main", { 1280, 720 } });
-        builder.resource<Resource::Surface>({ "mow", { 1280, 720 } });
         builder.resource<Resource::Surface>({ "UI", { 1280, 720 } });
 
-
-        builder.command<Command::BindSurface>({ "mow" });
-        builder.command<Command::RenderEntity>({ "Player", "MowCamera" });
+        builder.command<Command::BindSurface>({ "MowCamera" });
+        builder.command<Command::RenderEntity>({ "PlayerBottom", "MowCamera" });
         
-        builder.command<Command::BindSurface>({ "main" });
+        builder.command<Command::BindSurface>({ "MainCamera" });
         builder.command<Command::Clear>({ { 0, 0, 0, 255 } });
         builder.command<Command::RenderEntities>({ "MainCamera" });
         builder.command<Command::BlitSurface>({ { 0.f, 0.f }, { 1280.f, 720.f } });

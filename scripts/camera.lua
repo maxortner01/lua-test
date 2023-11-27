@@ -1,5 +1,5 @@
 function Update(world, entity)
-    local player = world:getEntity("Player")
+    local player = world:getEntity("PlayerTop")
     local player_transform = player:getComponent(Component.Transform)
     local camera_transform = entity:getComponent(Component.Transform)
 

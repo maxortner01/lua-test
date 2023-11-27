@@ -184,6 +184,7 @@ void Core::run()
         window.clear();
 
         world.progress();
+        top_scene->update();
 
         render(top_scene);
         
@@ -195,8 +196,6 @@ void Core::run()
             rigidbody.velocity += (rigidbody.added_force - rigidbody.linear_drag * rigidbody.velocity) * (float)Time::dt;
             transform.position += sf::Vector3f(rigidbody.velocity.x, rigidbody.velocity.y, 0.f) * (float)Time::dt;
         });
-
-        top_scene->draw(window);
 
         window.display();
 

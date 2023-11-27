@@ -1,7 +1,7 @@
 function Update(world, entity)
     local force = {
         amount = 0,
-        mag = 2500
+        mag = 1200
     }
 
     local rotation = {
