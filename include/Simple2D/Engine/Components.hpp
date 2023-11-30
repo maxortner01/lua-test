@@ -112,7 +112,7 @@ namespace S2D::Engine
     COMPONENT_DEFINITION(Sprite,
         std::shared_ptr<RawMesh> mesh;
         Lua::String texture;
-        sf::Vector2u size;
+        sf::Vector2f size;
     );
 
     enum class TextAlign

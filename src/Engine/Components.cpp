@@ -162,8 +162,8 @@ Component<Name::Sprite>::getTable(
     Lua::Table table;
 
     Lua::Table size;
-    size.set("width",  (Lua::Number)data.size.x);
-    size.set("height", (Lua::Number)data.size.y);
+    size.set("width",  data.size.x);
+    size.set("height", data.size.y);
     table.set("size", size);
     table.set("texture", data.texture);
 

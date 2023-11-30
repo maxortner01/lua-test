@@ -18,7 +18,10 @@ struct MainScene : Engine::LuaScene
 {
     MainScene(const std::string& filename) :
         LuaScene(filename)
-    {   }
+    {   
+        resources.loadResource<sf::Shader>("grass_shader", std::string(SOURCE_DIR "/shaders/test.vert.glsl"), sf::Shader::Vertex);
+        resources.loadResource<sf::Shader>("grass_shader", std::string(SOURCE_DIR "/shaders/test.frag.glsl"), sf::Shader::Fragment);
+    }
 
     void poststart() override
     {
@@ -27,10 +30,11 @@ struct MainScene : Engine::LuaScene
         S2D_ASSERT(e.has<Engine::CustomMesh>(), "Entity missing mesh component");
         auto* mesh = e.get_mut<Engine::CustomMesh>();
 
+        /*
         e.get_mut<Engine::ShaderComp>()->textures.push_back(std::pair(
             Engine::TexSource::Renderpass,
             "MowCamera"
-        ));
+        ));*/
 
         if (!mesh->mesh) mesh->mesh = std::make_unique<Engine::RawMesh>();
         mesh->mesh->primitive = Engine::Primitive::Points;
@@ -58,14 +62,23 @@ struct MainScene : Engine::LuaScene
 
                 sf::Vertex vertex;
                 vertex.position = sf::Vector2f(
-                    x + random() * 0.9,
-                    y + random() * 0.9
+                    (x + random() * 0.9 - (float)image->getSize().x / 2.f) / (float)image->getSize().x,
+                    (y + random() * 0.9 - (float)image->getSize().y / 2.f) / (float)image->getSize().y
                 );
                 vertex.color = sf::Color::Red;
 
                 mesh->mesh->vertices.append(vertex);
             }
         }
+    }
+
+    void update() override
+    {
+        // set mow-camera info into shader
+        auto mow_camera = world.lookup("MowCamera");
+        const auto* transform = mow_camera.get<Engine::Transform>();
+        auto shader = resources.getResource<sf::Shader>("grass_shader");
+        shader.value()->setUniform("aspectRatio", 0.f);
     }
 
     void constructPass(Engine::RenderpassBuilder& builder) override
@@ -89,6 +102,11 @@ struct MainScene : Engine::LuaScene
         builder.command<Command::RenderUI>({ loadRuntime(SOURCE_DIR "/scripts/ui.lua", world) });
         builder.command<Command::BlitSurface>({ { 0.f, 0.f }, { 1280.f, 720.f } });
 
+        // The shader goes like so
+        // Convert the -1 to 1 coordinates to (0, 0) -> (1, 1) coordinates and then simply 
+        // sample into the mow camera with this. Since they're both centered I don't need to
+        // worry about it.
+
     }
 };
 
@@ -101,7 +119,7 @@ struct App : Engine::Application
 
     void start(Engine::Core& core) override
     {
-        core.emplaceScene<MainScene>(SOURCE_DIR "/scripts/test.lua");
+        core.emplaceScene<MainScene>(SOURCE_DIR "/scripts/new_test.lua");
     }
 };
 

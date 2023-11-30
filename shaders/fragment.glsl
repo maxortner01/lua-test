@@ -1,4 +1,12 @@
+uniform vec2 texture_size;
 uniform sampler2D texture;
+
+void main() 
+{ 
+  gl_FragColor = gl_Color;
+}
+
+/*uniform sampler2D texture;
 
 uniform vec3 camera_pos;
 uniform vec2 size;
@@ -14,4 +22,4 @@ void main()
     vec4 pixel = texture2D(texture, vec2(pos.x / size.x, pos.y / size.y));
     if (pixel.a > 0.0) discard;
     gl_FragColor = vec4(0, 1, 0, 1);
-}
+}*/

@@ -6,7 +6,7 @@ namespace S2D::Engine
 {
     enum class ResourceType
     {
-        Texture, Font, Image, Count
+        Texture, Font, Image, Surface, Count
     };
 
     const char* operator*(ResourceType r);

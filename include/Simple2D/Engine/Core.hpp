@@ -5,6 +5,7 @@
 #include "Renderpass.hpp"
 #include "Resources.hpp"
 #include "Components.hpp"
+#include "Renderer.hpp"
 
 #include <stack>
 #include <flecs.h>
@@ -26,12 +27,13 @@ namespace S2D::Engine
         Resources resources;
 
         // Important cached queries for rendering
-        flecs::query<Script> scripts;
-        flecs::query<Transform, Rigidbody> rigidbodies;
-        flecs::query<const Transform> transforms;
-        flecs::query<const Collider, Transform, Rigidbody> colliders;
-        flecs::query<Dead> dead;
+        flecs::query<Script> scripts; // for script system
+        flecs::query<Transform, Rigidbody> rigidbodies; // for collision
+        flecs::query<const Collider, Transform, Rigidbody> colliders; // for collision
+        //flecs::query<const Transform> transforms; // for rendering
+        flecs::query<Dead> dead; // for cleanup
 
+        std::unique_ptr<Renderer> renderer;
         std::unique_ptr<Renderpass> renderpass;
 
         Scene();

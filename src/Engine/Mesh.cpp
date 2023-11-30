@@ -33,7 +33,7 @@ namespace S2D::Engine
     static void 
     addBox(
         std::unique_ptr<CollisionMesh>& collision,
-        sf::Vector2u size,
+        sf::Vector2f size,
         sf::Vector3f offset,
         float scale)
     {
@@ -102,13 +102,13 @@ namespace S2D::Engine
         };
 
         const sf::Vector2f tex_coords[] = {
-            { 0, 1 },
             { 1, 0 },
-            { 0, 0 },
+            { 0, 1 },
+            { 1, 1 },
 
-            { 1, 0 },
             { 0, 1 },
-            { 1, 1 }
+            { 1, 0 },
+            { 0, 0 }
         };
 
         vertices.clear();
@@ -124,8 +124,6 @@ namespace S2D::Engine
             vertex.color = sf::Color::White;
         }
     }
-
-    //static void constructTilemap()
 
     template<>
     void MeshBuilder<Sprite>::checkAndBuild(flecs::entity e)
@@ -283,7 +281,7 @@ namespace S2D::Engine
                 if (collider && p.second.second == Component<Name::Tilemap>::LayerState::Solid)
                 {
                     // Push quad at this point
-                    addBox(collider->mesh, (sf::Vector2u)tilemap->tilesize, { position.x, position.y, 0 }, scale);
+                    addBox(collider->mesh, tilemap->tilesize, { position.x, position.y, 0 }, scale);
                 }
                 
                 // Construct the vertices of the quad

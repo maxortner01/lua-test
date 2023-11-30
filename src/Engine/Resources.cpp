@@ -1,7 +1,12 @@
 #include <Simple2D/Engine/Resources.hpp>
 #include <Simple2D/Def.hpp>
 
+#include <Simple2D/Log/Log.hpp>
+
 #include <SFML/Graphics.hpp>
+
+#include <fstream>
+#include <sstream>
 
 namespace S2D::Engine
 {
@@ -45,14 +50,32 @@ Resources::loadResource<sf::Shader>(const std::string& name, const std::string& 
     if (types.count(name)) res = (sf::Shader*)types.at(name).ptr;
     else 
     {
+        Log::Logger::instance("engine")->trace("Generating new shader");
         res = new sf::Shader();
         types.insert(std::pair(name, DataPoint {
             .ptr     = (void*)res,
             .deleter = [](void* ptr) { delete reinterpret_cast<sf::Shader*>(ptr); }
         }));
     }
-    S2D_ASSERT(res, "Error loading resource");
-    S2D_ASSERT(res->loadFromFile(std::filesystem::path(filename), type), "Error loading shader from file");
+
+    S2D_ASSERT(res, "Error loading/creating resource");
+
+    Log::Logger::instance("engine")->trace("Setting {} shader to program \"{}\"", (type == sf::Shader::Vertex ? "Vertex" : "Fragment"), name);
+
+    const auto contents = [&]()
+    {
+        const auto path = std::filesystem::path(filename);
+        std::ifstream file(path);
+        S2D_ASSERT(file, "Error loading file");
+
+        std::string line;
+        std::stringstream ss;
+        while (std::getline(file, line)) ss << line << "\n";
+
+        return ss.str();
+    }();
+
+    S2D_ASSERT(res->loadFromMemory(contents, type), "Error loading shader from file");
     return { };
 }
 

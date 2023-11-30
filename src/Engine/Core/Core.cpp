@@ -17,15 +17,6 @@ Scene::Scene() :
     scripts(
         world.query_builder<Script>().build()
     ),
-    transforms(
-        world.query_builder<const Transform>()
-            .order_by<Transform>(
-            [](flecs::entity_t e1, const Transform *d1, flecs::entity_t e2, const Transform *d2) 
-            {
-                return (d1->position.z > d2->position.z) - (d1->position.z < d2->position.z);
-            })
-            .build()
-    ),
     colliders(
         world.query_builder<const Collider, Transform, Rigidbody>().build()
     ),
@@ -34,9 +25,19 @@ Scene::Scene() :
     ),
     rigidbodies(
         world.query_builder<Transform, Rigidbody>().build()
+    ),
+    renderer(
+        std::make_unique<Renderer>(this)
     )
 {
+    // Shaders should be in the renderer, and there should be different ones for each component type
+    // Change the const shader pointer to a non-const and change the uniforms as needed there
+    // load default shader
+    //S2D_ASSERT(sf::Shader::isAvailable(), "Shaders are not supported on this machine");
 
+    // For some wack reason the matrix multiplication *does not* translate
+
+    //S2D_ASSERT(default_shader.loadFromMemory(vertex, fragment), "Error loading default shader");
 }
 
 Scene* Core::getTopScene()
@@ -222,7 +223,9 @@ Core::Core(const Application& app) :
     window(
         sf::VideoMode(app.size),
         app.name)
-{   }
+{   
+    Log::Logger::instance("engine")->info("Core and context started");
+}
 
 Core::~Core()
 {

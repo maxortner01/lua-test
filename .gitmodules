@@ -16,3 +16,9 @@
 [submodule "extern/eigen"]
 	path = extern/eigen
 	url = https://github.com/libigl/eigen
+[submodule "extern/SDL"]
+	path = extern/SDL
+	url = https://github.com/libsdl-org/SDL
+[submodule "extern/glew-cmake"]
+	path = extern/glew-cmake
+	url = https://github.com/Perlmint/glew-cmake

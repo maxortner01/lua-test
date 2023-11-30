@@ -18,6 +18,7 @@ const char* operator*(ResourceType r)
     case ResourceType::Font:    return "Font";
     case ResourceType::Image:   return "Image";
     case ResourceType::Texture: return "Texture";
+    case ResourceType::Surface: return "Surface";
     default: return "";
     }
 }
@@ -63,6 +64,14 @@ ResLib::getResource(Lua::State L)
         LUA_EXCEPTION(res, "Resource not found!");
         resource = (void*)res.value();
         
+        return 0;
+    }
+    case ResourceType::Surface:
+    {
+        LUA_EXCEPTION(scene->renderpass->targets.count(name), "Renderpass missing requested surface");
+        auto& res = scene->renderpass->targets.at(name);
+        resource = (void*)res.get();
+
         return 0;
     }
     default: return 0;

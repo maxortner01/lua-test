@@ -58,13 +58,33 @@ set(LUA_SOURCES
 
 add_library(simple2d-lua SHARED ${LUA_SOURCES})
 
-# ENGINE
 set(BUILD_TESTING OFF)
 set(BUILD_SHARED_LIBS TRUE)
 
+## GRAPHICS
+set(SDL_TEST_LIBRARY OFF)
+add_subdirectory(${CMAKE_SOURCE_DIR}/extern/SDL)
+
+set(glew-cmake_BUILD_SHARED OFF)
+add_subdirectory(${CMAKE_SOURCE_DIR}/extern/glew-cmake)
+
+set(GRAPHICS_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/Log/Log.cpp
+    ${CMAKE_SOURCE_DIR}/src/Graphics/Shader.cpp
+    ${CMAKE_SOURCE_DIR}/src/Graphics/DrawWindow.cpp
+    ${CMAKE_SOURCE_DIR}/src/Graphics/Keyboard.cpp
+    ${CMAKE_SOURCE_DIR}/src/Graphics/Mouse.cpp
+    ${CMAKE_SOURCE_DIR}/src/Graphics/Window.cpp)
+
+add_library(simple2d-graphics SHARED ${GRAPHICS_SOURCES})
+
+target_link_libraries(simple2d-graphics PRIVATE SDL3::SDL3 libglew_static)
+
+# ENGINE
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/spdlog)
+
+set(FLECS_STATIC OFF)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/flecs)
-add_subdirectory(${CMAKE_SOURCE_DIR}/extern/sfml)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/fcl)
 
 set(ENGINE_SOURCES
@@ -72,6 +92,7 @@ set(ENGINE_SOURCES
     ${CMAKE_SOURCE_DIR}/src/Engine/Mesh.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Resources.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Application.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/Renderer.cpp
 
     ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/ImageLib.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/ResLib.cpp
@@ -93,18 +114,13 @@ set(ENGINE_SOURCES
 
 add_library(simple2d-engine STATIC ${ENGINE_SOURCES})
 
-target_link_libraries(simple2d-engine PRIVATE simple2d-lua spdlog::spdlog fcl flecs sfml-graphics sfml-system sfml-window)
+target_link_libraries(simple2d-engine PRIVATE simple2d-lua simple2d-graphics spdlog::spdlog fcl flecs)
 
 ## EXECUTABLE
-add_executable(main entry.cpp)
+add_executable(main main.cpp)
 
 target_compile_definitions(main PUBLIC -DSOURCE_DIR="${CMAKE_SOURCE_DIR}")
-target_link_libraries(main PUBLIC simple2d-lua simple2d-engine flecs)
-
-install(
-    TARGETS main simple2d-engine simple2d-lua flecs spdlog fcl sfml-graphics sfml-system sfml-window 
-    DESTINATION ${CMAKE_SOURCE_DIR}/game
-)
+target_link_libraries(main PUBLIC simple2d-lua simple2d-engine simple2d-graphics flecs)
 
 #set_target_properties(simple2d-engine simple2d-lua main
 #    PROPERTIES

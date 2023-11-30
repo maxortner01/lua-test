@@ -295,6 +295,7 @@ void RenderComponent(
     target.draw(vertices, states);
 }
 
+/*
 static void 
 render_entity(
     Scene* scene, 
@@ -303,19 +304,20 @@ render_entity(
     flecs::entity camera, 
     flecs::entity e)
 {
-    /* Render Sprite */
+    // Render Sprite 
     if (e.has<Sprite>()) RenderComponent(scene, e, camera, transform, e.get_mut<Sprite>(), target);
 
-    /* Render Text */
+    // Render Text 
     if (e.has<Text>()) RenderComponent(scene, e, camera, transform, e.get_mut<Text>(), target);
 
-    /* Render Tilemap */
+    // Render Tilemap 
     if (e.has<Tilemap>()) RenderComponent(scene, e, camera, transform, e.get_mut<Tilemap>(), target);
 
-    /* Render Custom Mesh */
+    // Render Custom Mesh 
     if (e.has<CustomMesh>()) RenderComponent(scene, e, camera, transform, e.get_mut<CustomMesh>(), target);
-}
+}*/
 
+/*
 static void 
 render_entities(Scene* scene, sf::RenderTarget& target, flecs::entity camera)
 {
@@ -325,7 +327,7 @@ render_entities(Scene* scene, sf::RenderTarget& target, flecs::entity camera)
             render_entity(scene, target, transform, camera, e);
         }
     );
-}
+}*/
 
 void Core::render(Scene* scene)
 {   
@@ -334,6 +336,9 @@ void Core::render(Scene* scene)
     sf::RenderTexture* current_target = nullptr;
     const auto& targets  = scene->renderpass->targets;
     const auto& commands = scene->renderpass->commands;
+    
+    auto& renderer = scene->renderer;
+    S2D_ASSERT(renderer, "Renderer is corrupted");
 
     const auto camera = scene->world.filter<const Camera>().first();
 
@@ -380,7 +385,8 @@ void Core::render(Scene* scene)
                 break;
             }
 
-            render_entities(scene, *current_target, camera_to_use);
+            renderer->render(camera_to_use, *current_target);
+            //render_entities(scene, *current_target, camera_to_use);
 
             break;
         }
@@ -394,20 +400,6 @@ void Core::render(Scene* scene)
                 break;
             }
 
-            auto entity = scene->world.lookup(params->entity_name.c_str());
-            if (!entity) 
-            {
-                log->error("Entity \"{}\" doesn't exist", params->entity_name);
-                break;
-            }
-
-            const auto* transform = entity.get<Transform>();
-            if (!transform)
-            {
-                log->error("Entity \"{}\" doesn't have a transform", params->entity_name);
-                break;
-            }
-
             auto camera_to_use = (params->camera_name.size() ? scene->world.lookup(params->camera_name.c_str()) : camera);
             if (!camera_to_use)
             {
@@ -415,7 +407,8 @@ void Core::render(Scene* scene)
                 break;
             }
 
-            render_entity(scene, *current_target, *transform, camera_to_use, entity);
+            renderer->render(camera_to_use, params->entity_name.c_str(), *current_target);
+            //render_entity(scene, *current_target, *transform, camera_to_use, entity);
 
             break;
         }
@@ -457,7 +450,9 @@ void Core::render(Scene* scene)
             surface.set<uint64_t>("scene", (uint64_t)scene);
             surface.set<uint64_t>("surface", (uint64_t)current_target);
             
-            runtime->runFunction<>("RenderUI", surface);
+            const auto res = runtime->runFunction<>("RenderUI", surface);
+            if (!res && res.error().code() != Lua::Runtime::ErrorCode::NotFunction)
+                log->error("Error rendering UI ({}): {}", (int)res.error().code(), res.error().message());
 
             break;
         }
