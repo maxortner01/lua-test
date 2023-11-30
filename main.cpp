@@ -14,9 +14,26 @@ int main()
     auto& logger = Log::Logger::instance("window");
     
     Graphics::Program program;
-    S2D_ASSERT(program.fromFile(std::filesystem::path(SOURCE_DIR "/shaders/new.vert.glsl"), Graphics::Shader::Type::Vertex), "Error loading vertex shader");
-    S2D_ASSERT(program.fromFile(std::filesystem::path(SOURCE_DIR "/shaders/new.frag.glsl"), Graphics::Shader::Type::Fragment), "Error loading fragment shader");
+    S2D_ASSERT(program.fromFile(SOURCE_DIR "/shaders/new.vert.glsl", Graphics::Shader::Type::Vertex),   "Error loading vertex shader"  );
+    S2D_ASSERT(program.fromFile(SOURCE_DIR "/shaders/new.frag.glsl", Graphics::Shader::Type::Fragment), "Error loading fragment shader");
     program.link();
+
+    auto vertices = []()
+    {
+        std::vector<Graphics::Vertex> vertices;
+
+        const std::vector<Math::Vec3f> points = {
+            { -0.5f,  0.5f, 0.f },
+            {  0.5f, -0.5f, 0.f },
+            { -0.5f, -0.5f, 0.f }
+        };
+
+        for (const auto& p : points) vertices.push_back(Graphics::Vertex{ .position = p, .color = Graphics::Color(255, 0, 0, 255) });
+
+        Graphics::VertexArray vao;
+        vao.upload(vertices);
+        return vao;
+    }();
 
     while (window.isOpen())
     {
@@ -42,6 +59,11 @@ int main()
         }
 
         window.clear(Graphics::Color(255, 127, 0, 255));
+
+        program.use();
+        vertices.bind();
+        vertices.draw();
+
         window.display();
     }
 }

@@ -38,8 +38,7 @@ namespace S2D::Graphics
 
     void DrawWindow::clear(const Color& color) const
     {
-        const auto norm = color.normalized();
-        glClearColor(norm.x, norm.y, norm.z, norm.w);
+        glClearColor(color.r, color.g, color.b, color.a);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 

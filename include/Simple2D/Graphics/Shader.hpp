@@ -37,6 +37,7 @@ namespace S2D::Graphics
         ~Program() = default;
 
         Util::Result<void> link();
+        void use() const;
 
         [[nodiscard]]
         bool fromFile(const std::filesystem::path& filename, Shader::Type type);

@@ -76,6 +76,12 @@ Util::Result<void> Program::link()
     return { };
 }
 
+void Program::use() const
+{
+    S2D_ASSERT(handle, "Can't use program with invalid handle");
+    glUseProgram(handle);
+}
+
 bool Program::fromFile(const std::filesystem::path& filepath, Shader::Type type)
 {
     std::ifstream file(filepath);
