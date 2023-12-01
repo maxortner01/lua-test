@@ -14,10 +14,8 @@ namespace S2D::Graphics
         DrawWindow(const Math::Vec2u& size, const std::string& title);
         ~DrawWindow();
 
-        void clear(const Color& color = Color(0, 0, 0, 255)) const;
         void display() const;
-
-        void bind() override;
+        void bind() const override;
 
     private:
         Window::Handle context;

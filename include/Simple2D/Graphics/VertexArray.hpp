@@ -41,16 +41,28 @@ namespace S2D::Graphics
     {
         using Handle = uint32_t;
 
+        enum class DrawType
+        {
+            Triangles, Lines, Points
+        };
+
         VertexArray(const VertexArray&) = delete;
 
-        VertexArray(bool needs_index = false);
+        VertexArray();
         VertexArray(VertexArray&&) = default;
         
         ~VertexArray();
 
         void upload(const std::vector<Vertex>& vertices);
+        void uploadIndices(const std::vector<uint32_t>& indices);
+
         void bind() const;
         void draw(Surface* window) const override;
+
+        void setDrawType(DrawType type);
+        DrawType getDrawType() const { return draw_type; }
+
+        const std::size_t& vertexCount() const { return count; }
 
     private:
         std::optional<Buffer> indices;
@@ -58,6 +70,7 @@ namespace S2D::Graphics
 
         std::size_t count;
         Handle handle;
+        DrawType draw_type;
     };
 
     template<typename T>

@@ -42,19 +42,15 @@ namespace S2D::Graphics
         context = nullptr;
     }   
 
-    void DrawWindow::clear(const Color& color) const
-    {
-        glClearColor(color.r, color.g, color.b, color.a);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    }
-
     void DrawWindow::display() const
     {
         SDL_GL_SwapWindow(reinterpret_cast<SDL_Window*>(window));
     }
 
-    void DrawWindow::bind() 
+    void DrawWindow::bind() const
     {
-        
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, getSize().x, getSize().y);
     }
 }

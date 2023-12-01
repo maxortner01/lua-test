@@ -68,4 +68,33 @@ Texture::fromFile(
     return true;
 }
 
+bool 
+Texture::fromEmpty(
+    const Math::Vec2u& size, 
+    Format _format)
+{
+    const auto format = [&]()
+    {
+        switch (_format)
+        {
+        case Format::RGB:  return GL_RGB;
+        case Format::RGBA: return GL_RGBA;
+        default: return GL_NONE;
+        }
+    }();
+
+    glGenTextures(1, &handle);
+    
+    glActiveTexture(GL_TEXTURE0);
+    bind();
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, size.x, size.y, 0, format, GL_UNSIGNED_BYTE, nullptr);
+
+    return true;
+}
+
 }

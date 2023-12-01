@@ -19,8 +19,46 @@ int main()
     S2D_ASSERT(program.fromFile(SOURCE_DIR "/shaders/new.frag.glsl", Graphics::Shader::Type::Fragment), "Error loading fragment shader");
     program.link();
 
+    Graphics::Program flat;
+    S2D_ASSERT(flat.fromFile(SOURCE_DIR "/shaders/flat.vert.glsl", Graphics::Shader::Type::Vertex),   "Error loading vertex shader"  );
+    S2D_ASSERT(flat.fromFile(SOURCE_DIR "/shaders/flat.frag.glsl", Graphics::Shader::Type::Fragment), "Error loading fragment shader");
+    flat.link();
+
+    const auto square = [&]()
+    {
+        const std::vector<Math::Vec3f> points = {
+            { -1.f,  1.f, 0.f },
+            {  1.f, -1.f, 0.f },
+            { -1.f, -1.f, 0.f },
+            {  1.f,  1.f, 0.f }
+        };
+
+        const std::vector<Math::Vec2f> tex = {
+            { 0.f, 1.f },
+            { 1.f, 0.f },
+            { 0.f, 0.f },
+            { 1.f, 1.f }
+        };
+
+        const std::vector<uint32_t> indices = {
+            0, 1, 2, 0, 3, 1
+        };
+
+        std::vector<Graphics::Vertex> vertices;
+        for (uint32_t i = 0; i < 4; i++)
+            vertices.push_back(Graphics::Vertex{ .color = Graphics::Color(255, 255, 255, 255), .position = points[i], .texCoords = tex[i] });
+
+        Graphics::VertexArray v;
+        v.upload(vertices);
+        v.uploadIndices(indices);
+        return v;
+    }();
+
     Graphics::Texture texture;
     S2D_ASSERT(texture.fromFile(SOURCE_DIR "/textures/GRASS+.png"), "Error loading image");
+
+    Graphics::DrawTexture surface;
+    S2D_ASSERT(surface.create({ 1280, 720 }), "Error creating DrawTexture");
 
     auto vertices = []()
     {
@@ -39,7 +77,7 @@ int main()
         };
 
         for (uint32_t i = 0; i < points.size(); i++) 
-            vertices.push_back(Graphics::Vertex{ .position = points[i], .color = Graphics::Color(255, 0, 0, 255), .texCoords = tex[i] });
+            vertices.push_back(Graphics::Vertex{ .position = points[i], .color = Graphics::Color(255, 255, 255, 255), .texCoords = tex[i] });
 
         Graphics::VertexArray vao;
         vao.upload(vertices);
@@ -69,7 +107,8 @@ int main()
             }
         }
 
-        window.clear(Graphics::Color(255, 127, 0, 255));
+        window.clear(Graphics::Color(255, 0, 0, 255));
+        surface.clear(Graphics::Color(0, 255, 0, 255));
 
         Graphics::Context context;
         context.program = &program;
@@ -86,7 +125,14 @@ int main()
         program.setUniform("view", view);
         program.setUniform("projection", proj);
 
-        window.draw(vertices, context);
+        surface.draw(vertices, context);
+
+        {
+            Graphics::Context surface_context;
+            surface_context.program = &flat;
+            surface_context.textures.push_back(surface.texture());
+            window.draw(square, surface_context);
+        }
 
         window.display();
     }

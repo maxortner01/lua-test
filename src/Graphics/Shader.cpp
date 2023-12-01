@@ -81,42 +81,42 @@ template<>
 void Program::setUniform(const std::string& name, const int32_t& val)
 {
     const auto location = getUniformLocation(name);
-    if (location >= 0) glUniform1i(location, val);
+    if (location >= 0) glProgramUniform1i(handle, location, val);
 }
 
 template<>
 void Program::setUniform(const std::string& name, const float& val)
 {
     const auto location = getUniformLocation(name);
-    if (location >= 0) glUniform1f(location, val);
+    if (location >= 0) glProgramUniform1f(handle, location, val);
 }
 
 template<>
 void Program::setUniform(const std::string& name, const Math::Vec2f& vec)
 {
     const auto location = getUniformLocation(name);
-    if (location >= 0) glUniform2f(location, vec.x, vec.y);
+    if (location >= 0) glProgramUniform2f(handle, location, vec.x, vec.y);
 }
 
 template<>
 void Program::setUniform(const std::string& name, const Math::Vec3f& vec)
 {
     const auto location = getUniformLocation(name);
-    if (location >= 0) glUniform3f(location, vec.x, vec.y, vec.z);
+    if (location >= 0) glProgramUniform3f(handle, location, vec.x, vec.y, vec.z);
 }
 
 template<>
 void Program::setUniform(const std::string& name, const Math::Vec4f& vec)
 {
     const auto location = getUniformLocation(name);
-    if (location >= 0) glUniform4f(location, vec.x, vec.y, vec.z, vec.w);
+    if (location >= 0) glProgramUniform4f(handle, location, vec.x, vec.y, vec.z, vec.w);
 }
 
 template<>
 void Program::setUniform(const std::string& name, const Math::Mat4f& mat)
 {
     const auto location = getUniformLocation(name);
-    if (location >= 0) glUniformMatrix4fv(location, 1, GL_FALSE, mat.mat());
+    if (location >= 0) glProgramUniformMatrix4fv(handle, location, 1, GL_FALSE, mat.mat());
 }
 
 Util::Result<void> Program::link()
