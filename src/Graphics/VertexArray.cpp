@@ -1,4 +1,5 @@
 #include <Simple2D/Graphics/VertexArray.hpp>
+#include <Simple2D/Graphics/Surface.hpp>
 
 #include <GL/glew.h>
 
@@ -69,8 +70,9 @@ void VertexArray::bind() const
     glBindVertexArray(handle);
 }
 
-void VertexArray::draw() const
+void VertexArray::draw(Surface* window) const
 {
+    bind();
     glDrawArrays(GL_TRIANGLES, 0, count);
 }
 

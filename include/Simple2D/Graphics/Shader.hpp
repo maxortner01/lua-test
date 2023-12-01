@@ -36,6 +36,9 @@ namespace S2D::Graphics
         Program()  = default;
         ~Program() = default;
 
+        template<typename T>
+        void setUniform(const std::string& name, const T& value);
+
         Util::Result<void> link();
         void use() const;
 
@@ -46,7 +49,10 @@ namespace S2D::Graphics
         bool fromString(const std::string& contents, Shader::Type type);
 
     private:
+        int32_t getUniformLocation(const std::string& name);
+
         Handle handle;
         std::unordered_map<Shader::Type, std::unique_ptr<Shader>> shaders;
+        std::unordered_map<std::string, int32_t> uniforms;
     };
 }

@@ -19,11 +19,13 @@ namespace S2D::Graphics
         bool isOpen() const;
         bool pollEvent(Event& event) const;
 
+        const Math::Vec2u& getSize() const;
     
     protected:
         Handle window;
 
     private:
         bool _open;
+        Math::Vec2u _size;
     };
 }

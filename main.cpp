@@ -1,4 +1,5 @@
 #include <Simple2D/Graphics.hpp>
+#include <Simple2D/Util/Matrix.hpp>
 #include <Simple2D/Log/Log.hpp>
 
 using namespace S2D;
@@ -18,6 +19,9 @@ int main()
     S2D_ASSERT(program.fromFile(SOURCE_DIR "/shaders/new.frag.glsl", Graphics::Shader::Type::Fragment), "Error loading fragment shader");
     program.link();
 
+    Graphics::Texture texture;
+    S2D_ASSERT(texture.fromFile(SOURCE_DIR "/textures/GRASS+.png"), "Error loading image");
+
     auto vertices = []()
     {
         std::vector<Graphics::Vertex> vertices;
@@ -28,7 +32,14 @@ int main()
             { -0.5f, -0.5f, 0.f }
         };
 
-        for (const auto& p : points) vertices.push_back(Graphics::Vertex{ .position = p, .color = Graphics::Color(255, 0, 0, 255) });
+        const std::vector<Math::Vec2f> tex = {
+            { 0.f, 1.f },
+            { 1.f, 0.f },
+            { 0.f, 0.f }
+        };
+
+        for (uint32_t i = 0; i < points.size(); i++) 
+            vertices.push_back(Graphics::Vertex{ .position = points[i], .color = Graphics::Color(255, 0, 0, 255), .texCoords = tex[i] });
 
         Graphics::VertexArray vao;
         vao.upload(vertices);
@@ -60,9 +71,22 @@ int main()
 
         window.clear(Graphics::Color(255, 127, 0, 255));
 
-        program.use();
-        vertices.bind();
-        vertices.draw();
+        Graphics::Context context;
+        context.program = &program;
+        context.textures.push_back(&texture);
+
+        Math::Mat4f model(true);
+        Math::Mat4f view(true);
+        Math::Mat4f proj(true);
+        
+        const float aspectRatio = (float)window.getSize().x / (float)window.getSize().y;
+        proj[1][1] = aspectRatio;
+
+        program.setUniform("model", model);
+        program.setUniform("view", view);
+        program.setUniform("projection", proj);
+
+        window.draw(vertices, context);
 
         window.display();
     }

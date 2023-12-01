@@ -70,6 +70,8 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/extern/glew-cmake)
 
 set(GRAPHICS_SOURCES
     ${CMAKE_SOURCE_DIR}/src/Log/Log.cpp
+    ${CMAKE_SOURCE_DIR}/src/Graphics/Surface.cpp
+    ${CMAKE_SOURCE_DIR}/src/Graphics/Texture.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/VertexArray.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/Shader.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/DrawWindow.cpp

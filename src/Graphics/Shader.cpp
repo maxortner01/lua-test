@@ -1,5 +1,8 @@
 #include <Simple2D/Graphics/Shader.hpp>
 
+#include <Simple2D/Util/Vector.hpp>
+#include <Simple2D/Util/Matrix.hpp>
+
 #include <Simple2D/Log/Log.hpp>
 
 #include <sstream>
@@ -51,6 +54,69 @@ Shader::~Shader()
 bool Shader::good() const
 {
     return !error.has_value();
+}
+
+int32_t Program::getUniformLocation(const std::string& name)
+{
+    const auto location = [&]()
+    {
+        if (!uniforms.count(name)) 
+        {
+            const auto loc = glGetUniformLocation(handle, name.c_str());
+            uniforms.insert(std::pair(
+                name, loc
+            ));
+
+            if (loc == -1)
+                Log::Logger::instance("engine")->warn("Program doesn't have uniform \"{}\"", name);
+        }
+
+        return uniforms.at(name);
+    }();
+
+    return location;
+}
+
+template<>
+void Program::setUniform(const std::string& name, const int32_t& val)
+{
+    const auto location = getUniformLocation(name);
+    if (location >= 0) glUniform1i(location, val);
+}
+
+template<>
+void Program::setUniform(const std::string& name, const float& val)
+{
+    const auto location = getUniformLocation(name);
+    if (location >= 0) glUniform1f(location, val);
+}
+
+template<>
+void Program::setUniform(const std::string& name, const Math::Vec2f& vec)
+{
+    const auto location = getUniformLocation(name);
+    if (location >= 0) glUniform2f(location, vec.x, vec.y);
+}
+
+template<>
+void Program::setUniform(const std::string& name, const Math::Vec3f& vec)
+{
+    const auto location = getUniformLocation(name);
+    if (location >= 0) glUniform3f(location, vec.x, vec.y, vec.z);
+}
+
+template<>
+void Program::setUniform(const std::string& name, const Math::Vec4f& vec)
+{
+    const auto location = getUniformLocation(name);
+    if (location >= 0) glUniform4f(location, vec.x, vec.y, vec.z, vec.w);
+}
+
+template<>
+void Program::setUniform(const std::string& name, const Math::Mat4f& mat)
+{
+    const auto location = getUniformLocation(name);
+    if (location >= 0) glUniformMatrix4fv(location, 1, GL_FALSE, mat.mat());
 }
 
 Util::Result<void> Program::link()

@@ -1,8 +1,9 @@
 #pragma once
 
 #include "../Def.hpp"
-
 #include "../Util/Color.hpp"
+
+#include "Drawable.hpp"
 
 namespace S2D::Graphics
 {
@@ -36,7 +37,7 @@ namespace S2D::Graphics
         Math::Vec2f texCoords;
     };
 
-    struct VertexArray
+    struct VertexArray : Drawable
     {
         using Handle = uint32_t;
 
@@ -49,7 +50,7 @@ namespace S2D::Graphics
 
         void upload(const std::vector<Vertex>& vertices);
         void bind() const;
-        void draw() const;
+        void draw(Surface* window) const override;
 
     private:
         std::optional<Buffer> indices;
