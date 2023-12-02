@@ -33,11 +33,11 @@ namespace S2D::Engine
     static void 
     addBox(
         std::unique_ptr<CollisionMesh>& collision,
-        sf::Vector2f size,
-        sf::Vector3f offset,
+        Math::Vec2f size,
+        Math::Vec3f offset,
         float scale)
     {
-        const std::vector<sf::Vector3f> offsets = {
+        const std::vector<Math::Vec3f> offsets = {
             { -0.5, -0.5,  0.5 },
             {  0.5, -0.5,  0.5 },
             { -0.5,  0.5,  0.5 },
@@ -88,48 +88,60 @@ namespace S2D::Engine
             collision->triangles.push_back({ init_offset + triangle[0], init_offset + triangle[1], init_offset + triangle[2] });
     }
 
-    static void constructSprite(sf::VertexArray& vertices)
+    static void constructSprite(Graphics::VertexArray& vertices)
     {
-        // Forming a quad from two triangles
-        const sf::Vector2f offsets[] = {
-            { -0.5f,  0.5f },
-            {  0.5f, -0.5f },
-            { -0.5f, -0.5f },
+        using namespace Graphics;
 
-            {  0.5f, -0.5f },
-            { -0.5f,  0.5f },
-            {  0.5f,  0.5f }
+        // Forming a quad from two triangles
+        const Math::Vec3f offsets[] = {
+            { -0.5f,  0.5f, 0.f },
+            {  0.5f, -0.5f, 0.f },
+            { -0.5f, -0.5f, 0.f },
+            {  0.5f,  0.5f, 0.f }
         };
 
-        const sf::Vector2f tex_coords[] = {
+        const Math::Vec2f tex_coords[] = {
             { 1, 0 },
             { 0, 1 },
             { 1, 1 },
-
-            { 0, 1 },
-            { 1, 0 },
             { 0, 0 }
         };
 
-        vertices.clear();
+        vertices.setDrawType(VertexArray::DrawType::Triangles);
 
-        vertices.resize(6);
-        vertices.setPrimitiveType(sf::PrimitiveType::Triangles);
+        std::vector<Vertex> verts(4);
+        const std::vector<uint32_t> indices = {0, 1, 2, 0, 3, 1};
 
-        for (uint32_t i = 0; i < 6; i++)
+        uint32_t i = 0;
+        for (auto& vertex : verts)
         {
-            auto& vertex = vertices[i];
-            vertex.position  = sf::Vector2f(offsets[i].x, offsets[i].y);
-            vertex.texCoords = tex_coords[i];
-            vertex.color = sf::Color::White;
+            vertex.position  = offsets[i];
+            vertex.texCoords = tex_coords[i++];
+            vertex.color = Color(255, 255, 255, 255);
         }
+        vertices.upload(verts);
+        vertices.uploadIndices(indices);
+    }
+
+    std::shared_ptr<RawMesh> RawMesh::getQuadMesh()
+    {
+        static std::shared_ptr<RawMesh> quadMesh;
+
+        if (!quadMesh)
+        {
+            Log::Logger::instance("engine")->info("building quad mesh");
+            quadMesh = std::make_shared<RawMesh>();
+            constructSprite(quadMesh->vertices);
+        }
+
+        return quadMesh;
     }
 
     template<>
     void MeshBuilder<Sprite>::checkAndBuild(flecs::entity e)
     {
         // Would much rather this be stored in the scene somehow
-        static std::shared_ptr<RawMesh> data;
+        //static std::shared_ptr<RawMesh> data;
 
         // Make sure the entity has a sprite
         REQUIRE(e.has<Sprite>());
@@ -137,16 +149,7 @@ namespace S2D::Engine
         auto* collider = (e.has<Collider>()?e.get_mut<Collider>():nullptr);
 
         // If the sprite's mesh hasn't been generated, go ahead and generate it
-        if (!sprite->mesh)
-        {
-            if (!data)
-            {
-                Log::Logger::instance("engine")->info("building sprite");
-                data = std::make_shared<RawMesh>();
-                constructSprite(data->vertices);
-            }
-            sprite->mesh = data;
-        }
+        if (!sprite->mesh) sprite->mesh = RawMesh::getQuadMesh();
 
         // Set flag to re-build the collider mesh when transform is changed (?)
         // If the collider's mesh hasn't been initialized go ahead and construct it
@@ -230,9 +233,14 @@ namespace S2D::Engine
             return count;
         }();
 
-        uint32_t iterator = 0;
-        tilemap->mesh->vertices.resize(total_tiles * 6);
-        tilemap->mesh->vertices.setPrimitiveType(sf::PrimitiveType::Triangles);
+        using namespace Graphics;
+        uint32_t iterator = 0, index_iterator = 0;
+        std::vector<Vertex> vertices(4 * total_tiles);
+        std::vector<uint32_t> indices(6 * total_tiles);
+
+        //tilemap->mesh->vertices.resize(total_tiles * 6);
+        //tilemap->mesh->vertices.setPrimitiveType(sf::PrimitiveType::Triangles);
+        tilemap->mesh->vertices.setDrawType(VertexArray::DrawType::Triangles);
 
         const auto scale = (e.has<Transform>()?e.get<Transform>()->scale:1.f);
 
@@ -244,37 +252,35 @@ namespace S2D::Engine
                 const int32_t mask = 0xFFFF0000;
                 int16_t x = ((t.first & mask) >> 16);
                 int16_t y = (t.first & (~mask));
-                const auto position = sf::Vector2f(
+                const Math::Vec2f position = {
                     x * tilemap->tilesize.x,
                     y * tilemap->tilesize.y
-                );
+                };
 
                 // Construct the texture rectangle from the tile information
-                sf::IntRect tex_rect;
-                tex_rect.width  = tilemap->tilesize.x;
-                tex_rect.height = tilemap->tilesize.y;
-                tex_rect.left = t.second.texture_coords.x * tilemap->tilesize.x;
-                tex_rect.top  = t.second.texture_coords.y * tilemap->tilesize.y;
+                Math::Vec2f pos, size;
+                size.x  = tilemap->tilesize.x;
+                size.y = tilemap->tilesize.y;
+                pos.x = t.second.texture_coords.x * tilemap->tilesize.x;
+                pos.y = t.second.texture_coords.y * tilemap->tilesize.y;
 
                 // Forming a quad from two triangles
-                const sf::Vector2f offsets[] = {
+                const Math::Vec2f offsets[] = {
                     { -0.5f,  0.5f },
                     {  0.5f, -0.5f },
                     { -0.5f, -0.5f },
-
-                    {  0.5f, -0.5f },
-                    { -0.5f,  0.5f },
                     {  0.5f,  0.5f }
                 };
 
-                const sf::Vector2i tex_coords[] = {
+                const Math::Vec2f tex_coords[] = {
                     { 0, 1 },
                     { 1, 0 },
                     { 0, 0 },
-
-                    { 1, 0 },
-                    { 0, 1 },
                     { 1, 1 }
+                };
+
+                const std::vector<uint32_t> subindices = {
+                    0, 1, 2, 2, 3, 0
                 };
 
                 // Possibly... Now we need to push cubes to the collider mesh, not quads
@@ -285,17 +291,24 @@ namespace S2D::Engine
                 }
                 
                 // Construct the vertices of the quad
-                for (uint8_t i = 0; i < 6; i++)
+                for (uint8_t i = 0; i < 4; i++)
                 {
-                    auto& vertex = tilemap->mesh->vertices[iterator++];
+                    auto& vertex = vertices[iterator++];
                     vertex.position.x = offsets[i].x * tilemap->tilesize.x + position.x;
                     vertex.position.y = offsets[i].y * tilemap->tilesize.y + position.y;
-                    vertex.color = sf::Color::White;  
-                    vertex.texCoords.x = tex_rect.left + tex_rect.width  * tex_coords[i].x;
-                    vertex.texCoords.y = tex_rect.top + tex_rect.height * tex_coords[i].y;  
+                    vertex.color = Color(255, 255, 255, 255);  
+                    vertex.texCoords.x = pos.x + size.x * tex_coords[i].x;
+                    vertex.texCoords.y = pos.y + size.y * tex_coords[i].y;  
                 }
+
+                const auto start_size = index_iterator;
+                for (uint32_t i = 0; i < 6; i++)
+                    indices[index_iterator++] = subindices[i] + start_size;
             }
         }
+
+        tilemap->mesh->vertices.upload(vertices);
+        tilemap->mesh->vertices.uploadIndices(indices);
 
         REQUIRE(e.has<Collider>());
         MAKE_COLLISION_MODEL(Tilemap, collider->mesh);

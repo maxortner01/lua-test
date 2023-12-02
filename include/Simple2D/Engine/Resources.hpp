@@ -2,7 +2,7 @@
 
 #include "../Util.hpp"
 
-#include <SFML/Graphics.hpp>
+#include "../Graphics.hpp"
 #include <unordered_map>
 
 namespace S2D::Engine
@@ -12,12 +12,6 @@ namespace S2D::Engine
         enum class Error
         {
             AlreadyExists
-        };
-
-        struct DataPoint
-        {
-            void* ptr;
-            std::function<void(void*)> deleter;
         };
 
         ~Resources();
@@ -32,7 +26,7 @@ namespace S2D::Engine
         // Only works for T = sf::Shader
         template<typename T>
         Result<void>
-        loadResource(const std::string& name, const std::string& filename, sf::Shader::Type type);
+        loadResource(const std::string& name, const std::string& filename, Graphics::Shader::Type type);
 
         template<typename T>
         Result<const T*>
@@ -43,7 +37,7 @@ namespace S2D::Engine
         getResource(const std::string& name);
 
     private:
-        using ResourceMap = std::unordered_map<std::string, DataPoint>;
+        using ResourceMap = std::unordered_map<std::string, std::shared_ptr<void>>;
         std::unordered_map<std::size_t, ResourceMap> resources;
     };
 

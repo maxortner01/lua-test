@@ -5,7 +5,6 @@
 #include "Mesh.hpp"
 
 #include <flecs.h>
-#include <SFML/Graphics.hpp>
 
 #define COMPONENT_DEFINITION(name, contents)                            \
     template<> struct Component<Name::name>                             \
@@ -98,21 +97,21 @@ namespace S2D::Engine
     struct Component;
 
     COMPONENT_DEFINITION(Transform,
-        sf::Vector3f position;
+        Math::Vec3f position;
         float scale = 1.f;
         float rotation;
     );
 
     COMPONENT_DEFINITION(Rigidbody,
         Lua::Number linear_drag;
-        sf::Vector2f added_force;
-        sf::Vector2f velocity;
+        Math::Vec3f added_force;
+        Math::Vec3f velocity;
     );
 
     COMPONENT_DEFINITION(Sprite,
         std::shared_ptr<RawMesh> mesh;
         Lua::String texture;
-        sf::Vector2f size;
+        Math::Vec2f size;
     );
 
     enum class TextAlign
@@ -132,7 +131,7 @@ namespace S2D::Engine
     {
         struct Tile
         {
-            sf::Vector2u texture_coords;
+            Math::Vec2u texture_coords;
         };
 
         enum class LayerState
@@ -157,7 +156,7 @@ namespace S2D::Engine
         {
             std::unique_ptr<RawMesh> mesh;
             Map tiles;
-            sf::Vector2f tilesize;
+            Math::Vec2f tilesize;
             struct 
             {
                 std::string texture_name;
@@ -183,13 +182,10 @@ namespace S2D::Engine
 
     const char* operator*(Projection p);
 
-    sf::Vector2f toScreenSpace(flecs::entity camera, const sf::Vector2f& world_point);
-    sf::Vector2f toWorldSpace(flecs::entity camera, const sf::Vector2f& screen_point);
-
     COMPONENT_DEFINITION(Camera,
         Lua::Number FOV;
         Projection projection;
-        sf::Vector2u size;
+        Math::Vec2u size;
     );
 
     COMPONENT_DEFINITION(CustomMesh,

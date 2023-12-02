@@ -9,7 +9,6 @@
 
 #include <stack>
 #include <flecs.h>
-#include <SFML/Graphics.hpp>
 
 namespace S2D::Engine
 {
@@ -65,7 +64,7 @@ namespace S2D::Engine
         void render(Scene* scene);
         void collide(Scene* scene);
 
-        sf::RenderWindow window;
+        Graphics::DrawWindow window;
 
         std::stack<Scene*> _scenes;
     };

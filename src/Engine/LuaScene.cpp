@@ -63,10 +63,11 @@ LuaScene::load_resources(const Lua::Table& resources)
         {
             const auto& name     = texture.get<Lua::String>("name");
             const auto& filename = texture.get<Lua::String>("location");
-            this->resources.loadResource<sf::Texture>(name, filename);
+            this->resources.loadResource<Graphics::Texture>(name, filename);
         });
     });
 
+    /*
     resources.try_get<Lua::Table>("fonts", [&](const Lua::Table& fonts)
     {
         fonts.each<Lua::Table>([&](uint32_t i, const Lua::Table& font)
@@ -75,7 +76,7 @@ LuaScene::load_resources(const Lua::Table& resources)
             const auto& filename = font.get<Lua::String>("location");
             this->resources.loadResource<sf::Font>(name, filename);
         });
-    });
+    });*/
 
     resources.try_get<Lua::Table>("images", [&](const Lua::Table& images)
     {
@@ -83,7 +84,7 @@ LuaScene::load_resources(const Lua::Table& resources)
         {
             const auto& name     = image.get<Lua::String>("name");
             const auto& filename = image.get<Lua::String>("location");
-            this->resources.loadResource<sf::Image>(name, filename);
+            this->resources.loadResource<Graphics::Image>(name, filename);
         });
     });
 
@@ -93,10 +94,10 @@ LuaScene::load_resources(const Lua::Table& resources)
         {
             const auto& name = shader.get<Lua::String>("name");
             shader.try_get<Lua::String>("vertex", [&](const Lua::String& filename)
-            { this->resources.loadResource<sf::Shader>(name, filename, sf::Shader::Vertex); });
+            { this->resources.loadResource<Graphics::Program>(name, filename, Graphics::Shader::Type::Vertex); });
 
             shader.try_get<Lua::String>("fragment", [&](const Lua::String& filename)
-            { this->resources.loadResource<sf::Shader>(name, filename, sf::Shader::Fragment); });
+            { this->resources.loadResource<Graphics::Program>(name, filename, Graphics::Shader::Type::Fragment); });
         });
     });
 }

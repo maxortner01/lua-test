@@ -1,6 +1,7 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+#include "../Graphics.hpp"
+
 #include <fcl/fcl.h>
 #include <flecs.h>
 
@@ -16,7 +17,9 @@ namespace S2D::Engine
     struct RawMesh
     {
         Primitive primitive = Primitive::Triangles;
-        sf::VertexArray vertices;
+        Graphics::VertexArray vertices;
+        
+        static std::shared_ptr<RawMesh> getQuadMesh();
     };
 
     struct CollisionMesh

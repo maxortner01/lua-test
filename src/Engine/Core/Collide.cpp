@@ -61,66 +61,26 @@ void Core::collide(Scene* scene)
 
                 if (result.isCollision())
                 {
-                    std::vector<std::pair<float, sf::Vector2f>> depth_normal;
-
-                    std::vector<sf::Vertex> lines;
+                    std::vector<std::pair<float, Math::Vec3f>> depth_normal;
 
                     for (uint32_t i = 0; i < result.numContacts(); i++)
                     {
                         const auto& contact = result.getContact(i);
 
-                        // Debug draw contact points
-                        {
-                            sf::RectangleShape rect;
-                            rect.setSize({ 5.f, 5.f });
-                            rect.setOrigin(rect.getSize() / 2.f);
-
-                            auto index = collider_b.mesh->triangles[contact.b1];
-
-                            bool found = false;
-                            for (uint32_t j = 0; j < 3; j++)
-                            {
-                                auto point = collider_b.mesh->vertices[index[j]];
-                                if (point[0] + transform_b.position.x / transform_b.scale == contact.pos[0] &&
-                                    point[1] + transform_b.position.y / transform_b.scale == contact.pos[1])
-                                    {
-                                        found = true;
-                                        break;
-                                    }
-                            }
-                            
-                            if (found) continue;
-                                
-                            rect.setFillColor(sf::Color::White);
-                            rect.setPosition(sf::Vector2f(contact.pos[0], contact.pos[1]));
-                            window.draw(rect);
-
-                            lines.push_back(sf::Vertex(rect.getPosition(), sf::Color::Green));
-                            lines.push_back(sf::Vertex(rect.getPosition() + sf::Vector2f(contact.normal[0], contact.normal[1]) * 5.f * contact.penetration_depth, sf::Color::Green));
-                        }
-
                         const auto& vec   = contact.normal;
                         const auto& depth = contact.penetration_depth;
-                        const auto normal = sf::Vector2f(-1.f * vec[0], -1.f * vec[1]);
+                        const auto normal = Math::Vec3f(-1.f * vec[0], -1.f * vec[1], 0.f);
 
                         if (normal.length() && depth && depth < 1.f) depth_normal.push_back(std::pair(depth, normal));
                     }
 
                     auto dot = [&]()
                     {
-                        sf::Vector2f r;
+                        Math::Vec3f r;
                         for (const auto& p : depth_normal)
-                            r += p.first * p.second * 2.2f;
+                            r += p.second * p.first * 2.2f;
                         return r * (-1.f / depth_normal.size());
                     }();
-
-                    lines.push_back(sf::Vertex(sf::Vector2f(transform_a.position.x, transform_a.position.y) / transform_a.scale, sf::Color::Yellow));
-                    lines.push_back(sf::Vertex(sf::Vector2f(transform_a.position.x, transform_a.position.y) / transform_a.scale + dot * 10.f, sf::Color::Yellow));
-
-                    sf::VertexArray array(sf::PrimitiveType::Lines, lines.size());
-                    for (uint32_t i = 0; i < lines.size(); i++)
-                        array[i] = lines[i];
-                    window.draw(array);
 
                     // World space and pixel space are the same, so we want to neglect any collisions that are less
                     // than a pixel deep, otherwise we get caught up on too much
@@ -129,8 +89,8 @@ void Core::collide(Scene* scene)
                     // Still not quite right... sometimes, it will invert the direction of the velocity as opposed to 
                     // reflecting it... not quite sure *why* or *when* this happens.
                     const auto e_loss = 0.2f;
-                    transform_a.position += sf::Vector3f(dot.x, dot.y, 0) * 1.5f;
-                    rigid_body_a.velocity = e_loss * (rigid_body_a.velocity - 2.f * (rigid_body_a.velocity.dot(dot.normalized())) * dot.normalized());
+                    transform_a.position += Math::Vec3f(dot.x, dot.y, 0) * 1.5f;
+                    rigid_body_a.velocity = (rigid_body_a.velocity - (dot.normalized() * rigid_body_a.velocity.dot(dot.normalized())) * 2.f) * e_loss;
 
                     if (entity_a.has<Script>())
                     {

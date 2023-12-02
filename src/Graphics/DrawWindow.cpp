@@ -10,7 +10,8 @@ namespace S2D::Graphics
     DrawWindow::DrawWindow(
         const Math::Vec2u& size, 
         const std::string& title) :
-            Window(size, title)
+            Window(size, title),
+            _size(size)
     {
         auto& logger = Log::Logger::instance("graphics");
         S2D_ASSERT(window, "Window not initialized");
@@ -41,6 +42,11 @@ namespace S2D::Graphics
             SDL_GL_DeleteContext(reinterpret_cast<SDL_GLContext*>(context));
         context = nullptr;
     }   
+
+    const Math::Vec2u& DrawWindow::getSize() const
+    {
+        return _size;
+    }
 
     void DrawWindow::display() const
     {

@@ -8,6 +8,9 @@ namespace S2D::Graphics
 {
     struct Event
     {
+        Event() : mousePress{}
+        {   }
+
         enum class Type
         {
             Unsupported,
@@ -25,6 +28,8 @@ namespace S2D::Graphics
 
         struct MouseButtonEvent
         {
+            MouseButtonEvent() = default;
+
             Mouse::Button button;
             Math::Vec2f position;
         };

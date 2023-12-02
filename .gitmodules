@@ -4,9 +4,6 @@
 [submodule "extern/flecs"]
 	path = extern/flecs
 	url = https://github.com/SanderMertens/flecs
-[submodule "extern/sfml"]
-	path = extern/sfml
-	url = https://github.com/sfml/sfml
 [submodule "extern/doxygen-awesome-css"]
 	path = extern/doxygen-awesome-css
 	url = https://github.com/jothepro/doxygen-awesome-css.git

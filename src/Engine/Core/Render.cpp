@@ -1,12 +1,13 @@
 #include <Simple2D/Engine/Core.hpp>
-
 #include <Simple2D/Engine/LuaLib/Surface.hpp>
+
+#include <Simple2D/Util/Transform.hpp>
 
 #include <Simple2D/Log/Log.hpp>
 
 namespace S2D::Engine
 {
-
+/*
 void RenderComponent(
     Scene* scene,
     flecs::entity e,
@@ -107,7 +108,7 @@ void RenderComponent(
         (int)transform.position.y
     ) - camera_pos + (sf::Vector2f)target.getSize() / 2.f);
     t.setOrigin(sf::Vector2f(
-        (int)t.getLocalBounds().left /*+ (int)(t.getLocalBounds().width / 2.f)*/,
+        (int)t.getLocalBounds().left),
         (int)t.getLocalBounds().top + (int)(max_height / 2.f)
     ));
     t.setCharacterSize((unsigned int)text->character_size);
@@ -293,7 +294,7 @@ void RenderComponent(
     }
 
     target.draw(vertices, states);
-}
+}*/
 
 /*
 static void 
@@ -333,7 +334,7 @@ void Core::render(Scene* scene)
 {   
     auto& log = Log::Logger::instance("engine");
 
-    sf::RenderTexture* current_target = nullptr;
+    Graphics::DrawTexture* current_target = nullptr;
     const auto& targets  = scene->renderpass->targets;
     const auto& commands = scene->renderpass->commands;
     
@@ -421,6 +422,12 @@ void Core::render(Scene* scene)
             }
 
             GET_PARAMS(Command::BlitSurface);
+
+            /* Need to be able to draw sprite */
+            Math::Transform model;
+            model.scale({ 2.f, 2.f, 1.f });
+            renderer->renderQuad(model, window, current_target->texture());
+            /*
             sf::RectangleShape blit;
             blit.setPosition(params->position);
             blit.setSize(params->size);
@@ -428,7 +435,7 @@ void Core::render(Scene* scene)
             current_target->display();
             const auto& tex = current_target->getTexture();
             blit.setTexture(&tex);
-            window.draw(blit);
+            window.draw(blit);*/
 
             break;
         }

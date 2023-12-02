@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
+#include "../Util/Vector.hpp"
 
 namespace S2D::Engine
 {
@@ -8,10 +8,10 @@ namespace S2D::Engine
 
     struct Application
     {
-        sf::Vector2u size;
+        Math::Vec2u size;
         std::string name;
 
-        Application(const sf::Vector2u& _size);
+        Application(const Math::Vec2u& _size);
         virtual ~Application() = default;
 
         virtual void start(Core& core) = 0;

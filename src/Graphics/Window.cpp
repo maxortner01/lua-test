@@ -7,8 +7,7 @@ namespace S2D::Graphics
     Window::Window(
         const Math::Vec2u& size,
         const std::string& title) :
-            _open(false),
-            _size(size)
+            _open(false)
     {
         S2D_ASSERT(size.x && size.y, "Size is zero");
         S2D_ASSERT(SDL_Init(SDL_INIT_VIDEO) >= 0, "SDL Failed to initialize");
@@ -17,11 +16,6 @@ namespace S2D::Graphics
         S2D_ASSERT(window, "Window failed to create");
 
         _open = true;
-    }
-
-    const Math::Vec2u& Window::getSize() const
-    {
-        return _size;
     }
 
     Window::~Window()

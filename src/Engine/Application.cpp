@@ -2,7 +2,7 @@
 
 namespace S2D::Engine
 {
-    Application::Application(const sf::Vector2u& _size) :
+    Application::Application(const Math::Vec2u& _size) :
         size(_size)
     {   }
 }  

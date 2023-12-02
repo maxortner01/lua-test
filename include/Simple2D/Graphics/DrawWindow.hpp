@@ -17,7 +17,10 @@ namespace S2D::Graphics
         void display() const;
         void bind() const override;
 
+        const Math::Vec2u& getSize() const override;
+
     private:
         Window::Handle context;
+        Math::Vec2u _size;
     };
 }

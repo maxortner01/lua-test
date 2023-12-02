@@ -2,45 +2,42 @@
 #include <Simple2D/Engine/Mesh.hpp>
 #include <Simple2D/Engine/Core.hpp>
 
+#include <Simple2D/Util/Transform.hpp>
+
 #include <Simple2D/Log/Log.hpp>
 
 namespace S2D::Engine
 {
     template<>
+    DefaultShader<Graphics::Surface>::DefaultShader()
+    {
+        const std::string vertex = 
+        #include "DefaultShader/flat.vert.glsl"
+        ;
+
+        const std::string fragment = 
+        #include "DefaultShader/flat.frag.glsl"
+        ;
+        
+        S2D_ASSERT(shader.fromString(vertex, Graphics::Shader::Type::Vertex),   "Sprite vertex shader failed to load");
+        S2D_ASSERT(shader.fromString(fragment, Graphics::Shader::Type::Fragment), "Sprite fragment shader failed to load");
+        shader.link();
+    }
+
+    template<>
     DefaultShader<Sprite>::DefaultShader()
     {
-        S2D_ASSERT(sf::Shader::isAvailable(), "Shaders are not supported on this machine");
+        const std::string vertex = 
+        #include "DefaultShader/sprite.vert.glsl"
+        ;
 
-        const std::string vertex = \
-            "uniform mat3 model;" \
-            "uniform mat3 view;" \
-            "uniform float camera_z;" \
-            "uniform float aspectRatio;" \
-            "uniform vec2 sprite_size;" \
-            "void main() " \
-            "{ " \
-            "  vec3 prepos = gl_Vertex.xyz; " \
-            "  prepos.x *= sprite_size.x; " \
-            "  prepos.y *= sprite_size.y; " \
-            "  vec4 pos = vec4((prepos * model).xy, gl_Vertex.z, gl_Vertex.w);" \
-            "  pos.w *= camera_z;" \
-            "  pos.x += model[2][0] + view[2][0];" \
-            "  pos.y += model[2][1] + view[2][1];" \
-            "  pos.x /= aspectRatio;" \
-            "  gl_Position = pos; " \
-            "  gl_TexCoord[0] = gl_MultiTexCoord0; " \
-            "  gl_FrontColor = gl_Color; " \
-            "}";
-
-        const std::string fragment = \
-            "uniform sampler2D texture;" \
-            "void main() " \
-            "{ " \
-            "  vec4 pixel = texture2D(texture, gl_TexCoord[0].xy);" \
-            "  gl_FragColor = gl_Color * pixel;" \
-            "} ";
+        const std::string fragment = 
+        #include "DefaultShader/sprite.frag.glsl"
+        ;
         
-        S2D_ASSERT(shader.loadFromMemory(vertex, fragment), "Sprite shader failed to load");
+        S2D_ASSERT(shader.fromString(vertex, Graphics::Shader::Type::Vertex),   "Sprite vertex shader failed to load");
+        S2D_ASSERT(shader.fromString(fragment, Graphics::Shader::Type::Fragment), "Sprite fragment shader failed to load");
+        shader.link();
     }
 
     template<>
@@ -52,65 +49,52 @@ namespace S2D::Engine
     template<>
     DefaultShader<CustomMesh>::DefaultShader()
     {
-        const std::string vertex = \
-            "uniform mat3 model;" \
-            "uniform mat3 view;" \
-            "uniform float camera_z;" \
-            "uniform float aspectRatio;" \
-            "void main() " \
-            "{ " \
-            "  vec3 prepos = gl_Vertex.xyz; " \
-            "  prepos.y *= -1.0;" \
-            "  vec4 pos = vec4((prepos * model).xy, gl_Vertex.z, gl_Vertex.w);" \
-            "  pos.w *= camera_z;" \
-            "  pos.x += model[2][0] + view[2][0];" \
-            "  pos.y += model[2][1] + view[2][1];" \
-            "  pos.x /= aspectRatio;" \
-            "  gl_Position = pos; " \
-            "  gl_TexCoord[0] = gl_MultiTexCoord0; " \
-            "  gl_FrontColor = gl_Color; " \
-            "}";
+        const std::string vertex = 
+        #include "DefaultShader/custommesh.vert.glsl"
+        ;
 
-        const std::string fragment = \
-            "void main() " \
-            "{ " \
-            "  gl_FragColor = gl_Color;" \
-            "} ";
+        const std::string fragment = 
+        #include "DefaultShader/custommesh.frag.glsl"
+        ;
 
-        S2D_ASSERT(shader.loadFromMemory(vertex, fragment), "Sprite shader failed to load");
+        S2D_ASSERT(shader.fromString(vertex, Graphics::Shader::Type::Vertex),   "CustomMesh vertex shader failed to load");
+        S2D_ASSERT(shader.fromString(fragment, Graphics::Shader::Type::Fragment), "CustomMesh fragment shader failed to load");
+        shader.link();
     }
 
     void Renderer::set_uniforms(
         flecs::entity entity, 
         flecs::entity camera, 
-        sf::Shader* shader,
-        sf::RenderTarget& target)
+        Graphics::Program* shader,
+        Graphics::Surface& target)
     {
         const auto* camera_transform = camera.get<Transform>();
         const auto* entity_transform = entity.get<Transform>();
         S2D_ASSERT(camera_transform, "Camera missing transform");
-        
-        // Model matrix
-        sf::Transform model, view;
-        model.translate(sf::Vector2f(
-            entity_transform->position.x,
-            entity_transform->position.y
-        ));
-        model.scale(sf::Vector2f(1.f, 1.f) * entity_transform->scale);
-        model.rotate(sf::degrees(entity_transform->rotation));
+
+        Math::Transform model, view;
+        model.translate(entity_transform->position);
+        model.scale({ entity_transform->scale, entity_transform->scale, entity_transform->scale });
+        model.rotate({ 0.f, 0.f, entity_transform->rotation });
 
         // View matrix
-        view.translate(-1.f * sf::Vector2f(
-            camera_transform->position.x,
-            camera_transform->position.y
-        ));
-        view.rotate(sf::degrees(camera_transform->rotation));
+        view.translate({
+            -1.f * camera_transform->position.x,
+            -1.f * camera_transform->position.y, 0.f
+            //-1.f * camera_transform->position.z
+        });
+        //view.rotate({ 0.f, 0.f, -1.f * camera_transform->rotation });
+        //view.scale({ 1.f / camera_transform->position.z, 1.f / camera_transform->position.z, 1.f });
+
+        const auto aspectRatio = (float)target.getSize().x / (float)target.getSize().y;
+
+        Math::Mat4f proj;
+        proj[1][1] = aspectRatio;
 
         // Set the matrices in the shader
-        shader->setUniform("aspectRatio", (float)target.getSize().x / (float)target.getSize().y);
-        shader->setUniform("camera_z", camera_transform->position.z);
-        shader->setUniform("model", sf::Glsl::Mat3(model));
-        shader->setUniform("view",  sf::Glsl::Mat3(view));
+        shader->setUniform("proj", proj);
+        shader->setUniform("model", model.matrix());
+        shader->setUniform("view",  view.matrix());
     }
 
     template<>
@@ -118,33 +102,30 @@ namespace S2D::Engine
     Renderer::renderComponent<Sprite>(
         flecs::entity camera, 
         flecs::entity e, 
-        sf::RenderTarget& target,
-        sf::Shader* shader) const
+        Graphics::Surface& target,
+        Graphics::Context context) const
     {
-        if (!shader) shader = &default_sprite->shader;
-        Renderer::set_uniforms(e, camera, shader, target);
-        shader->setUniform("sprite_size", e.get<Sprite>()->size);
+        if (!context.program) context.program = &default_sprite->shader;
+        Renderer::set_uniforms(e, camera, context.program, target);
+        context.program->setUniform("spriteSize", e.get<Sprite>()->size);
 
         MeshBuilder<Sprite>::checkAndBuild(e);
 
         const auto* sprite = e.get<Sprite>();
         S2D_ASSERT(sprite->mesh, "Error generating sprite mesh");
 
-        sf::RenderStates states;
-        states.shader = shader;
-
         if (sprite->texture.size())
         {
             auto* texture = [&]() 
             {
-                const auto res = _scene->resources.getResource<sf::Texture>(sprite->texture);
+                const auto res = _scene->resources.getResource<Graphics::Texture>(sprite->texture);
                 S2D_ASSERT(res, "Error loading texture");
                 return res.value();
             }();
-            states.texture = texture;
+            context.textures.push_back(texture);
         }
 
-        target.draw(sprite->mesh->vertices, states);
+        target.draw(sprite->mesh->vertices, context);
     }
 
     template<>
@@ -152,31 +133,38 @@ namespace S2D::Engine
     Renderer::renderComponent<Tilemap>(
         flecs::entity camera, 
         flecs::entity e, 
-        sf::RenderTarget& target,
-        sf::Shader* shader) const
+        Graphics::Surface& target,
+        Graphics::Context context) const
     {
-        if (!shader) shader = &default_tilemap->shader;
-        Renderer::set_uniforms(e, camera, shader, target);
+        if (!context.program) context.program = &default_tilemap->shader;
+        Renderer::set_uniforms(e, camera, context.program, target);
 
         MeshBuilder<Tilemap>::checkAndBuild(e);
 
         const auto* tilemap = e.get<Tilemap>();
         S2D_ASSERT(tilemap->mesh, "Error generating tilemap mesh");
 
-        sf::RenderStates states;
-        states.shader = shader;
-
         // If the tilemap has a texture (it should always) set the state
         if (tilemap->spritesheet.texture_name.size())
         {
-            auto texture = _scene->resources.getResource<sf::Texture>(tilemap->spritesheet.texture_name);
+            auto texture = _scene->resources.getResource<Graphics::Texture>(tilemap->spritesheet.texture_name);
             S2D_ASSERT(texture, "Error getting texture");
-            states.texture = texture.value();
+            context.textures.push_back(texture.value());
         }
 
-        target.draw(tilemap->mesh->vertices, states);
+        target.draw(tilemap->mesh->vertices, context);
     }
 
+    template<>
+    void 
+    Renderer::renderComponent<Text>(
+        flecs::entity camera, 
+        flecs::entity e, 
+        Graphics::Surface& target,
+        Graphics::Context context) const
+    {   }
+
+    /*
     template<>
     void 
     Renderer::renderComponent<Text>(
@@ -187,32 +175,22 @@ namespace S2D::Engine
     {
         sf::RenderStates states;
         states.shader = shader;
-    }
+    }*/
 
     template<>
     void 
     Renderer::renderComponent<CustomMesh>(
         flecs::entity camera, 
         flecs::entity e, 
-        sf::RenderTarget& target,
-        sf::Shader* shader) const
+        Graphics::Surface& target,
+        Graphics::Context context) const
     {
-        if (!shader) shader = &default_mesh->shader;
-        Renderer::set_uniforms(e, camera, shader, target);
-
-        sf::RenderStates states;
-        states.shader = shader;
+        if (!context.program) context.program = &default_mesh->shader;
+        Renderer::set_uniforms(e, camera, context.program, target);
 
         auto& mesh = e.get_mut<CustomMesh>()->mesh;
-        switch (mesh->primitive)
-        {
-        case Primitive::Lines:     mesh->vertices.setPrimitiveType(sf::PrimitiveType::Lines);     break;
-        case Primitive::Points:    mesh->vertices.setPrimitiveType(sf::PrimitiveType::Points);    break;
-        case Primitive::Triangles: mesh->vertices.setPrimitiveType(sf::PrimitiveType::Triangles); break;
-        case Primitive::Count: return;
-        }
 
-        target.draw(mesh->vertices, states);
+        target.draw(mesh->vertices, context);
     }
 
     Renderer::Renderer(Scene* scene) :
@@ -228,13 +206,31 @@ namespace S2D::Engine
         ),
         default_mesh(std::make_unique<DefaultShader<CustomMesh>>()),
         default_sprite(std::make_unique<DefaultShader<Sprite>>()),
-        default_tilemap(std::make_unique<DefaultShader<Tilemap>>())
+        default_tilemap(std::make_unique<DefaultShader<Tilemap>>()),
+        default_flat(std::make_unique<DefaultShader<Graphics::Surface>>())
     {   }
+
+    void 
+    Renderer::renderQuad(
+        Math::Transform& transform, 
+        Graphics::Surface& target, 
+        const Graphics::Texture* texture) const
+    {
+        const auto mesh = RawMesh::getQuadMesh();
+
+        Graphics::Context context;
+        context.program = &default_flat->shader;
+        context.program->setUniform("model", transform.matrix());
+
+        if (texture) context.textures.push_back(texture);
+
+        target.draw(mesh->vertices, context);
+    }
 
     void 
     Renderer::render(
         flecs::entity camera, 
-        sf::RenderTarget& target) const
+        Graphics::Surface& target) const
     {
         transforms.each(
             [&](flecs::entity e, const Transform&)
@@ -247,33 +243,33 @@ namespace S2D::Engine
     Renderer::render(
         flecs::entity camera, 
         const std::string& entity,
-        sf::RenderTarget& target) const
+        Graphics::Surface& target) const
     {
         auto e = _scene->world.lookup(entity.c_str());
         S2D_ASSERT(e, "Trying to render invalid entity");
         render(camera, e, target);
     }
 
-#define RENDER_COMPONENT(name) if (entity.has<name>()) renderComponent<name>(camera, entity, target, shader)
+#define RENDER_COMPONENT(name) if (entity.has<name>()) renderComponent<name>(camera, entity, target, context)
 
     void 
     Renderer::render(
         flecs::entity camera, 
         flecs::entity entity,
-        sf::RenderTarget& target) const
+        Graphics::Surface& target) const
     {
         S2D_ASSERT(entity.has<Transform>(), "Entity missing transform");
         S2D_ASSERT(camera.has<Camera>(), "Camera missing camera component");
 
-        sf::Shader* shader = nullptr;
+        Graphics::Context context;
 
         const auto* component = entity.get<ShaderComp>();
         if (component)
         {
             // Set relevant information
-            const auto res = _scene->resources.getResource<sf::Shader>(component->name);
+            const auto res = _scene->resources.getResource<Graphics::Program>(component->name);
             S2D_ASSERT(res, "Error loading shader");
-            shader = res.value();
+            context.program = res.value();
 
             // Load the textures
             [&]() {
@@ -285,17 +281,14 @@ namespace S2D::Engine
                     {
                         S2D_ASSERT(_scene->renderpass->targets.count(p.second), "Renderpass doesn't contain requested resource");
                         const auto& pass = _scene->renderpass->targets.at(p.second);
-                        pass->display();
-                        shader->setUniform("texture_size", (sf::Vector2f)pass->getSize());
-                        shader->setUniform("texture", pass->getTexture());
+                        context.textures.push_back(pass->texture());
                         return;
                     }
                     case TexSource::Resources:
                     {
-                        const auto resource = _scene->resources.getResource<sf::Texture>(p.second);
+                        const auto resource = _scene->resources.getResource<Graphics::Texture>(p.second);
                         S2D_ASSERT(resource, "Failed to load resource!");
-                        shader->setUniform("texture_size", (sf::Vector2f)resource.value()->getSize());
-                        shader->setUniform("texture", *resource.value());
+                        context.textures.push_back(resource.value());
                         return;
                     }
                     default: break;
@@ -303,12 +296,6 @@ namespace S2D::Engine
                 }
             }();
         }
-
-        // Create the model and view matrices
-        /*
-        // Set the rest of the information needed
-        shader->setUniform("target_size", (sf::Vector2f)target.getSize());
-        shader->setUniform("camera_size", (sf::Vector2f)camera.get<Camera>()->size);*/
 
         RENDER_COMPONENT(Sprite);
         RENDER_COMPONENT(Tilemap);

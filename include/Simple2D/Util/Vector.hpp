@@ -18,6 +18,73 @@ namespace S2D::Math
     struct Vec3
     {
         _Type x, y, z;
+
+        Vec3() : x(0), y(0), z(0)
+        {   }
+
+        Vec3(_Type _x, _Type _y, _Type _z) :
+            x(_x), y(_y), z(_z)
+        {   }
+
+        _Type dot(const Vec3<_Type>& other) const
+        {
+            return x * other.x + y * other.y + z * other.z;
+        }
+
+        _Type length() const
+        {
+            return sqrt(x*x + y*y + z*z);
+        }
+
+        Vec3<_Type> normalized() const
+        {
+            const auto l = length();
+            return { x / l, y / l, z / l };
+        }
+
+        template<typename _Other>
+        operator Vec3<_Other>() const
+        {
+            return Vec3<_Other>(
+                static_cast<_Other>(x),
+                static_cast<_Other>(y),
+                static_cast<_Other>(z)
+            );
+        }
+
+        Vec3<_Type> operator+(const Vec3<_Type>& other) const
+        {
+            return Vec3<_Type>(
+                x + other.x,
+                y + other.y,
+                z + other.z
+            );
+        }
+
+        Vec3<_Type> operator/(const _Type& scalar) const
+        {
+            return {
+                x / scalar, y / scalar, z / scalar
+            };
+        }
+
+        Vec3<_Type> operator*(const _Type& scalar) const
+        {
+            return { x * scalar, y * scalar, z * scalar };
+        }
+
+        Vec3<_Type> operator-(const Vec3<_Type>& other) const
+        {
+            return {
+                x - other.x, y - other.y, z - other.z
+            };
+        }
+
+        Vec3<_Type> operator+=(const Vec3<_Type>& other)
+        {
+            x += other.x; y += other.y; z += other.z;
+            return *this;
+        }
     };
 
     using Vec3f = Vec3<float>;
@@ -28,6 +95,71 @@ namespace S2D::Math
     struct Vec2
     {
         _Type x, y;
+
+        Vec2() : x(0), y(0)
+        {   }
+
+        Vec2(_Type _x, _Type _y) :
+            x(_x), y(_y)
+        {   }
+
+        _Type dot(const Vec2<_Type>& other) const
+        {
+            return x * other.x + y * other.y;
+        }
+
+        _Type length() const
+        {
+            return sqrt(x*x + y*y);
+        }
+
+        Vec2<_Type> normalized() const
+        {
+            const auto l = length();
+            return { x / l, y / l };
+        }
+
+        template<typename _Other>
+        operator Vec2<_Other>() const
+        {
+            return Vec2<_Other>(
+                static_cast<_Other>(x),
+                static_cast<_Other>(y)
+            );
+        }
+
+        Vec2<_Type> operator+(const Vec2<_Type>& other) const
+        {
+            return Vec2<_Type>(
+                x + other.x,
+                y + other.y
+            );
+        }
+
+        Vec2<_Type> operator/(const _Type& scalar) const
+        {
+            return {
+                x / scalar, y / scalar
+            };
+        }
+
+        Vec2<_Type> operator*(const _Type& scalar) const
+        {
+            return { x * scalar, y * scalar };
+        }
+
+        Vec2<_Type> operator-(const Vec2<_Type>& other) const
+        {
+            return {
+                x - other.x, y - other.y
+            };
+        }
+
+        Vec2<_Type> operator+=(const Vec2<_Type>& other)
+        {
+            x += other.x; y += other.y;
+            return *this;
+        }
     };
 
     using Vec2f = Vec2<float>;

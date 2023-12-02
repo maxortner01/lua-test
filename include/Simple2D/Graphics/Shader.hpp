@@ -33,7 +33,7 @@ namespace S2D::Graphics
         Program(const Program&) = delete;
         Program(Program&&)      = delete;
 
-        Program()  = default;
+        Program();
         ~Program() = default;
 
         template<typename T>
@@ -41,6 +41,8 @@ namespace S2D::Graphics
 
         Util::Result<void> link();
         void use() const;
+
+        bool ready() const;
 
         [[nodiscard]]
         bool fromFile(const std::filesystem::path& filename, Shader::Type type);
@@ -54,5 +56,6 @@ namespace S2D::Graphics
         Handle handle;
         std::unordered_map<Shader::Type, std::unique_ptr<Shader>> shaders;
         std::unordered_map<std::string, int32_t> uniforms;
+        bool _linked;
     };
 }

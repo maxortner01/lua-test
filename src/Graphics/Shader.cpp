@@ -39,9 +39,10 @@ Shader::Shader(const std::string& contents, Shader::Type type) :
         char buffer[512];
         glGetShaderInfoLog(handle, 512, nullptr, buffer);
         error = std::string(buffer);
-        Log::Logger::instance("engine")->error("Error compiling {} shader: {}",
+        Log::Logger::instance("engine")->error("Error compiling {} shader: {}, source {}",
             ( type == Shader::Type::Vertex ? "Vertex" : "Fragment" ),
-            error.value());
+            error.value(),
+            contents);
     }
 }
 
@@ -56,8 +57,16 @@ bool Shader::good() const
     return !error.has_value();
 }
 
+Program::Program() : 
+    _linked(false)
+{
+
+}
+
 int32_t Program::getUniformLocation(const std::string& name)
 {
+    S2D_ASSERT(_linked, "Program is not linked");
+
     const auto location = [&]()
     {
         if (!uniforms.count(name)) 
@@ -138,14 +147,21 @@ Util::Result<void> Program::link()
     }
 
     shaders.clear();
+    _linked = true;
 
     return { };
 }
 
 void Program::use() const
 {
+    S2D_ASSERT(_linked, "Program not linked");
     S2D_ASSERT(handle, "Can't use program with invalid handle");
     glUseProgram(handle);
+}
+
+bool Program::ready() const
+{
+    return shaders.count(Shader::Type::Vertex) && shaders.count(Shader::Type::Fragment);
 }
 
 bool Program::fromFile(const std::filesystem::path& filepath, Shader::Type type)

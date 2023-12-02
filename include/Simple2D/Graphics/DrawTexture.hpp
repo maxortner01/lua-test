@@ -23,7 +23,7 @@ namespace S2D::Graphics
         [[nodiscard]]
         bool create(const Math::Vec2u& size);
 
-        const Math::Vec2u& getSize() const;
+        const Math::Vec2u& getSize() const override;
         const Texture* texture() const;
 
     private:

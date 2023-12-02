@@ -127,11 +127,13 @@ Component<Name::Rigidbody>::getTable(
     Lua::Table velocity;
     velocity.set("x", data.velocity.x);
     velocity.set("y", data.velocity.y);
+    velocity.set("z", data.velocity.z);
     table.set("velocity", velocity);
 
     Lua::Table added_force;
     added_force.set("x", data.added_force.x);
     added_force.set("y", data.added_force.y);
+    added_force.set("z", data.added_force.z);
     table.set("addedForce", added_force);
 
     table.set("linearDrag", data.linear_drag);
@@ -147,10 +149,12 @@ Component<Name::Rigidbody>::fromTable(
     const auto& velocity = table.get<Lua::Table>("velocity");
     data->velocity.x = velocity.get<float>("x");
     data->velocity.y = velocity.get<float>("y");
+    data->velocity.z = velocity.get<float>("z");
 
     const auto& added_force = table.get<Lua::Table>("addedForce");
     data->added_force.x = added_force.get<Lua::Number>("x");
     data->added_force.y = added_force.get<Lua::Number>("y");
+    data->added_force.z = added_force.get<Lua::Number>("z");
 
     data->linear_drag = table.get<Lua::Number>("linearDrag");
 }
@@ -337,31 +341,6 @@ const char* operator*(Projection p)
     case Projection::Perspective:  return "Perspective";
     default: return "";
     }
-}
-
-sf::Vector2f 
-toScreenSpace(
-    flecs::entity camera, 
-    const sf::Vector2f& world_point)
-{
-    const auto* transform = camera.get<Transform>();
-    const auto* cam = camera.get<Camera>();
-    S2D_ASSERT(transform, "Camera must have transform");
-    S2D_ASSERT(cam, "Camera missing camera component");
-
-    sf::Transform view;
-    view.translate(-1.f * sf::Vector2f(transform->position.x, transform->position.y));
-
-    const auto transformed = view.transformPoint(world_point);
-    return transformed + (sf::Vector2f)cam->size / 2.f;
-}
-
-sf::Vector2f 
-toWorldSpace(
-    flecs::entity camera, 
-    const sf::Vector2f& screen_point)
-{
-
 }
 
 Lua::Table 

@@ -41,15 +41,16 @@ ResLib::getResource(Lua::State L)
     {
     case ResourceType::Font:
     {
-        const auto res = scene->resources.getResource<sf::Font>(name);
-        LUA_EXCEPTION(res, "Resource not found!");
-        resource = (void*)res.value();
+        S2D_ASSERT(false, "Fonts not supported yet");
+        //const auto res = scene->resources.getResource<sf::Font>(name);
+        //LUA_EXCEPTION(res, "Resource not found!");
+        //resource = (void*)res.value();
 
         return 0;
     }
     case ResourceType::Image:
     {
-        const auto res = scene->resources.getResource<sf::Image>(name);
+        const auto res = scene->resources.getResource<Graphics::Image>(name);
         LUA_EXCEPTION(res, "Resource not found!");
         resource = (void*)res.value();
 
@@ -60,7 +61,7 @@ ResLib::getResource(Lua::State L)
     }
     case ResourceType::Texture:
     {
-        const auto res = scene->resources.getResource<sf::Texture>(name);
+        const auto res = scene->resources.getResource<Graphics::Texture>(name);
         LUA_EXCEPTION(res, "Resource not found!");
         resource = (void*)res.value();
         

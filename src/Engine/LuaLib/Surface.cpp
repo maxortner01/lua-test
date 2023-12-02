@@ -10,6 +10,9 @@ namespace S2D::Engine
 {
     int Surface::drawText(Lua::State L)
     {
+        S2D_ASSERT(false, "Text not supported");
+
+        /*
         const auto [ surface_table, x, y, size, text, font ] = 
             extractArgs<Lua::Table, Lua::Number, Lua::Number, Lua::Number, Lua::String, Lua::String>(L);
 
@@ -17,7 +20,7 @@ namespace S2D::Engine
         const auto* scene = (Scene*)*surface_table.get<uint64_t*>("scene");
 
         LUA_ASSERT(surface_table.hasValue("surface"), "Surface missing render surface");
-        auto* surface = (sf::RenderTexture*)*surface_table.get<uint64_t*>("surface");
+        auto* surface = (Graphics::DrawTexture*)*surface_table.get<uint64_t*>("surface");
 
         const auto font_r = scene->resources.getResource<sf::Font>(font);
         LUA_ASSERT(font_r, "Scene missing font '" + font + "'");
@@ -28,7 +31,7 @@ namespace S2D::Engine
         t.setPosition(sf::Vector2f((int)x, (int)y));
         surface->draw(t);
 
-        return 0;
+        return 0;*/
     }
     
     // Takes in the surface, name, type, transform info
@@ -41,16 +44,16 @@ namespace S2D::Engine
         const auto* scene = (Scene*)*surface_table.get<uint64_t*>("scene");
 
         LUA_ASSERT(surface_table.hasValue("surface"), "Surface missing render surface");
-        auto* surface = (sf::RenderTexture*)*surface_table.get<uint64_t*>("surface");
+        auto* surface = (Graphics::DrawTexture*)*surface_table.get<uint64_t*>("surface");
 
         // Get the resource
         const auto res_type = (ResourceType)(int)type;
-        const sf::Texture* texture = nullptr;
+        const Graphics::Texture* texture = nullptr;
         switch(res_type)
         {
         case ResourceType::Texture:
         {
-            const auto res = scene->resources.getResource<sf::Texture>(name);
+            const auto res = scene->resources.getResource<Graphics::Texture>(name);
             LUA_ASSERT(res, "Error loading texture");
             texture = res.value();
             break;
@@ -58,14 +61,14 @@ namespace S2D::Engine
         case ResourceType::Surface:
         {
             LUA_ASSERT(scene->renderpass->targets.count(name), "Renderpass missing requested target");
-            texture = &scene->renderpass->targets.at(name)->getTexture();
+            texture = scene->renderpass->targets.at(name)->texture();
             break;
         }
         default: LUA_ASSERT(res_type == ResourceType::Texture || res_type == ResourceType::Surface, "Can only draw texture of texture or surface resource");
         }
 
         // Get the transform info
-        sf::Vector2f position, scale;
+        Math::Vec2f position, scale;
         float rotation = 0.f;
 
         transform_table.try_get<Lua::Table>("position", 
@@ -82,11 +85,14 @@ namespace S2D::Engine
         transform_table.try_get<Lua::Number>("rotation", [&](const Lua::Number& r) { rotation = r; });
 
         LUA_ASSERT(texture, "Error getting texture");
+
+        S2D_ASSERT(false, "Sprite drawing not supported");
+        /*
         sf::Sprite sprite(*texture);
         sprite.move(position);
         sprite.scale(scale);
         sprite.rotate(sf::degrees(rotation));
-        surface->draw(sprite);
+        surface->draw(sprite);*/
 
         return 0;
     }

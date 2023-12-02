@@ -37,7 +37,7 @@ MeshLib::getVertexCount(Lua::State L)
     LUA_EXCEPTION(entity.has<CustomMesh>(), "Entity missing custom mesh component");
     
     auto* mesh = entity.get<CustomMesh>();
-    lua_pushnumber(L, mesh->mesh ? mesh->mesh->vertices.getVertexCount() : 0);
+    lua_pushnumber(L, mesh->mesh ? mesh->mesh->vertices.vertexCount() : 0);
     return 1;
 }
 
@@ -52,21 +52,22 @@ MeshLib::pushVertex(Lua::State L)
     auto* mesh = entity.get_mut<CustomMesh>();
     if (!mesh->mesh) mesh->mesh = std::make_unique<RawMesh>();
 
-    sf::Vertex v;
+    Graphics::Vertex v;
 
     if (vertex.hasValue("position"))
     {
         const auto& position = vertex.get<Lua::Table>("position");
-        v.position = sf::Vector2f(
+        v.position = {
             position.hasValue("x") ? position.get<Lua::Number>("x") : 0.f,
-            position.hasValue("y") ? position.get<Lua::Number>("y") : 0.f
-        );
+            position.hasValue("y") ? position.get<Lua::Number>("y") : 0.f,
+            position.hasValue("z") ? position.get<Lua::Number>("z") : 0.f
+        };
     }
 
     if (vertex.hasValue("color"))
     {
         const auto& color = vertex.get<Lua::Table>("color");
-        v.color = sf::Color(
+        v.color = Graphics::Color(
             (uint8_t)(int)(color.hasValue("r") ? color.get<Lua::Number>("r") : 0),
             (uint8_t)(int)(color.hasValue("g") ? color.get<Lua::Number>("g") : 0),
             (uint8_t)(int)(color.hasValue("b") ? color.get<Lua::Number>("b") : 0),
@@ -77,13 +78,14 @@ MeshLib::pushVertex(Lua::State L)
     if (vertex.hasValue("texpos"))
     {
         const auto& tex = vertex.get<Lua::Table>("texpos");
-        v.texCoords = sf::Vector2f(
+        v.texCoords = {
             tex.hasValue("x") ? tex.get<Lua::Number>("x") : 0.f,
             tex.hasValue("y") ? tex.get<Lua::Number>("y") : 0.f
-        );
+        };
     }
 
-    mesh->mesh->vertices.append(v);
+    // need to add CPU side of vertexarray
+    //mesh->mesh->vertices.append(v);
 
     return 0;
 }
@@ -91,6 +93,8 @@ MeshLib::pushVertex(Lua::State L)
 int 
 MeshLib::getVertex(Lua::State L)
 {
+    return 0;
+    /*
     auto& logger = Log::Logger::instance("engine");
     const auto [ mesh_table, index ] = extractArgs<Lua::Table, Lua::Number>(L);
     LUA_EXCEPTION(index >= 0, "Index can't be negative");
@@ -123,7 +127,7 @@ MeshLib::getVertex(Lua::State L)
 
     table.toStack(L);
 
-    return 1;
+    return 1;*/
 }
 
 MeshLib::MeshLib() : Base("Mesh",

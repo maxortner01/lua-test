@@ -5,4 +5,5 @@
 #include "Graphics/VertexArray.hpp"
 #include "Graphics/Context.hpp"
 #include "Graphics/Texture.hpp"
+#include "Graphics/Image.hpp"
 #include "Graphics/DrawTexture.hpp"

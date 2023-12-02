@@ -44,7 +44,6 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/extern/spdlog/include
     ${CMAKE_SOURCE_DIR}/extern/flecs/include
-    ${CMAKE_SOURCE_DIR}/extern/sfml/include
     ${CMAKE_SOURCE_DIR}/extern/fcl/include
     ${CMAKE_CURRENT_BINARY_DIR}/extern/fcl/include)
 
@@ -70,6 +69,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/extern/glew-cmake)
 
 set(GRAPHICS_SOURCES
     ${CMAKE_SOURCE_DIR}/src/Log/Log.cpp
+    ${CMAKE_SOURCE_DIR}/src/Graphics/Image.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/Surface.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/DrawTexture.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/Texture.cpp
@@ -121,7 +121,7 @@ add_library(simple2d-engine STATIC ${ENGINE_SOURCES})
 target_link_libraries(simple2d-engine PRIVATE simple2d-lua simple2d-graphics spdlog::spdlog fcl flecs)
 
 ## EXECUTABLE
-add_executable(main main.cpp)
+add_executable(main entry.cpp)
 
 target_compile_definitions(main PUBLIC -DSOURCE_DIR="${CMAKE_SOURCE_DIR}")
 target_link_libraries(main PUBLIC simple2d-lua simple2d-engine simple2d-graphics flecs)

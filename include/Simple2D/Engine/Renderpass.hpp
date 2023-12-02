@@ -3,7 +3,7 @@
 #include "../Util.hpp"
 #include "../Lua.hpp"
 
-#include <SFML/Graphics.hpp>
+#include <Simple2D/Graphics.hpp>
 
 #include <vector>
 #include <memory>
@@ -33,7 +33,7 @@ namespace S2D::Engine
     template<>
     struct CommandParameters<Command::Clear>
     {
-        sf::Color color;
+        Graphics::Color color;
     };
 
     template<>
@@ -65,7 +65,7 @@ namespace S2D::Engine
     template<>
     struct CommandParameters<Command::BlitSurface>
     {
-        sf::Vector2f position, size;
+        Math::Vec2f position, size;
     };
 
     template<Resource R>
@@ -75,12 +75,12 @@ namespace S2D::Engine
     struct ResourceParameters<Resource::Surface>
     {
         std::string name;
-        sf::Vector2u size;
+        Math::Vec2u size;
     };
 
     struct Renderpass
     {
-        std::unordered_map<std::string, std::unique_ptr<sf::RenderTexture>> targets;
+        std::unordered_map<std::string, std::unique_ptr<Graphics::DrawTexture>> targets;
         std::vector<std::pair<Command, std::shared_ptr<void>>> commands;
     };
 
@@ -133,11 +133,11 @@ namespace S2D::Engine
                     const auto& params = *(RP*)res.second.get();
 
                     // Switch this out for a method that takes the type and constructs a target
-                    auto* surface = new sf::RenderTexture();
+                    auto* surface = new Graphics::DrawTexture();
                     S2D_ASSERT(surface->create(params.size), "Surface failed to create.");
                     renderpass->targets.insert(std::pair(
                         params.name,
-                        std::unique_ptr<sf::RenderTexture>(surface)
+                        std::unique_ptr<Graphics::DrawTexture>(surface)
                     ));
                 });
             }

@@ -1,8 +1,7 @@
 #pragma once
 
 #include "../../Lua.hpp"
-
-#include <SFML/Graphics.hpp>
+#include "../../Util/Vector.hpp"
 
 namespace S2D::Engine
 {
@@ -22,7 +21,7 @@ namespace S2D::Engine
         };  
 
         inline static std::unordered_map<std::string, KeyState> global_state;
-        inline static sf::Vector2f mouse_position; // World position
+        inline static Math::Vec2f mouse_position; // World position
 
         static int getMousePosition(Lua::State L);
         static int getPressed(Lua::State L);

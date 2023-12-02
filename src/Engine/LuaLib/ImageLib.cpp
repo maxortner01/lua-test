@@ -1,8 +1,7 @@
 #include <Simple2D/Engine/LuaLib/ImageLib.hpp>
+#include <Simple2D/Graphics.hpp>
 
 #include <Simple2D/Log/Log.hpp>
-
-#include <SFML/Graphics.hpp>
 
 #define LUA_EXCEPTION(expr, msg) if (!(expr)) { logger->error(msg); return 0; }
 
@@ -16,7 +15,7 @@ ImageLib::getSize(Lua::State L)
     const auto [ resource ] = extractArgs<Lua::Table>(L);
     LUA_EXCEPTION(resource.hasValue("resource"), "Resource missing reference");
 
-    auto* image = (sf::Image*)*resource.get<uint64_t*>("resource");
+    auto* image = (Graphics::Image*)*resource.get<uint64_t*>("resource");
 
     const auto size = image->getSize();
     
@@ -36,8 +35,8 @@ ImageLib::getPixel(Lua::State L)
     LUA_EXCEPTION(resource.hasValue("resource"), "Resource missing reference");
     LUA_EXCEPTION(x >= 0 && y >= 0, "Coordinates can not be negative");
 
-    auto* image = (sf::Image*)*resource.get<uint64_t*>("resource");
-    const auto pixel = image->getPixel(sf::Vector2u(x, y));
+    auto* image = (Graphics::Image*)*resource.get<uint64_t*>("resource");
+    const auto pixel = image->read({ (uint32_t)x, (uint32_t)y });
 
     Lua::Table p;
     p.set("r", (Lua::Number)pixel.r);

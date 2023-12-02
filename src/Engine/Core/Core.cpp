@@ -45,36 +45,15 @@ Scene* Core::getTopScene()
     return _scenes.top();
 }
 
-#define ITEM(x) case sf::Keyboard::Key::x: return #x;
-std::string getSFMLKey(const sf::Keyboard::Key& key)
-{
-    switch (key)
-    {
-    ITEM(W)
-    ITEM(A)
-    ITEM(S)
-    ITEM(D)
-    default: return "";
-    }
-}
-
-std::string getSFMLMouse(const sf::Mouse::Button& button)
-{
-    switch (button)
-    {
-    case sf::Mouse::Button::Left:  return *Input::Button::LeftClick;
-    case sf::Mouse::Button::Right: return *Input::Button::RightClick;
-    default: return "";
-    }
-}
-
 void Core::run()
 {
+    using namespace Graphics;
+
     auto tick = std::chrono::high_resolution_clock::now();
 
     while (window.isOpen() && _scenes.size())
     {
-        sf::Event event;
+        Event event;
 
         // Change all KeyState::Pressed to KeyState::Down
         // Erase all KeyState::Released
@@ -89,27 +68,27 @@ void Core::run()
 
         while (window.pollEvent(event))
         {
-            if (event.type == sf::Event::Closed)
+            if (event.type == Event::Type::Close)
                 window.close();
 
-            if (event.type == sf::Event::KeyPressed)
+            if (event.type == Event::Type::KeyPress)
             {
-                const auto code = getSFMLKey(event.key.code);
+                const auto code = std::string(*event.keyPress.key);
                 if (!Input::global_state.count(code)) Input::global_state.insert(std::pair(code, Input::KeyState::Press));
             }
-            else if (event.type == sf::Event::KeyReleased)
+            else if (event.type == Event::Type::KeyRelease)
             {
-                const auto code = getSFMLKey(event.key.code);
+                const auto code = std::string(*event.keyPress.key);
                 if (Input::global_state.count(code)) Input::global_state.at(code) = Input::KeyState::Release;
             }
-            else if (event.type == sf::Event::MouseButtonPressed)
+            else if (event.type == Event::Type::MousePress)
             {
-                const auto code = getSFMLMouse(event.mouseButton.button);
+                const auto code = std::string(*event.mousePress.button);
                 if (!Input::global_state.count(code)) Input::global_state.insert(std::pair(code, Input::KeyState::Press));
             }
-            else if (event.type == sf::Event::MouseButtonReleased)
+            else if (event.type == Event::Type::MouseRelease)
             {
-                const auto code = getSFMLMouse(event.mouseButton.button);
+                const auto code = std::string(*event.mousePress.button);
                 if (Input::global_state.count(code)) Input::global_state.at(code) = Input::KeyState::Release;
             }
         }
@@ -194,8 +173,8 @@ void Core::run()
         collide(top_scene);
         top_scene->rigidbodies.each([&](Transform& transform, Rigidbody& rigidbody)
         {
-            rigidbody.velocity += (rigidbody.added_force - rigidbody.linear_drag * rigidbody.velocity) * (float)Time::dt;
-            transform.position += sf::Vector3f(rigidbody.velocity.x, rigidbody.velocity.y, 0.f) * (float)Time::dt;
+            rigidbody.velocity += (rigidbody.added_force - rigidbody.velocity * rigidbody.linear_drag) * (float)Time::dt;
+            transform.position += Math::Vec3f(rigidbody.velocity.x, rigidbody.velocity.y, 0.f) * (float)Time::dt;
         });
 
         window.display();
@@ -207,22 +186,20 @@ void Core::run()
         tick = now;
 
         // Set mouse position
-        sf::Vector2f camera_pos;
+        Math::Vec2f camera_pos;
         if (camera.is_alive() && camera.has<Transform>())
         {
             const auto* transform = camera.get<Transform>();
-            camera_pos = sf::Vector2f(transform->position.x, transform->position.y);
+            camera_pos = { transform->position.x, transform->position.y };
         }
 
         // Won't need this hacky stuff once we start using shaders and pass camera transform info to them
-        Input::mouse_position = (sf::Vector2f)sf::Mouse::getPosition(window) + camera_pos - (sf::Vector2f)window.getSize() / 2.f;
+        Input::mouse_position = Graphics::Mouse::getPosition() + camera_pos - (Math::Vec2f)window.getSize() / 2.f;
     }
 }
 
 Core::Core(const Application& app) :
-    window(
-        sf::VideoMode(app.size),
-        app.name)
+    window(app.size, app.name)
 {   
     Log::Logger::instance("engine")->info("Core and context started");
 }

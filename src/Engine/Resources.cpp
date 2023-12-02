@@ -3,8 +3,6 @@
 
 #include <Simple2D/Log/Log.hpp>
 
-#include <SFML/Graphics.hpp>
-
 #include <fstream>
 #include <sstream>
 
@@ -12,12 +10,7 @@ namespace S2D::Engine
 {
 
 Resources::~Resources()
-{
-    for (auto& p : resources)
-        for (auto& d : p.second)
-            d.second.deleter(d.second.ptr);
-    resources.clear();
-}
+{   }
 
 template<typename T>
 Resources::Result<void>
@@ -28,39 +21,43 @@ Resources::loadResource(const std::string& name, const std::string& filename)
     auto& types = resources.at(id);
     if (types.count(name)) return { Error::AlreadyExists };
     auto* resource = new T();
-    S2D_ASSERT(resource->loadFromFile(filename), "Resource failed to load");
-    types.insert(std::pair(name, DataPoint{
-        .ptr     = (void*)resource,
-        .deleter = [](void* ptr) { delete reinterpret_cast<T*>(ptr); }
-    }));
+    S2D_ASSERT(resource->fromFile(filename), "Resource failed to load");
+    types.insert(std::pair(
+        name,
+        std::shared_ptr<void>(
+            (void*)resource,
+            [](void* ptr) { delete reinterpret_cast<T*>(ptr); }
+        )
+    ));
     return { };
 }
-template typename Resources::Result<void> Resources::loadResource<sf::Font>(const std::string&, const std::string&);
-template typename Resources::Result<void> Resources::loadResource<sf::Texture>(const std::string&, const std::string&);
-template typename Resources::Result<void> Resources::loadResource<sf::Image>(const std::string&, const std::string&);
+//template typename Resources::Result<void> Resources::loadResource<sf::Font>(const std::string&, const std::string&);
+template typename Resources::Result<void> Resources::loadResource<Graphics::Texture>(const std::string&, const std::string&);
+template typename Resources::Result<void> Resources::loadResource<Graphics::Image>(const std::string&, const std::string&);
 
 template<>
 Resources::Result<void>
-Resources::loadResource<sf::Shader>(const std::string& name, const std::string& filename, sf::Shader::Type type)
+Resources::loadResource<Graphics::Program>(const std::string& name, const std::string& filename, Graphics::Shader::Type type)
 {
-    const auto id = typeid(sf::Shader).hash_code();
+    const auto id = typeid(Graphics::Program).hash_code();
     if (!resources.count(id)) resources.insert(std::pair(id, ResourceMap()));
     auto& types = resources.at(id);
-    sf::Shader* res = nullptr;
-    if (types.count(name)) res = (sf::Shader*)types.at(name).ptr;
+    Graphics::Program* res = nullptr;
+    if (types.count(name)) res = (Graphics::Program*)types.at(name).get();
     else 
     {
         Log::Logger::instance("engine")->trace("Generating new shader");
-        res = new sf::Shader();
-        types.insert(std::pair(name, DataPoint {
-            .ptr     = (void*)res,
-            .deleter = [](void* ptr) { delete reinterpret_cast<sf::Shader*>(ptr); }
-        }));
+        res = new Graphics::Program();
+        types.insert(std::pair(
+            name,
+            std::shared_ptr<void>(
+                (void*)res,
+                [](void* ptr) { delete reinterpret_cast<Graphics::Program*>(ptr); }
+            )
+        ));
     }
 
     S2D_ASSERT(res, "Error loading/creating resource");
-
-    Log::Logger::instance("engine")->trace("Setting {} shader to program \"{}\"", (type == sf::Shader::Vertex ? "Vertex" : "Fragment"), name);
 
     const auto contents = [&]()
     {
@@ -75,7 +72,10 @@ Resources::loadResource<sf::Shader>(const std::string& name, const std::string& 
         return ss.str();
     }();
 
-    S2D_ASSERT(res->loadFromMemory(contents, type), "Error loading shader from file");
+    S2D_ASSERT(res->fromString(contents, type), "Error loading shader from file");
+
+    if (res->ready()) res->link();
+
     return { };
 }
 
@@ -87,12 +87,12 @@ Resources::getResource(const std::string& name) const
     S2D_ASSERT(resources.count(id), "Resource type does not exist");
     auto& types = resources.at(id);
     S2D_ASSERT(types.count(name), "Resource does not exist");
-    return static_cast<const T*>(types.at(name).ptr);
+    return static_cast<const T*>(types.at(name).get());
 }
-template typename Resources::Result<const sf::Font*> Resources::getResource<sf::Font>(const std::string&) const;
-template typename Resources::Result<const sf::Texture*> Resources::getResource<sf::Texture>(const std::string&) const;
-template typename Resources::Result<const sf::Image*> Resources::getResource<sf::Image>(const std::string&) const;
-template typename Resources::Result<const sf::Shader*> Resources::getResource<sf::Shader>(const std::string&) const;
+//template typename Resources::Result<const sf::Font*> Resources::getResource<sf::Font>(const std::string&) const;
+template typename Resources::Result<const Graphics::Texture*> Resources::getResource<Graphics::Texture>(const std::string&) const;
+template typename Resources::Result<const Graphics::Image*> Resources::getResource<Graphics::Image>(const std::string&) const;
+template typename Resources::Result<const Graphics::Program*> Resources::getResource<Graphics::Program>(const std::string&) const;
 
 template<typename T>
 Resources::Result<T*>
@@ -102,11 +102,11 @@ Resources::getResource(const std::string& name)
     S2D_ASSERT(resources.count(id), "Resource type does not exist");
     auto& types = resources.at(id);
     S2D_ASSERT(types.count(name), "Resource does not exist");
-    return static_cast<T*>(types.at(name).ptr);
+    return static_cast<T*>(types.at(name).get());
 }
-template typename Resources::Result<sf::Font*> Resources::getResource<sf::Font>(const std::string&);
-template typename Resources::Result<sf::Texture*> Resources::getResource<sf::Texture>(const std::string&);
-template typename Resources::Result<sf::Image*> Resources::getResource<sf::Image>(const std::string&);
-template typename Resources::Result<sf::Shader*> Resources::getResource<sf::Shader>(const std::string&);
+//template typename Resources::Result<sf::Font*> Resources::getResource<sf::Font>(const std::string&);
+template typename Resources::Result<Graphics::Texture*> Resources::getResource<Graphics::Texture>(const std::string&);
+template typename Resources::Result<Graphics::Image*> Resources::getResource<Graphics::Image>(const std::string&);
+template typename Resources::Result<Graphics::Program*> Resources::getResource<Graphics::Program>(const std::string&);
 
 }

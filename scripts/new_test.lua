@@ -9,26 +9,7 @@ function GetResources()
                 name = "mower_bottom",
                 location = Directory.Source.."/textures/mower_bottom.png"
             }
-        },
-        fonts = {
-            {
-                name = "arial",
-                location = Directory.Source.."/fonts/arial.ttf"
-            }
-        },
-        images = {
-            {
-                name = "mask",
-                location = Directory.Source.."/textures/grass_mask.png"
-            }
-        }--[[,
-        shaders = {
-            {
-                name = "grass_shader",
-                vertex   = Directory.Source.."/shaders/test.vert.glsl",
-                fragment = Directory.Source.."/shaders/test.frag.glsl"
-            }
-        }--]]
+        }
     }
 end
 
@@ -41,7 +22,7 @@ function GetEntities()
                     type = Component.Transform,
                     value = {
                         position = { x = 0, y = 0, z = 2 },
-                        scale = 3,
+                        scale = 0.25,
                         rotation = 0
                     }
                 },
@@ -55,9 +36,9 @@ function GetEntities()
                 {
                     type = Component.Rigidbody,
                     value = {
-                        velocity   = { x = 0, y = 0 },
-                        addedForce = { x = 0, y = 0 },
-                        linearDrag = 10
+                        velocity   = { x = 0, y = 0, z = 0 },
+                        addedForce = { x = 0, y = 0, z = 0 },
+                        linearDrag = 3
                     }
                 },
                 {
@@ -75,8 +56,8 @@ function GetEntities()
                 {
                     type = Component.Transform,
                     value = {
-                        position = { x = 0, y = 0, z = 1 },
-                        scale = 3,
+                        position = { x = 0, y = 0, z = 2 },
+                        scale = 0.25,
                         rotation = 0
                     }
                 },
@@ -90,29 +71,6 @@ function GetEntities()
             },
             scripts = {
                 Directory.Source.."/scripts/mower_bottom.lua"
-            }
-        },
-        {
-            name = "Mesh",
-            components = {
-                {
-                    type = Component.Transform,
-                    value = {
-                        position = { x = 0, y = 0, z = 0 },
-                        scale = 50,
-                        rotation = 0
-                    }
-                },
-                {
-                    type = Component.CustomMesh,
-                    value = {}
-                }--[[,
-                {
-                    type = Component.Shader,
-                    value = {
-                        name = "grass_shader"
-                    }
-                }--]]
             }
         },
         {
@@ -145,7 +103,7 @@ function GetEntities()
                 {
                     type = Component.Transform,
                     value = {
-                        position = { x = 0, y = 0, z = 50 },
+                        position = { x = 0, y = 0, z = 15 },
                         scale = 1,
                         rotation = 0
                     }
