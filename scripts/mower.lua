@@ -1,12 +1,12 @@
 function Update(world, entity)
     local force = {
         amount = 0,
-        mag = 2
+        mag = 10
     }
 
     local rotation = {
         amount = 0,
-        mag = 2.4
+        mag = 4.0
     }
 
     if Input.getDown("D") then
@@ -28,7 +28,7 @@ function Update(world, entity)
     local rigidbody = entity:getComponent(Component.Rigidbody)
     local transform = entity:getComponent(Component.Transform)
 
-    transform.rotation = transform.rotation + rotation.amount * force.amount * 0.1
+    transform.rotation = transform.rotation + rotation.amount * force.amount * 0.01
     rigidbody.addedForce.x = force.amount * math.sin(math.rad(transform.rotation));
     rigidbody.addedForce.y = force.amount * math.cos(math.rad(transform.rotation));
     

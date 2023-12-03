@@ -19,6 +19,8 @@ namespace S2D::Graphics
         glEnable(GL_BLEND); 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
+        glEnable(GL_DEPTH_TEST);  
+
         if (context.program) context.program->use();
 
         for (int32_t i = 0; i < context.textures.size(); i++)
@@ -39,6 +41,13 @@ namespace S2D::Graphics
             glBindTexture(GL_TEXTURE_2D, 0);
         }
 
+        unbind();
+    }
+
+    void Surface::clearDepth() const
+    {
+        bind();
+        glClear(GL_DEPTH_BUFFER_BIT);
         unbind();
     }
 

@@ -51,6 +51,9 @@ void Core::run()
 
     auto tick = std::chrono::high_resolution_clock::now();
 
+    std::vector<double> frame_times(120);
+
+    uint32_t frame = 0;
     while (window.isOpen() && _scenes.size())
     {
         Event event;
@@ -184,6 +187,7 @@ void Core::run()
         Time::dt = std::chrono::duration_cast<std::chrono::microseconds>(now - tick).count() / 1e6;
         if (Time::dt > 1.0) Time::dt = 1.0;
         tick = now;
+        frame_times[frame % frame_times.size()] = Time::dt;
 
         // Set mouse position
         Math::Vec2f camera_pos;
@@ -195,6 +199,16 @@ void Core::run()
 
         // Won't need this hacky stuff once we start using shaders and pass camera transform info to them
         Input::mouse_position = Graphics::Mouse::getPosition() + camera_pos - (Math::Vec2f)window.getSize() / 2.f;
+
+        frame++;
+
+        if (frame % frame_times.size() == 0)
+        {
+            double avg = 0.f;
+            for (const auto& time : frame_times) avg += time;
+            avg /= (double)frame_times.size();
+            Log::Logger::instance("engine")->trace("Last {} frames ran at {:0.1f} fps", frame_times.size(), 1.0 / avg);
+        }
     }
 }
 

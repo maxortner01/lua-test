@@ -1,5 +1,6 @@
 #pragma once
 
+// SHould be S2D::Math
 namespace S2D::Util
 {
     struct Angle

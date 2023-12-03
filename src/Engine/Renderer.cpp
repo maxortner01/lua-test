@@ -3,6 +3,7 @@
 #include <Simple2D/Engine/Core.hpp>
 
 #include <Simple2D/Util/Transform.hpp>
+#include <Simple2D/Util/Angle.hpp>
 
 #include <Simple2D/Log/Log.hpp>
 
@@ -78,23 +79,26 @@ namespace S2D::Engine
         model.rotate({ 0.f, 0.f, entity_transform->rotation });
 
         // View matrix
-        view.translate({
-            -1.f * camera_transform->position.x,
-            -1.f * camera_transform->position.y, 0.f
-            //-1.f * camera_transform->position.z
-        });
-        //view.rotate({ 0.f, 0.f, -1.f * camera_transform->rotation });
-        //view.scale({ 1.f / camera_transform->position.z, 1.f / camera_transform->position.z, 1.f });
+        view.translate(camera_transform->position * -1.f);
+        //view.rotate({ 0.f, 0.f, camera_transform->rotation });
 
         const auto aspectRatio = (float)target.getSize().x / (float)target.getSize().y;
 
-        Math::Mat4f proj;
-        proj[1][1] = aspectRatio;
+        const auto near = 0.01;
+        const auto far = 10000.0;
+        const auto t = 1.f / tanf(Util::degrees(camera.get<Camera>()->FOV / 2.f).asRadians());
+
+        Math::Mat4f proj(false);
+        proj[0][0] = t / aspectRatio;
+        proj[1][1] = t;
+        proj[2][2] = -1.f * (far + near) / (far - near);
+        proj[3][2] = -2.f * (far * near) / (far - near);
+        proj[2][3] = -1.f;
+
+        const auto mat = model.matrix() * view.matrix() * proj;
 
         // Set the matrices in the shader
-        shader->setUniform("proj", proj);
-        shader->setUniform("model", model.matrix());
-        shader->setUniform("view",  view.matrix());
+        shader->setUniform("MVP", mat);
     }
 
     template<>

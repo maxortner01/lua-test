@@ -12,6 +12,7 @@ namespace S2D::Graphics
         virtual void bind() const = 0;
 
         void unbind() const;
+        void clearDepth() const;
         void clear(const Color& color = Color(0, 0, 0, 255)) const;
         void draw(const Drawable& object, const Context& context);
 

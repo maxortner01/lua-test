@@ -6,13 +6,11 @@ layout (location = 1) in vec4 color;
 
 out vec4 vertColor;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 proj;
+uniform mat4 MVP;
 
 void main()
 {
-    gl_Position = proj * view * model * vec4(position, 1.0);
+    gl_Position = MVP * vec4(position, 1.0);
     vertColor = color;
 }
 

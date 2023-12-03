@@ -10,16 +10,13 @@ out vec4 vertColor;
 
 uniform vec2 spriteSize;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 proj;
+uniform mat4 MVP;
 
 void main()
 {
-    vec4 sprite_pos = vec4(position.x, position.y * spriteSize.y / spriteSize.x, 0.0, 1.0);
-    vec4 final_pos = proj * view * model * sprite_pos;
+    vec4 sprite_pos = vec4(position.x, position.y * spriteSize.y / spriteSize.x, position.z, 1.0);
 
-    gl_Position = vec4(final_pos.xy, 0.0, 1.0);
+    gl_Position = MVP * sprite_pos;
     texPos = tex_coords;
     vertColor = color;
 }

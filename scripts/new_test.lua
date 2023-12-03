@@ -21,8 +21,8 @@ function GetEntities()
                 {
                     type = Component.Transform,
                     value = {
-                        position = { x = 0, y = 0, z = 2 },
-                        scale = 0.25,
+                        position = { x = 0, y = 0, z = 0 },
+                        scale = 2.0,
                         rotation = 0
                     }
                 },
@@ -38,7 +38,7 @@ function GetEntities()
                     value = {
                         velocity   = { x = 0, y = 0, z = 0 },
                         addedForce = { x = 0, y = 0, z = 0 },
-                        linearDrag = 3
+                        linearDrag = 8
                     }
                 },
                 {
@@ -56,8 +56,8 @@ function GetEntities()
                 {
                     type = Component.Transform,
                     value = {
-                        position = { x = 0, y = 0, z = 2 },
-                        scale = 0.25,
+                        position = { x = 0, y = 0, z = 0 },
+                        scale = 2.0,
                         rotation = 0
                     }
                 },
@@ -79,7 +79,7 @@ function GetEntities()
                 {
                     type = Component.Transform,
                     value = {
-                        position = { x = 0, y = 0, z = 15 },
+                        position = { x = 0, y = 0, z = 4 },
                         scale = 1,
                         rotation = 0
                     }
@@ -87,7 +87,7 @@ function GetEntities()
                 {
                     type = Component.Camera,
                     value = {
-                        FOV = 90,
+                        FOV = 100,
                         projection = ProjectionType.Orthographic,
                         size = { width = 1280, height = 720 }
                     }
@@ -103,7 +103,7 @@ function GetEntities()
                 {
                     type = Component.Transform,
                     value = {
-                        position = { x = 0, y = 0, z = 15 },
+                        position = { x = 0, y = 0, z = 10 },
                         scale = 1,
                         rotation = 0
                     }
@@ -111,9 +111,9 @@ function GetEntities()
                 {
                     type = Component.Camera,
                     value = {
-                        FOV = 90,
+                        FOV = 100,
                         projection = ProjectionType.Orthographic,
-                        size = { width = 1280, height = 720 }
+                        size = { width = 500, height = 500 }
                     }
                 }
             }

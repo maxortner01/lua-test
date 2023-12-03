@@ -73,6 +73,9 @@ struct MainScene : Engine::LuaScene
 
     void update() override
     {
+        //auto camera = world.lookup("MainCamera");
+        //camera.get_mut<Engine::Transform>()->position.z += 0.001;
+
         // set mow-camera info into shader
         //auto mow_camera = world.lookup("MowCamera");
         //const auto* transform = mow_camera.get<Engine::Transform>();
@@ -89,11 +92,11 @@ struct MainScene : Engine::LuaScene
 
         builder.command<Command::BindSurface>({ "MowCamera" });
         builder.command<Command::RenderEntity>({ "PlayerBottom", "MowCamera" });
+        builder.command<Command::BlitSurface>({ { 0.f, 0.f }, { 1280.f, 720.f } });
 
         builder.command<Command::BindSurface>({ "MainCamera" });
         builder.command<Command::Clear>({ { 100, 100, 100, 255 } });
         builder.command<Command::RenderEntities>({ "MainCamera" });
-        builder.command<Command::BlitSurface>({ { 0.f, 0.f }, { 1280.f, 720.f } });
 
         /*
         builder.command<Command::BindSurface>({ "UI" });

@@ -354,6 +354,11 @@ void Core::render(Scene* scene)
             GET_PARAMS(Command::BindSurface);
             if (targets.count(params->name)) current_target = targets.at(params->name).get();
             else log->error("Requesting target that doesn't exist");
+
+            if (current_target) 
+            {
+                current_target->clearDepth();
+            }
             break;
         }
         case Command::Clear:
