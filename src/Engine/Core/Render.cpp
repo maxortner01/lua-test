@@ -474,8 +474,8 @@ void Core::render(Scene* scene)
             // this way the function can access the scene and its resources
             // We also pass a pointer to the current surface
             auto surface = Surface().asTable();
-            surface.set<uint64_t>("scene", (uint64_t)scene);
-            surface.set<uint64_t>("surface", (uint64_t)current_target);
+            surface.set("scene",   (void*)scene);
+            surface.set("surface", (void*)current_target);
             
             const auto res = runtime->runFunction<>("RenderUI", surface);
             if (!res && res.error().code() != Lua::Runtime::ErrorCode::NotFunction)

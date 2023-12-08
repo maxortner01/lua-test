@@ -16,10 +16,10 @@ namespace S2D::Engine
             extractArgs<Lua::Table, Lua::Number, Lua::Number, Lua::Number, Lua::String, Lua::String>(L);
 
         LUA_ASSERT(surface_table.hasValue("scene"), "Surface missing scene");
-        auto* scene = (Scene*)*surface_table.get<uint64_t*>("scene");
+        auto* scene = (Scene*)*surface_table.get<void**>("scene");
 
         LUA_ASSERT(surface_table.hasValue("surface"), "Surface missing render surface");
-        auto* surface = (Graphics::DrawTexture*)*surface_table.get<uint64_t*>("surface");
+        auto* surface = (Graphics::DrawTexture*)*surface_table.get<void**>("surface");
 
         const auto font_r = scene->resources.getResource<Graphics::Font>(font);
         LUA_ASSERT(font_r, "Scene missing font '" + font + "'");
@@ -40,10 +40,10 @@ namespace S2D::Engine
             extractArgs<Lua::Table, Lua::String, Lua::Number, Lua::Table>(L);
 
         LUA_ASSERT(surface_table.hasValue("scene"), "Surface missing scene");
-        const auto* scene = (Scene*)*surface_table.get<uint64_t*>("scene");
+        const auto* scene = (Scene*)surface_table.get<void*>("scene");
 
         LUA_ASSERT(surface_table.hasValue("surface"), "Surface missing render surface");
-        auto* surface = (Graphics::DrawTexture*)*surface_table.get<uint64_t*>("surface");
+        auto* surface = (Graphics::DrawTexture*)surface_table.get<void*>("surface");
 
         // Get the resource
         const auto res_type = (ResourceType)(int)type;

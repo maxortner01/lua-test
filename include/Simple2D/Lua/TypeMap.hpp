@@ -15,7 +15,10 @@ namespace S2D::Lua
 namespace CompileTime
 {
     template<typename T>
-    struct TypeMap
+    struct TypeMap;
+
+    template<>
+    struct TypeMap<void*>
     {
         constexpr static int LuaType = LUA_TUSERDATA;
 
@@ -26,16 +29,16 @@ namespace CompileTime
         }
 
         inline static void
-        push(State L, const T& val)
+        push(State L, void* const & val)
         {
-            auto* ptr = lua_newuserdata(L, sizeof(T));
-            *reinterpret_cast<T*>(ptr) = val;
+            auto* ptr = lua_newuserdata(L, sizeof(void*));
+            *reinterpret_cast<void**>(ptr) = val;
         }
 
-        inline static T
+        inline static void*
         construct(State L)
         {
-            return *reinterpret_cast<T*>(lua_touserdata(L, -1));
+            return *reinterpret_cast<void**>(lua_touserdata(L, -1));
         }
     };
     template<>

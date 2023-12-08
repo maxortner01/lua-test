@@ -25,6 +25,7 @@ namespace S2D::Engine
     struct CollisionMesh
     {
         using Model = fcl::BVHModel<fcl::OBBRSSf>;
+        //void* fcl_collision_data;
         std::vector<fcl::Vector3f> vertices;
         std::vector<fcl::Triangle> triangles;
         std::shared_ptr<Model> model;

@@ -13,8 +13,8 @@ namespace S2D::Engine
     Entity::extractWorldInfo(
         const Lua::Table& entity_or_component)
     {
-        const auto e_id  = *entity_or_component.get<uint64_t*>("entity");
-        const auto w_ptr = (flecs::world_t*)*entity_or_component.get<uint64_t*>("world");
+        const auto e_id  = *(uint64_t*)entity_or_component.get<void*>("entity");
+        const auto w_ptr = (flecs::world_t*)*(uint64_t*)entity_or_component.get<void*>("world");
 
         return {
             flecs::world(w_ptr),
@@ -51,8 +51,8 @@ namespace S2D::Engine
                 table.fromTable(Component<component>::getTable(*(const ComponentData<component>*)comp));
                 table.set("good", true);
                 table.set("type", (Lua::Number)ID);
-                table.set("entity", entity.raw_id());
-                table.set("world", (uint64_t)world.c_ptr());
+                table.set("entity", (void*)entity.raw_id());
+                table.set("world", (void*)world.c_ptr());
                 found = true;
             }
         });

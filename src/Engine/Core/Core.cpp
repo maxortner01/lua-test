@@ -117,16 +117,17 @@ void Core::run()
         {
             if (!e.is_alive() || e.has<Dead>()) return;
 
+            void* t = world.c_ptr();
             // Execute the update function
             auto ent = Engine::Entity().asTable();
-            ent.set("entity", e.raw_id());
+            ent.set("entity", (void*)e.raw_id());
             ent.set("good", true);
-            ent.set("world", (uint64_t)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
+            ent.set("world", t); 
 
             auto _world = Engine::World().asTable();
             _world.superimpose(Engine::ResLib().asTable());
-            _world.set("world", (uint64_t)world.c_ptr());
-            _world.set("scene", (uint64_t)top_scene);
+            _world.set("world", (void*)world.c_ptr());
+            _world.set("scene", (void*)top_scene);
             _world.set("good", true);
 
             #define CHECK_FUNCTION(name) \

@@ -26,7 +26,7 @@ static int createEntityFromComponents(Lua::State L)
     }
 
     Lua::Table world_table(L);
-    flecs::world world((flecs::world_t*)*world_table.get<uint64_t*>("world"));
+    flecs::world world((flecs::world_t*)world_table.get<void*>("world"));
 
     auto entity = world.entity();
 
@@ -61,8 +61,8 @@ static int createEntityFromComponents(Lua::State L)
 
     auto entity_table = Entity().asTable();
     entity_table.set("good", true);
-    entity_table.set("entity", entity.raw_id());
-    entity_table.set("world", (uint64_t)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
+    entity_table.set("entity", (void*)entity.raw_id());
+    entity_table.set("world", (void*)world.c_ptr()); 
     entity_table.toStack(L);
 
     return 1;
@@ -84,7 +84,7 @@ static int createEntityInitComponents(Lua::State L)
     
     S2D_ASSERT(lua_gettop(L) == 1, "Argument size mismatch");
     Lua::Table world_table(L);
-    flecs::world world((flecs::world_t*)*world_table.get<uint64_t*>("world"));
+    flecs::world world((flecs::world_t*)world_table.get<void*>("world"));
     
     auto entity = world.entity();
     
@@ -112,8 +112,8 @@ static int createEntityInitComponents(Lua::State L)
     
     auto entity_table = Entity().asTable();
     entity_table.set("good", true);
-    entity_table.set("entity", entity.raw_id());
-    entity_table.set("world", (uint64_t)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
+    entity_table.set("entity", (void*)entity.raw_id());
+    entity_table.set("world", (void*)world.c_ptr()); 
     entity_table.toStack(L);
     
     return 1;
@@ -144,15 +144,15 @@ int World::getEntity(Lua::State L)
     const auto [ world_table, name ] = extractArgs<Lua::Table, Lua::String>(L);
 
     S2D_ASSERT(world_table.hasValue("world"), "World table is messed up");
-    flecs::world world((flecs::world_t*)*world_table.get<uint64_t*>("world"));
+    flecs::world world((flecs::world_t*)*world_table.get<void**>("world"));
 
     auto entity = world.lookup(name.c_str());
     S2D_ASSERT(entity.is_alive(), "Entity is dead :(");
 
     auto ent = Engine::Entity().asTable();
-    ent.set("entity", entity.raw_id());
+    ent.set("entity", (void*)entity.raw_id());
     ent.set("good", true);
-    ent.set("world", (uint64_t)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
+    ent.set("world", (void*)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
     S2D_ASSERT(!lua_gettop(L), "Unknown args");
 
     ent.toStack(L);

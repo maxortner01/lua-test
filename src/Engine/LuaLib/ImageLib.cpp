@@ -15,7 +15,7 @@ ImageLib::getSize(Lua::State L)
     const auto [ resource ] = extractArgs<Lua::Table>(L);
     LUA_EXCEPTION(resource.hasValue("resource"), "Resource missing reference");
 
-    auto* image = (Graphics::Image*)*resource.get<uint64_t*>("resource");
+    auto* image = (Graphics::Image*)resource.get<void*>("resource");
 
     const auto size = image->getSize();
     
@@ -35,7 +35,7 @@ ImageLib::getPixel(Lua::State L)
     LUA_EXCEPTION(resource.hasValue("resource"), "Resource missing reference");
     LUA_EXCEPTION(x >= 0 && y >= 0, "Coordinates can not be negative");
 
-    auto* image = (Graphics::Image*)*resource.get<uint64_t*>("resource");
+    auto* image = (Graphics::Image*)resource.get<void*>("resource");
     const auto pixel = image->read({ (uint32_t)x, (uint32_t)y });
 
     Lua::Table p;

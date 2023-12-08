@@ -101,6 +101,7 @@ namespace S2D::Lua
          */
         template<typename T>
         const T& get(const std::string& name) const;
+        void* get(const std::string& name) const;
 
         /**
          * @brief Set the value associated with a key
@@ -110,6 +111,7 @@ namespace S2D::Lua
          */
         template<typename T>
         void set(const std::string& name, const T& value);
+        void set(const std::string& name, void* value);
 
         /**
          * @brief Get the raw mapping of this table

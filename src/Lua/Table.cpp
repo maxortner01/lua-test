@@ -97,7 +97,7 @@ template void Table::each(std::function<void(uint32_t, Lua::String&)>);
 template void Table::each(std::function<void(uint32_t, Lua::Boolean&)>);
 template void Table::each(std::function<void(uint32_t, Lua::Function&)>);
 template void Table::each(std::function<void(uint32_t, Lua::Table&)>);
-template void Table::each(std::function<void(uint32_t, uint64_t*&)>);
+template void Table::each(std::function<void(uint32_t, void*&)>);
 
 template<typename T>
 void 
@@ -115,7 +115,7 @@ template void Table::each(std::function<void(uint32_t, const Lua::String&)>) con
 template void Table::each(std::function<void(uint32_t, const Lua::Boolean&)>) const;
 template void Table::each(std::function<void(uint32_t, const Lua::Function&)>) const;
 template void Table::each(std::function<void(uint32_t, const Lua::Table&)>) const;
-template void Table::each(std::function<void(uint32_t, uint64_t* const&)>) const;
+template void Table::each(std::function<void(uint32_t, void* const&)>) const;
 
 template<typename T>
 void Table::try_get(const std::string& name, std::function<void(T&)> lambda)
@@ -127,7 +127,7 @@ template void Table::try_get(const std::string&, std::function<void(Lua::String&
 template void Table::try_get(const std::string&, std::function<void(Lua::Boolean&)>);
 template void Table::try_get(const std::string&, std::function<void(Lua::Function&)>);
 template void Table::try_get(const std::string&, std::function<void(Lua::Table&)>);
-template void Table::try_get(const std::string&, std::function<void(uint64_t*&)>);
+template void Table::try_get(const std::string&, std::function<void(void*&)>);
 
 template<typename T>
 void Table::try_get(const std::string& name, std::function<void(const T&)> lambda) const
@@ -139,7 +139,7 @@ template void Table::try_get(const std::string&, std::function<void(const Lua::S
 template void Table::try_get(const std::string&, std::function<void(const Lua::Boolean&)>) const;
 template void Table::try_get(const std::string&, std::function<void(const Lua::Function&)>) const;
 template void Table::try_get(const std::string&, std::function<void(const Lua::Table&)>) const;
-template void Table::try_get(const std::string&, std::function<void(uint64_t* const&)>) const;
+template void Table::try_get(const std::string&, std::function<void(void* const&)>) const;
 
 void
 Table::fromTable(const Table& table)
@@ -176,7 +176,7 @@ template Lua::String&   Table::get(const std::string&);
 template Lua::Boolean&  Table::get(const std::string&);
 template Lua::Function& Table::get(const std::string&);
 template Lua::Table&    Table::get(const std::string&);
-template uint64_t*&     Table::get(const std::string&);
+template void**&        Table::get(const std::string&);
 
 template<typename T>
 const T& Table::get(const std::string& name) const
@@ -189,7 +189,7 @@ template const Lua::String&   Table::get(const std::string&) const;
 template const Lua::Boolean&  Table::get(const std::string&) const;
 template const Lua::Function& Table::get(const std::string&) const;
 template const Lua::Table&    Table::get(const std::string&) const;
-template uint64_t* const&     Table::get(const std::string&) const;
+template void** const&        Table::get(const std::string&) const;
 
 template<typename T>
 void Table::set(const std::string& name, const T& value)
@@ -201,7 +201,11 @@ template void Table::set(const std::string&, const Lua::String&);
 template void Table::set(const std::string&, const Lua::Boolean&);
 template void Table::set(const std::string&, const Lua::Function&);
 template void Table::set(const std::string&, const Lua::Table&);
-template void Table::set(const std::string&, const uint64_t&);
+
+void Table::set(const std::string& name, void* value)
+{
+    dictionary.insert(std::pair(name, Table::Data::fromValue(value)));
+}
 
 const Table::Map&
 Table::getMap() const
@@ -230,7 +234,7 @@ Table::toStack(State L) const
             break;
         }
         case LUA_TFUNCTION: TypeMap<Lua::Function>::push(L, get<Lua::Function>(p.first)); break;
-        default: TypeMap<uint64_t>::push(L, get<uint64_t>(p.first)); break; // need to make this general
+        default: TypeMap<void*>::push(L, get<void*>(p.first)); break; // need to make this general
         }
 
         lua_settable(L, -3);

@@ -99,12 +99,12 @@ void Core::collide(Scene* scene)
                         {
                             // Execute the update function
                             auto ent = Engine::Entity().asTable();
-                            ent.set("entity", entity_a.raw_id());
+                            ent.set("entity", (void*)entity_a.raw_id());
                             ent.set("good", true);
-                            ent.set("world", (uint64_t)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
+                            ent.set("world", (void*)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
 
                             auto _world = Engine::World().asTable();
-                            _world.set("world", (uint64_t)world.c_ptr());
+                            _world.set("world", (void*)world.c_ptr());
                             _world.set("good", true);
 
                             Lua::Table collision;

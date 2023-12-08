@@ -13,7 +13,7 @@ namespace S2D::Graphics
 
     bool check_and_init()
     {
-        if (ft) return;
+        if (ft) return true;
 
         if (FT_Init_FreeType(&ft))
         {
@@ -106,7 +106,7 @@ namespace S2D::Graphics
 
                         for (uint32_t bit_index = 0; bit_index < min(8, character.size.x - num_bits_done); bit_index++)
                         {
-                            const auto bit = byte_value & (1 << 7 - bit_index);
+                            const auto bit = byte_value & (1 << (7 - bit_index));
                             if (bit) destination[rowstart + bit_index] = 255;
                         }
                     }
