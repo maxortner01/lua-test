@@ -48,7 +48,7 @@ struct MainScene : Engine::LuaScene
         {
             return (double)rand() / (double)std::numeric_limits<int>::max();
         };
-    
+
         const auto point_per_pixel = 3U;
         std::vector<Graphics::Vertex> vertices;
         for (uint32_t y = 0; y < image->getSize().y; y++)

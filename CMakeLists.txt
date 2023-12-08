@@ -38,7 +38,6 @@ if(CCD_INCLUDE_DIR AND CCD_LIBRARY)
 endif()
 
 include_directories(
-    ${LUA_INCLUDE_DIR}
     ${EIGEN3_INCLUDE_DIR}
     ${CCD_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/include
@@ -46,8 +45,6 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/extern/flecs/include
     ${CMAKE_SOURCE_DIR}/extern/fcl/include
     ${CMAKE_CURRENT_BINARY_DIR}/extern/fcl/include)
-
-link_libraries(${LUA_LIBRARIES})
 
 ## LUA
 set(LUA_SOURCES
@@ -58,16 +55,22 @@ set(LUA_SOURCES
 
 add_library(simple2d-lua SHARED ${LUA_SOURCES})
 
+target_link_libraries(simple2d-lua PRIVATE ${LUA_LIBRARIES})
+target_include_directories(simple2d-lua PRIVATE ${LUA_INCLUDE_DIR})
+
 set(BUILD_TESTING OFF)
-set(BUILD_SHARED_LIBS TRUE)
 
 ## GRAPHICS
+# Build SDL as a dll needed in the final product
 set(SDL_TEST_LIBRARY OFF)
+set(SDL_SHARED ON)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/SDL)
 
+# Build the static glew into graphics
 set(glew-cmake_BUILD_SHARED OFF)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/glew-cmake)
 
+# Build the static library into graphics
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/freetype)
 
 set(GRAPHICS_SOURCES
@@ -90,6 +93,7 @@ target_include_directories(simple2d-graphics PRIVATE ${CMAKE_SOURCE_DIR}/extern/
 target_link_libraries(simple2d-graphics PRIVATE SDL3::SDL3 libglew_static freetype)
 
 # ENGINE
+# Engine needs lua for now
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/spdlog)
 
 set(FLECS_STATIC OFF)
@@ -123,17 +127,11 @@ set(ENGINE_SOURCES
 
 add_library(simple2d-engine STATIC ${ENGINE_SOURCES})
 
-target_link_libraries(simple2d-engine PRIVATE simple2d-lua simple2d-graphics spdlog::spdlog fcl flecs)
+target_link_libraries(simple2d-engine PRIVATE simple2d-lua simple2d-graphics spdlog::spdlog fcl flecs ${LUA_LIBRARIES})
+target_include_directories(simple2d-engine PRIVATE ${LUA_INCLUDE_DIR})
 
 ## EXECUTABLE
 add_executable(main entry.cpp)
 
 target_compile_definitions(main PUBLIC -DSOURCE_DIR="${CMAKE_SOURCE_DIR}")
 target_link_libraries(main PUBLIC simple2d-lua simple2d-engine simple2d-graphics flecs)
-
-#set_target_properties(simple2d-engine simple2d-lua main
-#    PROPERTIES
-#    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"
-#    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/lib"
-#    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
-#)

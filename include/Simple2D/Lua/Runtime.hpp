@@ -157,7 +157,7 @@ namespace S2D::Lua
             CompileTime::TypeMap<Type>::push(L, std::get<I>(args_set));
         });
 
-        if (_call_func(sizeof...(Args), sizeof...(Return)) != LUA_OK) return { { ErrorCode::FunctionError, CompileTime::TypeMap<Lua::String>::construct(L) } };
+        if (_call_func(sizeof...(Args), sizeof...(Return)) != 0) return { { ErrorCode::FunctionError, CompileTime::TypeMap<Lua::String>::construct(L) } };
         
         bool err = false;
         auto left = sizeof...(Return);

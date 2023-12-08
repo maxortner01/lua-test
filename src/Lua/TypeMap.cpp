@@ -1,15 +1,17 @@
 #include <Simple2D/Lua/TypeMap.hpp>
 
+#include "Lua.cpp"
+
 namespace S2D::Lua
 {
 namespace CompileTime
 {    
     int TypeMap<void*>::LuaType = LUA_TUSERDATA;
-    template<> int TypeMap<Lua::Number>::LuaType = LUA_TNUMBER;
-    template<> int TypeMap<Lua::String>::LuaType = LUA_TSTRING;
+    template<> int TypeMap<Lua::Number>::LuaType   = LUA_TNUMBER;
+    template<> int TypeMap<Lua::String>::LuaType   = LUA_TSTRING;
     template<> int TypeMap<Lua::Function>::LuaType = LUA_TFUNCTION;
-    template<> int TypeMap<Lua::Boolean>::LuaType = LUA_TBOOLEAN;
-    template<> int TypeMap<Lua::Table>::LuaType = LUA_TTABLE;
+    template<> int TypeMap<Lua::Boolean>::LuaType  = LUA_TBOOLEAN;
+    template<> int TypeMap<Lua::Table>::LuaType    = LUA_TTABLE;
     
     bool
     TypeMap<void*>::check(State L)
@@ -78,7 +80,7 @@ namespace CompileTime
     bool
     TypeMap<Lua::Function>::check(State L)
     {
-        return lua_iscfunction(reinterpret_cast<lua_State*>(L), -1);
+        return lua_iscfunction(STATE, -1);
     }
 
     template<>

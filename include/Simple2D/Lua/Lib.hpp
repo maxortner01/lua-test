@@ -48,25 +48,33 @@ namespace S2D::Lua::Lib
         Map         _funcs;
     };
 
+    namespace detail
+    {
+    
+    std::size_t __getTop(State L);
+    bool        __isNil(State L);
+    void        __pop(State L, uint32_t n);
+
+    }
+
     /* struct Base */
     template<typename... Args>
     std::tuple<Args...>
-    Base::extractArgs(State _L)
+    Base::extractArgs(State L)
     {
-        auto* L = reinterpret_cast<lua_State*>(_L);
-        S2D_ASSERT(lua_gettop(L) == sizeof...(Args), "Lua arguments do not match expected args.");
+        S2D_ASSERT(detail::__getTop(L) == sizeof...(Args), "Lua arguments do not match expected args.");
         std::tuple<Args...> values;
         Util::CompileTime::static_for<sizeof...(Args)>([&](auto n) {
-            S2D_ASSERT(!lua_isnil(L, -1), "Argument nil");
+            S2D_ASSERT(!detail::__isNil(L), "Argument nil");
 
             const std::size_t I = n;
             const auto i = sizeof...(Args) - I - 1;
             using Type = Util::CompileTime::NthType<i, Args...>;
             S2D_ASSERT(Lua::CompileTime::TypeMap<Type>::check(L), "Type mismatch");
             
-            const auto count = lua_gettop(L);
+            const auto count = detail::__getTop(L);
             std::get<i>(values) = Lua::CompileTime::TypeMap<Type>::construct(L);
-            if (lua_gettop(L) == count) lua_pop(L, 1);
+            if (detail::__getTop(L) == count) detail::__pop(L, 1);
         });
         return values;
     }

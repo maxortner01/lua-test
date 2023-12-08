@@ -71,7 +71,10 @@ Runtime::Result<T>
 Runtime::getGlobal(const std::string& name)
 {
     lua_getglobal(STATE, name.c_str());
-    if (!CompileTime::TypeMap<T>::check(L)) return { ErrorCode::TypeMismatch };
+    const auto t = lua_type(STATE, -1);
+    if (t != CompileTime::TypeMap<T>::LuaType)
+        return { ErrorCode::TypeMismatch };
+    
     return { CompileTime::TypeMap<T>::construct(L) };
 }
 template Runtime::Result<Number>   Runtime::getGlobal(const std::string&);
