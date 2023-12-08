@@ -38,13 +38,9 @@ if(CCD_INCLUDE_DIR AND CCD_LIBRARY)
 endif()
 
 include_directories(
-    ${EIGEN3_INCLUDE_DIR}
-    ${CCD_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/extern/spdlog/include
-    ${CMAKE_SOURCE_DIR}/extern/flecs/include
-    ${CMAKE_SOURCE_DIR}/extern/fcl/include
-    ${CMAKE_CURRENT_BINARY_DIR}/extern/fcl/include)
+    ${CMAKE_SOURCE_DIR}/extern/flecs/include)
 
 ## LUA
 set(LUA_SOURCES
@@ -102,7 +98,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/extern/fcl)
 
 set(ENGINE_SOURCES
     ${CMAKE_SOURCE_DIR}/src/Engine/LuaScene.cpp
-    ${CMAKE_SOURCE_DIR}/src/Engine/Mesh.cpp
+    ${CMAKE_SOURCE_DIR}/src/Engine/Mesh/Mesh.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Resources.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Application.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Renderer.cpp
@@ -128,10 +124,15 @@ set(ENGINE_SOURCES
 add_library(simple2d-engine STATIC ${ENGINE_SOURCES})
 
 target_link_libraries(simple2d-engine PRIVATE simple2d-lua simple2d-graphics spdlog::spdlog fcl flecs ${LUA_LIBRARIES})
-target_include_directories(simple2d-engine PRIVATE ${LUA_INCLUDE_DIR})
+target_include_directories(simple2d-engine PRIVATE 
+    ${LUA_INCLUDE_DIR}
+    ${EIGEN3_INCLUDE_DIR}
+    ${CCD_INCLUDE_DIRS}
+    ${CMAKE_SOURCE_DIR}/extern/fcl/include
+    ${CMAKE_CURRENT_BINARY_DIR}/extern/fcl/include)
 
 ## EXECUTABLE
-add_executable(main entry.cpp)
+#add_executable(main entry.cpp)
 
-target_compile_definitions(main PUBLIC -DSOURCE_DIR="${CMAKE_SOURCE_DIR}")
-target_link_libraries(main PUBLIC simple2d-lua simple2d-engine simple2d-graphics flecs)
+#target_compile_definitions(main PUBLIC -DSOURCE_DIR="${CMAKE_SOURCE_DIR}")
+#target_link_libraries(main PUBLIC simple2d-lua simple2d-engine simple2d-graphics flecs)

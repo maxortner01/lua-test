@@ -2,7 +2,7 @@
 
 #include "../Graphics.hpp"
 
-#include <fcl/fcl.h>
+//#include <fcl/fcl.h>
 #include <flecs.h>
 
 namespace S2D::Engine
@@ -24,11 +24,13 @@ namespace S2D::Engine
 
     struct CollisionMesh
     {
-        using Model = fcl::BVHModel<fcl::OBBRSSf>;
+        //using Model = fcl::BVHModel<fcl::OBBRSSf>;
+        std::shared_ptr<void> fcl_collision_data; // vertex and triangle information
         //void* fcl_collision_data;
-        std::vector<fcl::Vector3f> vertices;
-        std::vector<fcl::Triangle> triangles;
-        std::shared_ptr<Model> model;
+        //std::vector<fcl::Vector3f> vertices;
+        //std::vector<fcl::Triangle> triangles;
+        //std::shared_ptr<Model> model;
+        std::shared_ptr<void> fcl_model;
     };
 
     template<typename T>

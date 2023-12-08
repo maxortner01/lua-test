@@ -3,6 +3,8 @@
 
 #include <Simple2D/Log/Log.hpp>
 
+#include "CollisionMesh.cpp"
+
 namespace S2D::Engine
 {
     const char* operator*(Primitive p)
@@ -25,14 +27,14 @@ namespace S2D::Engine
     collision->vertices.shrink_to_fit();                                                    \
     collision->triangles.shrink_to_fit();                                                   \
     Log::Logger::instance("engine")->trace("Generating collision model for {}", #type);     \
-    collision->model = std::make_shared<CollisionMesh::Model>();                            \
+    collision->model = std::make_shared<CollisionFCL::Model>();                             \
     collision->model->beginModel();                                                         \
     collision->model->addSubModel(collision->vertices, collision->triangles);               \
     collision->model->endModel();    
 
     static void 
     addBox(
-        std::unique_ptr<CollisionMesh>& collision,
+        CollisionFCL* collision,
         Math::Vec2f size,
         Math::Vec3f offset,
         float scale)
@@ -157,16 +159,22 @@ namespace S2D::Engine
         {
             Log::Logger::instance("engine")->info("building sprite collider");
             collider->mesh = std::make_unique<CollisionMesh>();
+            auto* ptr = new CollisionFCL();
+            collider->mesh->fcl_collision_data = std::shared_ptr<void>(
+                (void*)ptr,
+                [](void* ptr) { delete reinterpret_cast<CollisionFCL*>(ptr); }
+            );
+            
 
             // Grab the scale for the collision model
             const auto scale = (e.has<Transform>()?e.get<Transform>()->scale:1.f);
 
             // Generate the collision mesh
-            collider->mesh->vertices.clear(); 
-            collider->mesh->triangles.clear();
-            addBox(collider->mesh, sprite->size, { 0, 0, 0 }, scale);
+            ptr->vertices.clear(); 
+            ptr->triangles.clear();
+            addBox(ptr, sprite->size, { 0, 0, 0 }, scale);
             
-            MAKE_COLLISION_MODEL(Sprite, collider->mesh);
+            MAKE_COLLISION_MODEL(Sprite, ptr);
         }
     }
 
@@ -216,7 +224,16 @@ namespace S2D::Engine
 
         if (!build_collider && !build_mesh) return;
 
-        if (build_collider) Log::Logger::instance("engine")->info("building tilemap collider");
+        CollisionFCL* fcl_collision = nullptr;
+        if (build_collider) 
+        {
+            Log::Logger::instance("engine")->info("building tilemap collider");
+            fcl_collision = new CollisionFCL();
+            collider->mesh->fcl_collision_data = std::shared_ptr<void>(
+                (void*)fcl_collision,
+                [](void* ptr) { delete reinterpret_cast<CollisionFCL*>(ptr); }
+            );
+        }
 
         const auto& map = tilemap->tiles.map;
 
@@ -284,10 +301,10 @@ namespace S2D::Engine
                 };
 
                 // Possibly... Now we need to push cubes to the collider mesh, not quads
-                if (collider && p.second.second == Component<Name::Tilemap>::LayerState::Solid)
+                if (fcl_collision && p.second.second == Component<Name::Tilemap>::LayerState::Solid)
                 {
                     // Push quad at this point
-                    addBox(collider->mesh, tilemap->tilesize, { position.x, position.y, 0 }, scale);
+                    addBox(fcl_collision, tilemap->tilesize, { position.x, position.y, 0 }, scale);
                 }
                 
                 // Construct the vertices of the quad
@@ -311,6 +328,6 @@ namespace S2D::Engine
         tilemap->mesh->vertices.uploadIndices(indices);
 
         REQUIRE(e.has<Collider>());
-        MAKE_COLLISION_MODEL(Tilemap, collider->mesh);
+        MAKE_COLLISION_MODEL(Tilemap, fcl_collision);
     }
 }

@@ -5,6 +5,8 @@
 
 #include <Simple2D/Log/Log.hpp>
 
+#include "../Mesh/CollisionMesh.cpp"
+
 namespace S2D::Engine
 {
 
@@ -21,7 +23,10 @@ void Core::collide(Scene* scene)
             const Transform& transform,
             const Collider&  collider)
         {
-            if (!collider.mesh || (collider.mesh && !collider.mesh->model)) return;
+            std::shared_ptr<CollisionFCL::Model> model;
+            if (collider.mesh) model = reinterpret_cast<CollisionFCL*>(collider.mesh->fcl_collision_data.get())->model;
+
+            if (!collider.mesh || (collider.mesh && model)) return;
 
             S2D_ASSERT(!map.count(entity.raw_id()), "Something went wrong");
 
@@ -30,7 +35,7 @@ void Core::collide(Scene* scene)
             transform_matrix.translation() = fcl::Vector3f(transform.position.x, transform.position.y, 0);
             map.insert(std::pair(
                 entity.raw_id(),
-                std::make_unique<fcl::CollisionObjectf>(collider.mesh->model, transform_matrix)
+                std::make_unique<fcl::CollisionObjectf>(model, transform_matrix)
             ));
         });
 
