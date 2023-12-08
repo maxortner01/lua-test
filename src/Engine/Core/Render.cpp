@@ -355,10 +355,6 @@ void Core::render(Scene* scene)
             if (targets.count(params->name)) current_target = targets.at(params->name).get();
             else log->error("Requesting target that doesn't exist");
 
-            if (current_target) 
-            {
-                current_target->clearDepth();
-            }
             break;
         }
         case Command::Clear:
@@ -370,7 +366,7 @@ void Core::render(Scene* scene)
             }
 
             GET_PARAMS(Command::Clear);
-            current_target->clear(params->color);
+            current_target->clear(params->color, params->layer);
 
             break;
         }
@@ -413,8 +409,20 @@ void Core::render(Scene* scene)
                 break;
             }
 
-            renderer->render(camera_to_use, params->entity_name.c_str(), *current_target);
-            //render_entity(scene, *current_target, *transform, camera_to_use, entity);
+            Graphics::Program* program = nullptr;
+            if (params->shader_name.size())
+            {
+                const auto res = scene->resources.getResource<Graphics::Program>(params->shader_name);
+                if (!res) 
+                {
+                    log->error("Error loading shader {}", params->shader_name);
+                    break;
+                }
+
+                program = res.value();
+            }
+
+            renderer->render(camera_to_use, params->entity_name.c_str(), *current_target, program);
 
             break;
         }
@@ -430,17 +438,24 @@ void Core::render(Scene* scene)
 
             /* Need to be able to draw sprite */
             Math::Transform model;
-            model.scale({ 2.f, 2.f, 1.f });
-            renderer->renderQuad(model, window, current_target->texture());
-            /*
-            sf::RectangleShape blit;
-            blit.setPosition(params->position);
-            blit.setSize(params->size);
+            model.scale({ 
+                (float)params->size.x / (float)current_target->getSize().x * 2.f, 
+                (float)params->size.y / (float)current_target->getSize().y * 2.f, 
+                1.f 
+            });
 
-            current_target->display();
-            const auto& tex = current_target->getTexture();
-            blit.setTexture(&tex);
-            window.draw(blit);*/
+            // this might be wrong
+            model.translate({
+                params->position.x / (2.f * window.getSize().x),
+                params->position.y / (2.f * window.getSize().y),
+                0.f
+            });
+
+            Renderer::QuadInfo info;
+            info.texture = current_target->texture();
+            info.depth_test = false;
+
+            renderer->renderQuad(model, window, info);
 
             break;
         }
@@ -465,6 +480,20 @@ void Core::render(Scene* scene)
             const auto res = runtime->runFunction<>("RenderUI", surface);
             if (!res && res.error().code() != Lua::Runtime::ErrorCode::NotFunction)
                 log->error("Error rendering UI ({}): {}", (int)res.error().code(), res.error().message());
+
+            break;
+        }
+        case Command::RenderFunction:
+        {
+            if (!current_target)
+            {
+                log->error("Attempting to run a function on null surface");
+                break;
+            }
+
+            GET_PARAMS(Command::RenderFunction);
+
+            params->function(scene, *current_target);
 
             break;
         }

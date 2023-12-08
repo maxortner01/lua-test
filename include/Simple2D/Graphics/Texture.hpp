@@ -13,7 +13,7 @@ namespace S2D::Graphics
 
         enum class Format
         {
-            RGB, RGBA
+            Red, RGB, RGBA
         };
 
         Texture(const Texture&) = delete;
@@ -27,6 +27,9 @@ namespace S2D::Graphics
 
         [[nodiscard]]
         bool fromFile(const std::filesystem::path& path);
+
+        [[nodiscard]]
+        bool fromMemory(const Math::Vec2u& size, const uint8_t* data, Format format);
 
         [[nodiscard]]
         bool fromEmpty(const Math::Vec2u& size, Format _format);

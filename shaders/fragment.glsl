@@ -1,25 +1,19 @@
-uniform vec2 texture_size;
-uniform sampler2D texture;
+#version 410 core
 
-void main() 
-{ 
-  gl_FragColor = gl_Color;
-}
+in vec2 texPos;
+in vec4 vertColor;
+in vec2 world_pos;
 
-/*uniform sampler2D texture;
+out vec4 color;
 
-uniform vec3 camera_pos;
-uniform vec2 size;
-uniform vec2 target_size;
+uniform sampler2D texture0;
 
 void main()
 {
-    vec2 pos = vec2(
-        gl_FragCoord.x - (320.0 * 3.0 / 2.0) + camera_pos.x,
-        gl_FragCoord.y + (320.0 * 3.0 / 2.0) - camera_pos.y
-    );
+    vec4 tex_color = texture(texture0, (world_pos + vec2(1.0, 1.0)) / 2.0);
+    
+    vec2 velocity = tex_color.xy * 2.0 - vec2(1.0, 1.0);
 
-    vec4 pixel = texture2D(texture, vec2(pos.x / size.x, pos.y / size.y));
-    if (pixel.a > 0.0) discard;
-    gl_FragColor = vec4(0, 1, 0, 1);
-}*/
+    if (tex_color.a >= 0.1) color = vec4(0, 0.25 * abs(velocity.y + velocity.x) / 2.0 + 0.2, 0, 1.0);
+    else color = vec4(0, 0.9, 0, 1);
+}

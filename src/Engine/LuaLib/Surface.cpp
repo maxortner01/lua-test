@@ -10,28 +10,27 @@ namespace S2D::Engine
 {
     int Surface::drawText(Lua::State L)
     {
-        S2D_ASSERT(false, "Text not supported");
+        //S2D_ASSERT(false, "Text not supported");
 
-        /*
         const auto [ surface_table, x, y, size, text, font ] = 
             extractArgs<Lua::Table, Lua::Number, Lua::Number, Lua::Number, Lua::String, Lua::String>(L);
 
         LUA_ASSERT(surface_table.hasValue("scene"), "Surface missing scene");
-        const auto* scene = (Scene*)*surface_table.get<uint64_t*>("scene");
+        auto* scene = (Scene*)*surface_table.get<uint64_t*>("scene");
 
         LUA_ASSERT(surface_table.hasValue("surface"), "Surface missing render surface");
         auto* surface = (Graphics::DrawTexture*)*surface_table.get<uint64_t*>("surface");
 
-        const auto font_r = scene->resources.getResource<sf::Font>(font);
+        const auto font_r = scene->resources.getResource<Graphics::Font>(font);
         LUA_ASSERT(font_r, "Scene missing font '" + font + "'");
-        const auto* sf_font = font_r.value();
+        auto* graphics_font = font_r.value();
 
-        sf::Text t(*sf_font, text);
-        t.setCharacterSize(size);
-        t.setPosition(sf::Vector2f((int)x, (int)y));
-        surface->draw(t);
+        Math::Transform transform;
+        transform.translate(Math::Vec3f(x, y, 0));
 
-        return 0;*/
+        scene->renderer->renderText(transform, *surface, text, graphics_font, (uint32_t)size);
+
+        return 0;
     }
     
     // Takes in the surface, name, type, transform info

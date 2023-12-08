@@ -21,13 +21,22 @@ namespace S2D::Graphics
         Buffer();
         ~Buffer();
 
-        void setData(const void* data, std::size_t byte_size, bool indices = false);
+        struct DataInfo
+        {
+            DataInfo(bool i = false, bool d = false) : indices(i), dynamic(d)
+            {   }
+            
+            bool indices;
+            bool dynamic;
+        };
+
+        void setData(const void* data, std::size_t byte_size, DataInfo info = DataInfo());
 
         template<typename T>
-        void setData(const T* data, std::size_t count, bool indices = false);
+        void setData(const T* data, std::size_t count, DataInfo info = DataInfo());
 
         template<typename T>
-        void setData(const std::vector<T>& data, bool indices = false);
+        void setData(const std::vector<T>& data, DataInfo info = DataInfo());
     };
 
     struct Vertex
@@ -53,7 +62,7 @@ namespace S2D::Graphics
         
         ~VertexArray();
 
-        void upload(const std::vector<Vertex>& vertices);
+        void upload(const std::vector<Vertex>& vertices, bool dynamic = false);
         void uploadIndices(const std::vector<uint32_t>& indices);
 
         void bind() const;
@@ -74,15 +83,15 @@ namespace S2D::Graphics
     };
 
     template<typename T>
-    void Buffer::setData(const T* data, std::size_t count, bool indices)
+    void Buffer::setData(const T* data, std::size_t count, DataInfo info)
     {
-        setData(reinterpret_cast<const void*>(data), count * sizeof(T), indices);
+        setData(reinterpret_cast<const void*>(data), count * sizeof(T), info);
     }
 
     template<typename T>
-    void Buffer::setData(const std::vector<T>& data, bool indices)
+    void Buffer::setData(const std::vector<T>& data, DataInfo info)
     {
-        setData(data.data(), data.size(), indices);
+        setData(data.data(), data.size(), info);
     }
 
 }

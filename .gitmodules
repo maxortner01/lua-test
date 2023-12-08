@@ -19,3 +19,6 @@
 [submodule "extern/glew-cmake"]
 	path = extern/glew-cmake
 	url = https://github.com/Perlmint/glew-cmake
+[submodule "extern/freetype"]
+	path = extern/freetype
+	url = https://github.com/freetype/freetype

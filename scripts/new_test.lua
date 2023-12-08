@@ -9,6 +9,30 @@ function GetResources()
                 name = "mower_bottom",
                 location = Directory.Source.."/textures/mower_bottom.png"
             }
+        },
+        images = {
+            {
+                name = "mask",
+                location = Directory.Source.."/textures/grass_mask.png"
+            }
+        },
+        shaders = {
+            {
+                name = "grass_shader",
+                vertex   = Directory.Source.."/shaders/vertex.glsl",
+                fragment = Directory.Source.."/shaders/fragment.glsl"
+            },
+            {
+                name = "bottom",
+                vertex   = Directory.Source.."/shaders/bottom.vert",
+                fragment = Directory.Source.."/shaders/bottom.frag"
+            }
+        },
+        fonts = {
+            {
+                name = "arial",
+                location = Directory.Source.."/fonts/Baskervald-Italic.otf"
+            }
         }
     }
 end
@@ -16,13 +40,36 @@ end
 function GetEntities()
     return {
         {
+            name = "Mesh",
+            components = {
+                {
+                    type = Component.Transform,
+                    value = {
+                        position = { x = 0, y = 0, z = -0.1 },
+                        scale = 16,
+                        rotation = 0
+                    }
+                },
+                {
+                    type = Component.CustomMesh,
+                    value = {}
+                },
+                {
+                    type = Component.Shader,
+                    value = {
+                        name = "grass_shader"
+                    }
+                }
+            }
+        },
+        {
             name = "PlayerTop",
             components = {
                 {
                     type = Component.Transform,
                     value = {
                         position = { x = 0, y = 0, z = 0 },
-                        scale = 2.0,
+                        scale = 1.0,
                         rotation = 0
                     }
                 },
@@ -57,7 +104,7 @@ function GetEntities()
                     type = Component.Transform,
                     value = {
                         position = { x = 0, y = 0, z = 0 },
-                        scale = 2.0,
+                        scale = 1.0,
                         rotation = 0
                     }
                 },
@@ -79,7 +126,7 @@ function GetEntities()
                 {
                     type = Component.Transform,
                     value = {
-                        position = { x = 0, y = 0, z = 4 },
+                        position = { x = 0, y = 0, z = 3.7 },
                         scale = 1,
                         rotation = 0
                     }
@@ -88,7 +135,7 @@ function GetEntities()
                     type = Component.Camera,
                     value = {
                         FOV = 100,
-                        projection = ProjectionType.Orthographic,
+                        projection = ProjectionType.Perspective,
                         size = { width = 1280, height = 720 }
                     }
                 }
@@ -103,7 +150,7 @@ function GetEntities()
                 {
                     type = Component.Transform,
                     value = {
-                        position = { x = 0, y = 0, z = 10 },
+                        position = { x = 0, y = 0, z = 20 },
                         scale = 1,
                         rotation = 0
                     }
@@ -112,8 +159,8 @@ function GetEntities()
                     type = Component.Camera,
                     value = {
                         FOV = 100,
-                        projection = ProjectionType.Orthographic,
-                        size = { width = 500, height = 500 }
+                        projection = ProjectionType.Perspective,
+                        size = { width = 1000, height = 1000 }
                     }
                 }
             }

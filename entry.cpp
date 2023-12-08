@@ -20,7 +20,6 @@ struct MainScene : Engine::LuaScene
         LuaScene(filename)
     {   }
 
-    /*
     void poststart() override
     {
         auto e = world.lookup("Mesh");
@@ -28,13 +27,14 @@ struct MainScene : Engine::LuaScene
         S2D_ASSERT(e.has<Engine::CustomMesh>(), "Entity missing mesh component");
         auto* mesh = e.get_mut<Engine::CustomMesh>();
 
-        //e.get_mut<Engine::ShaderComp>()->textures.push_back(std::pair(
-        //    Engine::TexSource::Renderpass,
-        //    "MowCamera"
-        //));
+        e.get_mut<Engine::ShaderComp>()->textures.push_back(std::pair(
+            Engine::TexSource::Renderpass,
+            "MowCamera"
+        ));
 
         if (!mesh->mesh) mesh->mesh = std::make_unique<Engine::RawMesh>();
-        mesh->mesh->primitive = Engine::Primitive::Points;
+        //mesh->mesh->primitive = Engine::Primitive::Points;
+        mesh->mesh->vertices.setDrawType(Graphics::VertexArray::DrawType::Points);
 
         const auto* image = [&]()
         {
@@ -49,37 +49,43 @@ struct MainScene : Engine::LuaScene
             return (double)rand() / (double)std::numeric_limits<int>::max();
         };
     
+        const auto point_per_pixel = 3U;
         std::vector<Graphics::Vertex> vertices;
         for (uint32_t y = 0; y < image->getSize().y; y++)
         {
             for (uint32_t x = 0; x < image->getSize().x; x++)
             {
                 auto color = image->read({ x, y });
+                for (uint32_t i = 0; i < point_per_pixel; i++)
+                {
+                    if (abs(random()) > color.a ) continue;
 
-                if (abs(random()) > color.a / 255.f ) continue;
-
-                Graphics::Vertex vertex;
-                vertex.position = Math::Vec3f(
-                    (x + random() * 0.9 - (float)image->getSize().x / 2.f) / (float)image->getSize().x,
-                    (y + random() * 0.9 - (float)image->getSize().y / 2.f) / (float)image->getSize().y,
-                    0.f
-                );
-                vertex.color = Graphics::Color(255, 0, 0, 255);
+                    Graphics::Vertex vertex;
+                    vertex.position = Math::Vec3f(
+                        (x + random() * 0.9 - (float)image->getSize().x / 2.f) / (float)image->getSize().x,
+                        (y + random() * 0.9 - (float)image->getSize().y / 2.f) / (float)image->getSize().y,
+                        0.f
+                    );
+                    vertex.color = Graphics::Color(255, 0, 0, 255);
+                    vertices.push_back(vertex);
+                }
             }
         }
 
         mesh->mesh->vertices.upload(vertices);
-    }*/
+    }
 
     void update() override
     {
-        //auto camera = world.lookup("MainCamera");
-        //camera.get_mut<Engine::Transform>()->position.z += 0.001;
+        auto camera = world.lookup("MowCamera");
+        auto* shader = resources.getResource<Graphics::Program>("grass_shader").value();
+        shader->setUniform("camera_view", Engine::viewMatrix(camera));
+        shader->setUniform("camera_proj", Engine::projectionMatrix(camera));
 
-        // set mow-camera info into shader
-        //auto mow_camera = world.lookup("MowCamera");
-        //const auto* transform = mow_camera.get<Engine::Transform>();
-        //auto shader = resources.getResource<Graphics::Program>("grass_shader");
+        auto player = world.lookup("PlayerTop");
+        const auto* rigid = player.get<Engine::Rigidbody>();
+        auto* bottom_shader = resources.getResource<Graphics::Program>("bottom").value();
+        bottom_shader->setUniform("velocity", Math::Vec2f(rigid->velocity.x, rigid->velocity.y));
     }
 
     void constructPass(Engine::RenderpassBuilder& builder) override
@@ -88,27 +94,20 @@ struct MainScene : Engine::LuaScene
 
         Log::Logger::instance("engine")->info("Constructing pass");
 
-        //builder.resource<Resource::Surface>({ "UI", { 1280, 720 } });
+        builder.resource<Resource::Surface>({ "UI", { 1280, 720 } });
 
-        builder.command<Command::BindSurface>({ "MowCamera" });
-        builder.command<Command::RenderEntity>({ "PlayerBottom", "MowCamera" });
-        builder.command<Command::BlitSurface>({ { 0.f, 0.f }, { 1280.f, 720.f } });
+        builder.command<Command::BindSurface>({ "MowCamera" })
+            .command<Command::RenderEntity>({ "PlayerBottom", "MowCamera", "bottom" });
 
-        builder.command<Command::BindSurface>({ "MainCamera" });
-        builder.command<Command::Clear>({ { 100, 100, 100, 255 } });
-        builder.command<Command::RenderEntities>({ "MainCamera" });
+        builder.command<Command::BindSurface>({ "MainCamera" })
+            .command<Command::Clear>({ { 75, 50, 50, 255 }, Graphics::LayerType::Both })
+            .command<Command::RenderEntities>({ "MainCamera" });
+            //.command<Command::BlitSurface>({ { 0.f, 0.f }, { 1280.f, 720.f } });
 
-        /*
-        builder.command<Command::BindSurface>({ "UI" });
-        builder.command<Command::Clear>({ { 0, 0, 0, 0 } });
-        builder.command<Command::RenderUI>({ loadRuntime(SOURCE_DIR "/scripts/ui.lua", world) });
-        builder.command<Command::BlitSurface>({ { 0.f, 0.f }, { 1280.f, 720.f } });*/
-
-        // The shader goes like so
-        // Convert the -1 to 1 coordinates to (0, 0) -> (1, 1) coordinates and then simply 
-        // sample into the mow camera with this. Since they're both centered I don't need to
-        // worry about it.
-
+        builder.command<Command::BindSurface>({ "UI" })
+            .command<Command::Clear>({ { 0, 0, 0, 0 }, Graphics::LayerType::Both })
+            .command<Command::RenderUI>({ loadRuntime(SOURCE_DIR "/scripts/ui.lua", world) })
+            .command<Command::BlitSurface>({ { 0.f, 0.f }, { 1280.f, 720.f } }); // need to be able to render without depth
     }
 };
 

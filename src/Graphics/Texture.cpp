@@ -54,16 +54,52 @@ Texture::fromFile(
     
     glActiveTexture(GL_TEXTURE0);
     bind();
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
     unbind();
 
     stbi_image_free(data);
+
+    return true;
+}
+
+bool 
+Texture::fromMemory(
+    const Math::Vec2u& size, 
+    const uint8_t* data, 
+    Format _format)
+{
+    const auto format = [&]()
+    {
+        switch (_format)
+        {
+        case Format::Red:  return GL_RED;
+        case Format::RGB:  return GL_RGB;
+        case Format::RGBA: return GL_RGBA;
+        default: return GL_NONE;
+        }
+    }();
+
+    glGenTextures(1, &handle);
+    
+    glActiveTexture(GL_TEXTURE0);
+    bind();
+    
+    if (format == GL_RED) glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, size.x, size.y, 0, format, GL_UNSIGNED_BYTE, data);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     return true;
 }
@@ -77,6 +113,7 @@ Texture::fromEmpty(
     {
         switch (_format)
         {
+        case Format::Red:  return GL_RED;
         case Format::RGB:  return GL_RGB;
         case Format::RGBA: return GL_RGBA;
         default: return GL_NONE;
@@ -87,12 +124,14 @@ Texture::fromEmpty(
     
     glActiveTexture(GL_TEXTURE0);
     bind();
+    
+    glTexImage2D(GL_TEXTURE_2D, 0, format, size.x, size.y, 0, format, GL_UNSIGNED_BYTE, nullptr);
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, format, size.x, size.y, 0, format, GL_UNSIGNED_BYTE, nullptr);
 
     return true;
 }

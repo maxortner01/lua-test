@@ -67,8 +67,11 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/extern/SDL)
 set(glew-cmake_BUILD_SHARED OFF)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/glew-cmake)
 
+add_subdirectory(${CMAKE_SOURCE_DIR}/extern/freetype)
+
 set(GRAPHICS_SOURCES
     ${CMAKE_SOURCE_DIR}/src/Log/Log.cpp
+    ${CMAKE_SOURCE_DIR}/src/Graphics/Font.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/Image.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/Surface.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/DrawTexture.cpp
@@ -82,7 +85,8 @@ set(GRAPHICS_SOURCES
 
 add_library(simple2d-graphics SHARED ${GRAPHICS_SOURCES})
 
-target_link_libraries(simple2d-graphics PRIVATE SDL3::SDL3 libglew_static)
+target_include_directories(simple2d-graphics PRIVATE ${CMAKE_SOURCE_DIR}/extern/freetype/include)
+target_link_libraries(simple2d-graphics PRIVATE SDL3::SDL3 libglew_static freetype)
 
 # ENGINE
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/spdlog)

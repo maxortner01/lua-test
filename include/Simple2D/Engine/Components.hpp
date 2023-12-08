@@ -2,6 +2,7 @@
 
 #include "../Lua.hpp"
 
+#include "../Util/Matrix.hpp"
 #include "Mesh.hpp"
 
 #include <flecs.h>
@@ -181,6 +182,9 @@ namespace S2D::Engine
     };
 
     const char* operator*(Projection p);
+
+    Math::Mat4f viewMatrix(flecs::entity camera);
+    Math::Mat4f projectionMatrix(flecs::entity camera);
 
     COMPONENT_DEFINITION(Camera,
         Lua::Number FOV;

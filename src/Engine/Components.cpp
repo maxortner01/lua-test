@@ -343,6 +343,41 @@ const char* operator*(Projection p)
     }
 }
 
+S2D::Math::Mat4f 
+viewMatrix(
+    flecs::entity camera)
+{
+    const auto camera_transform = camera.get<Transform>();
+    S2D_ASSERT(camera_transform, "Camera missing transform component");
+
+    S2D::Math::Transform view;
+    view.translate(camera_transform->position * -1.f);
+    return view.matrix();
+}
+
+S2D::Math::Mat4f 
+projectionMatrix(
+    flecs::entity camera)
+{
+    const auto* camera_comp = camera.get<Camera>();
+    S2D_ASSERT(camera_comp, "Camera missing camera component");
+
+    const auto aspectRatio = (float)camera_comp->size.x / (float)camera_comp->size.y;
+
+    const auto near = 0.01;
+    const auto far = 10000.0;
+    const auto t = 1.f / tanf(Util::degrees(camera_comp->FOV / 2.f).asRadians());
+
+    S2D::Math::Mat4f proj(false);
+    proj[0][0] = t / aspectRatio;
+    proj[1][1] = t;
+    proj[2][2] = -1.f * (far + near) / (far - near);
+    proj[3][2] = -2.f * (far * near) / (far - near);
+    proj[2][3] = -1.f;
+
+    return proj;
+}
+
 Lua::Table 
 Component<Name::Camera>::getTable(
     const Data& data)

@@ -19,7 +19,10 @@ namespace S2D::Graphics
         glEnable(GL_BLEND); 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
-        glEnable(GL_DEPTH_TEST);  
+        if (context.depth_test)
+            glEnable(GL_DEPTH_TEST);  
+        else
+            glDisable(GL_DEPTH_TEST);
 
         if (context.program) context.program->use();
 
@@ -44,18 +47,16 @@ namespace S2D::Graphics
         unbind();
     }
 
-    void Surface::clearDepth() const
-    {
-        bind();
-        glClear(GL_DEPTH_BUFFER_BIT);
-        unbind();
-    }
-
-    void Surface::clear(const Color& color) const
+    void Surface::clear(const Color& color, LayerType type) const
     {
         bind();
         glClearColor(color.r, color.g, color.b, color.a);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        GLenum layer = GL_NONE;
+        if ((type & LayerType::Color) != LayerType::None) layer |= GL_COLOR_BUFFER_BIT;
+        if ((type & LayerType::Depth) != LayerType::None) layer |= GL_DEPTH_BUFFER_BIT;
+
+        glClear(layer);
         unbind();
     }
 }

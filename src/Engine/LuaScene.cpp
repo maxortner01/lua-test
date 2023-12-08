@@ -67,16 +67,15 @@ LuaScene::load_resources(const Lua::Table& resources)
         });
     });
 
-    /*
     resources.try_get<Lua::Table>("fonts", [&](const Lua::Table& fonts)
     {
         fonts.each<Lua::Table>([&](uint32_t i, const Lua::Table& font)
         {
             const auto& name     = font.get<Lua::String>("name");
             const auto& filename = font.get<Lua::String>("location");
-            this->resources.loadResource<sf::Font>(name, filename);
+            this->resources.loadResource<Graphics::Font>(name, filename);
         });
-    });*/
+    });
 
     resources.try_get<Lua::Table>("images", [&](const Lua::Table& images)
     {

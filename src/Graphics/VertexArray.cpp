@@ -26,12 +26,13 @@ Buffer::~Buffer()
     handle = 0;
 }
 
-void Buffer::setData(const void* data, std::size_t byte_size, bool indices)
+void Buffer::setData(const void* data, std::size_t byte_size, DataInfo info)
 {
-    if (indices) is_index = true;
-    const auto type = ( indices ? GL_ELEMENT_ARRAY_BUFFER : GL_ARRAY_BUFFER );
+    if (info.indices) is_index = true;
+    const auto type = ( info.indices ? GL_ELEMENT_ARRAY_BUFFER : GL_ARRAY_BUFFER );
+    const auto location = ( info.dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW );
     glBindBuffer(type, handle);
-    glBufferData(type, byte_size, data, GL_STATIC_DRAW);
+    glBufferData(type, byte_size, data, location);
 }
 
 VertexArray::VertexArray() :
@@ -47,10 +48,10 @@ VertexArray::~VertexArray()
     handle = 0;
 }
 
-void VertexArray::upload(const std::vector<Vertex>& vertices)
+void VertexArray::upload(const std::vector<Vertex>& vertices, bool dynamic)
 {
     bind();
-    buffer.setData(vertices);
+    buffer.setData(vertices, Buffer::DataInfo( false, dynamic ));
     
     if (!indices.has_value())
         count = vertices.size();
@@ -70,7 +71,7 @@ void VertexArray::uploadIndices(const std::vector<uint32_t>& index_list)
     bind();
     indices.emplace();
 
-    indices.value().setData(index_list, true);
+    indices.value().setData(index_list, Buffer::DataInfo(true, false));
     count = index_list.size();
 }
 

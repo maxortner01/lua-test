@@ -86,6 +86,10 @@ namespace S2D::Math
             return s * rot_x * rot_y * rot_z * t;
         }
 
+        const Math::Vec3f& getRotation() const { return rotation; }
+        const Math::Vec3f& getScale() const { return _scale; }
+        const Math::Vec3f& getTranslation() const { return translation; }
+
     private:
         Math::Vec3f _scale;
         Math::Vec3f rotation;

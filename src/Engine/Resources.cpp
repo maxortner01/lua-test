@@ -1,6 +1,8 @@
 #include <Simple2D/Engine/Resources.hpp>
 #include <Simple2D/Def.hpp>
 
+#include <Simple2D/Graphics/Font.hpp>
+
 #include <Simple2D/Log/Log.hpp>
 
 #include <fstream>
@@ -31,7 +33,7 @@ Resources::loadResource(const std::string& name, const std::string& filename)
     ));
     return { };
 }
-//template typename Resources::Result<void> Resources::loadResource<sf::Font>(const std::string&, const std::string&);
+template typename Resources::Result<void> Resources::loadResource<Graphics::Font>(const std::string&, const std::string&);
 template typename Resources::Result<void> Resources::loadResource<Graphics::Texture>(const std::string&, const std::string&);
 template typename Resources::Result<void> Resources::loadResource<Graphics::Image>(const std::string&, const std::string&);
 
@@ -89,7 +91,7 @@ Resources::getResource(const std::string& name) const
     S2D_ASSERT(types.count(name), "Resource does not exist");
     return static_cast<const T*>(types.at(name).get());
 }
-//template typename Resources::Result<const sf::Font*> Resources::getResource<sf::Font>(const std::string&) const;
+template typename Resources::Result<const Graphics::Font*> Resources::getResource<Graphics::Font>(const std::string&) const;
 template typename Resources::Result<const Graphics::Texture*> Resources::getResource<Graphics::Texture>(const std::string&) const;
 template typename Resources::Result<const Graphics::Image*> Resources::getResource<Graphics::Image>(const std::string&) const;
 template typename Resources::Result<const Graphics::Program*> Resources::getResource<Graphics::Program>(const std::string&) const;
@@ -104,7 +106,7 @@ Resources::getResource(const std::string& name)
     S2D_ASSERT(types.count(name), "Resource does not exist");
     return static_cast<T*>(types.at(name).get());
 }
-//template typename Resources::Result<sf::Font*> Resources::getResource<sf::Font>(const std::string&);
+template typename Resources::Result<Graphics::Font*> Resources::getResource<Graphics::Font>(const std::string&);
 template typename Resources::Result<Graphics::Texture*> Resources::getResource<Graphics::Texture>(const std::string&);
 template typename Resources::Result<Graphics::Image*> Resources::getResource<Graphics::Image>(const std::string&);
 template typename Resources::Result<Graphics::Program*> Resources::getResource<Graphics::Program>(const std::string&);

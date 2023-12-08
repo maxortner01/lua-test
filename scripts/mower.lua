@@ -10,19 +10,19 @@ function Update(world, entity)
     }
 
     if Input.getDown("D") then
-        rotation.amount = rotation.amount + rotation.mag
-    end
-
-    if (Input.getDown("A")) then
         rotation.amount = rotation.amount - rotation.mag
     end
 
+    if (Input.getDown("A")) then
+        rotation.amount = rotation.amount + rotation.mag
+    end
+
     if (Input.getDown("S")) then
-        force.amount = force.amount - force.mag
+        force.amount = force.amount + force.mag
     end
 
     if (Input.getDown("W")) then
-        force.amount = force.amount + force.mag
+        force.amount = force.amount - force.mag
     end
 
     local rigidbody = entity:getComponent(Component.Rigidbody)

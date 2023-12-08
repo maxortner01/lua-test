@@ -2,6 +2,8 @@
 #include <Simple2D/Engine/Mesh.hpp>
 #include <Simple2D/Engine/Core.hpp>
 
+#include <Simple2D/Graphics/Font.hpp>
+
 #include <Simple2D/Util/Transform.hpp>
 #include <Simple2D/Util/Angle.hpp>
 
@@ -42,9 +44,25 @@ namespace S2D::Engine
     }
 
     template<>
+    DefaultShader<Text>::DefaultShader()
+    {
+        const std::string vertex = 
+        #include "DefaultShader/text.vert.glsl"
+        ;
+
+        const std::string fragment = 
+        #include "DefaultShader/text.frag.glsl"
+        ;
+
+        S2D_ASSERT(shader.fromString(vertex,   Graphics::Shader::Type::Vertex),   "Sprite vertex shader failed to load");
+        S2D_ASSERT(shader.fromString(fragment, Graphics::Shader::Type::Fragment), "Sprite fragment shader failed to load");
+        shader.link();
+    }
+
+    template<>
     DefaultShader<Tilemap>::DefaultShader()
     {
-
+        
     }
 
     template<>
@@ -73,31 +91,18 @@ namespace S2D::Engine
         const auto* entity_transform = entity.get<Transform>();
         S2D_ASSERT(camera_transform, "Camera missing transform");
 
-        Math::Transform model, view;
+        Math::Transform model;
         model.translate(entity_transform->position);
         model.scale({ entity_transform->scale, entity_transform->scale, entity_transform->scale });
         model.rotate({ 0.f, 0.f, entity_transform->rotation });
 
-        // View matrix
-        view.translate(camera_transform->position * -1.f);
-        //view.rotate({ 0.f, 0.f, camera_transform->rotation });
+        const auto view = viewMatrix(camera);
+        const auto proj = projectionMatrix(camera);
 
-        const auto aspectRatio = (float)target.getSize().x / (float)target.getSize().y;
-
-        const auto near = 0.01;
-        const auto far = 10000.0;
-        const auto t = 1.f / tanf(Util::degrees(camera.get<Camera>()->FOV / 2.f).asRadians());
-
-        Math::Mat4f proj(false);
-        proj[0][0] = t / aspectRatio;
-        proj[1][1] = t;
-        proj[2][2] = -1.f * (far + near) / (far - near);
-        proj[3][2] = -2.f * (far * near) / (far - near);
-        proj[2][3] = -1.f;
-
-        const auto mat = model.matrix() * view.matrix() * proj;
+        const auto mat = model.matrix() * view * proj;
 
         // Set the matrices in the shader
+        shader->setUniform("model", model.matrix());
         shader->setUniform("MVP", mat);
     }
 
@@ -159,6 +164,62 @@ namespace S2D::Engine
         target.draw(tilemap->mesh->vertices, context);
     }
 
+    void 
+    Renderer::renderText(
+        const Math::Transform& transform, 
+        Graphics::Surface& target, 
+        const std::string& text, 
+        Graphics::Font* font, 
+        uint32_t pixel_height) const
+    {
+        S2D_ASSERT(font, "Must have font to render text");
+        //auto mesh = RawMesh::getQuadMesh();
+
+        Graphics::VertexArray vao;
+        const std::vector<uint32_t> indices = {
+            0, 1, 2, 2, 3, 1
+        };
+        vao.uploadIndices(indices);
+
+        const auto scale = transform.getScale() * 0.1f;
+        auto pos = Math::Vec2f(0, 0);
+        for (const auto& c : text)
+        {
+            const auto& glyph = font->getCharacter(c, pixel_height);
+            
+            float xpos = pos.x + glyph.bearing.x / (float)pixel_height * scale.x;
+            float ypos = pos.y - (glyph.size.y - glyph.bearing.y) / (float)pixel_height * scale.y * -1.f;
+
+            float w = glyph.size.x / (float)pixel_height * scale.x;
+            float h = glyph.size.y / (float)pixel_height * scale.y * -1.f;
+
+            const std::vector<Graphics::Vertex> vertices = {
+                Graphics::Vertex{
+                    .position = Math::Vec3f(xpos, ypos, 0.f), .color = Graphics::Color(255, 255, 255, 255), .texCoords = Math::Vec2f(0, 1)
+                },
+                Graphics::Vertex{
+                    .position = Math::Vec3f(xpos + w, ypos, 0.f), .color = Graphics::Color(255, 255, 255, 255), .texCoords = Math::Vec2f(1, 1)
+                },
+                Graphics::Vertex{
+                    .position = Math::Vec3f(xpos, ypos + h, 0.f), .color = Graphics::Color(255, 255, 255, 255), .texCoords = Math::Vec2f(0, 0)
+                },
+                Graphics::Vertex{
+                    .position = Math::Vec3f(xpos + w, ypos + h, 0.f), .color = Graphics::Color(255, 255, 255, 255), .texCoords = Math::Vec2f(1, 0)
+                }
+            };
+            vao.upload(vertices, true);
+            
+            Graphics::Context context;
+            context.program = &default_text->shader;
+            context.textures.push_back(glyph.texture.get());
+
+            context.program->setUniform("model", transform.matrix());
+            target.draw(vao, context);
+
+            pos.x += (float)(glyph.advance >> 6) / (float)pixel_height * scale.x;
+        }
+    }
+
     template<>
     void 
     Renderer::renderComponent<Text>(
@@ -166,7 +227,10 @@ namespace S2D::Engine
         flecs::entity e, 
         Graphics::Surface& target,
         Graphics::Context context) const
-    {   }
+    {   
+        if (!context.program) context.program = &default_text->shader;
+        Renderer::set_uniforms(e, camera, context.program, target);
+    }
 
     /*
     template<>
@@ -211,14 +275,15 @@ namespace S2D::Engine
         default_mesh(std::make_unique<DefaultShader<CustomMesh>>()),
         default_sprite(std::make_unique<DefaultShader<Sprite>>()),
         default_tilemap(std::make_unique<DefaultShader<Tilemap>>()),
+        default_text(std::make_unique<DefaultShader<Text>>()),
         default_flat(std::make_unique<DefaultShader<Graphics::Surface>>())
     {   }
 
     void 
     Renderer::renderQuad(
-        Math::Transform& transform, 
+        const Math::Transform& transform, 
         Graphics::Surface& target, 
-        const Graphics::Texture* texture) const
+        std::optional<QuadInfo> info) const
     {
         const auto mesh = RawMesh::getQuadMesh();
 
@@ -226,7 +291,11 @@ namespace S2D::Engine
         context.program = &default_flat->shader;
         context.program->setUniform("model", transform.matrix());
 
-        if (texture) context.textures.push_back(texture);
+        if (info.has_value())
+        {
+            context.depth_test = info.value().depth_test;
+            if (info.value().texture) context.textures.push_back(info.value().texture);
+        }
 
         target.draw(mesh->vertices, context);
     }
@@ -234,12 +303,13 @@ namespace S2D::Engine
     void 
     Renderer::render(
         flecs::entity camera, 
-        Graphics::Surface& target) const
+        Graphics::Surface& target,
+        Graphics::Program* shader) const
     {
         transforms.each(
             [&](flecs::entity e, const Transform&)
             {
-                render(camera, e, target);
+                render(camera, e, target, shader);
             });
     }
 
@@ -247,11 +317,12 @@ namespace S2D::Engine
     Renderer::render(
         flecs::entity camera, 
         const std::string& entity,
-        Graphics::Surface& target) const
+        Graphics::Surface& target,
+        Graphics::Program* shader) const
     {
         auto e = _scene->world.lookup(entity.c_str());
         S2D_ASSERT(e, "Trying to render invalid entity");
-        render(camera, e, target);
+        render(camera, e, target, shader);
     }
 
 #define RENDER_COMPONENT(name) if (entity.has<name>()) renderComponent<name>(camera, entity, target, context)
@@ -260,12 +331,14 @@ namespace S2D::Engine
     Renderer::render(
         flecs::entity camera, 
         flecs::entity entity,
-        Graphics::Surface& target) const
+        Graphics::Surface& target,
+        Graphics::Program* shader) const
     {
         S2D_ASSERT(entity.has<Transform>(), "Entity missing transform");
         S2D_ASSERT(camera.has<Camera>(), "Camera missing camera component");
 
         Graphics::Context context;
+        context.program = shader;
 
         const auto* component = entity.get<ShaderComp>();
         if (component)

@@ -101,10 +101,10 @@ namespace S2D::Engine
         };
 
         const Math::Vec2f tex_coords[] = {
-            { 1, 0 },
             { 0, 1 },
-            { 1, 1 },
-            { 0, 0 }
+            { 1, 0 },
+            { 0, 0 },
+            { 1, 1 }
         };
 
         vertices.setDrawType(VertexArray::DrawType::Triangles);

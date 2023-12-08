@@ -5,11 +5,14 @@
 
 #include <Simple2D/Graphics.hpp>
 
+#include <functional>
 #include <vector>
 #include <memory>
 
 namespace S2D::Engine
 {
+    struct Scene;
+
     enum class Command
     {
         Clear,
@@ -18,6 +21,7 @@ namespace S2D::Engine
         RenderEntity,
         RenderUI,
         BlitSurface,
+        RenderFunction,
         Count
     };
 
@@ -34,6 +38,7 @@ namespace S2D::Engine
     struct CommandParameters<Command::Clear>
     {
         Graphics::Color color;
+        Graphics::LayerType layer;
     };
 
     template<>
@@ -53,6 +58,7 @@ namespace S2D::Engine
     {
         std::string entity_name;
         std::string camera_name;
+        std::string shader_name;
     };
 
     template<>
@@ -66,6 +72,12 @@ namespace S2D::Engine
     struct CommandParameters<Command::BlitSurface>
     {
         Math::Vec2f position, size;
+    };
+
+    template<>
+    struct CommandParameters<Command::RenderFunction>
+    {
+        std::function<void(Scene*, Graphics::Surface&)> function;
     };
 
     template<Resource R>
@@ -91,7 +103,7 @@ namespace S2D::Engine
 
     public:
         template<Command C>
-        void command(CommandParameters<C>&& parameters)
+        RenderpassBuilder& command(CommandParameters<C>&& parameters)
         { 
             using CP = CommandParameters<C>;
             commands.push_back(std::pair(
@@ -101,6 +113,7 @@ namespace S2D::Engine
                     [](void* ptr) { delete reinterpret_cast<CP*>(ptr); }
                 )
             ));
+            return *this;
         }
 
         template<Resource R>
