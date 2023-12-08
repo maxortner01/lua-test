@@ -4,6 +4,8 @@
 #include <Simple2D/Engine/Components.hpp>
 #include <Simple2D/Def.hpp>
 
+#include "../../Lua/Lua.cpp"
+
 #include <flecs.h>
 
 namespace S2D::Engine
@@ -14,7 +16,7 @@ static int createEntityFromComponents(Lua::State L)
     using namespace Lua::CompileTime;
     using namespace Util::CompileTime;
     
-    const std::size_t components = lua_gettop(L);
+    const std::size_t components = lua_gettop(STATE);
     
     std::vector<Lua::Table> tables;
     tables.reserve(components - 1);
@@ -26,7 +28,7 @@ static int createEntityFromComponents(Lua::State L)
     }
 
     Lua::Table world_table(L);
-    flecs::world world((flecs::world_t*)world_table.get<void*>("world"));
+    flecs::world world((flecs::world_t*)*world_table.get<void**>("world"));
 
     auto entity = world.entity();
 
@@ -73,18 +75,18 @@ static int createEntityInitComponents(Lua::State L)
     using namespace Lua::CompileTime;
     using namespace Util::CompileTime;
 
-    const std::size_t components = lua_gettop(L);
+    const std::size_t components = lua_gettop(STATE);
     std::vector<Lua::Number> numbers(components);
     for (uint32_t i = 0; i < components - 1; i++)
     {
-        S2D_ASSERT(lua_type(L, -1) == LUA_TNUMBER, "Type mismatch");
-        numbers[i] = lua_tonumber(L, -1);
-        lua_pop(L, 1);
+        S2D_ASSERT(lua_type(STATE, -1) == LUA_TNUMBER, "Type mismatch");
+        numbers[i] = lua_tonumber(STATE, -1);
+        lua_pop(STATE, 1);
     }
     
-    S2D_ASSERT(lua_gettop(L) == 1, "Argument size mismatch");
+    S2D_ASSERT(lua_gettop(STATE) == 1, "Argument size mismatch");
     Lua::Table world_table(L);
-    flecs::world world((flecs::world_t*)world_table.get<void*>("world"));
+    flecs::world world((flecs::world_t*)*world_table.get<void**>("world"));
     
     auto entity = world.entity();
     
@@ -121,15 +123,15 @@ static int createEntityInitComponents(Lua::State L)
 
 int World::createEntity(Lua::State L)
 {
-    const std::size_t components = lua_gettop(L);
-    S2D_ASSERT(lua_type(L, (int)(-1 * components)) == LUA_TTABLE, "Missing world");
+    const std::size_t components = lua_gettop(STATE);
+    S2D_ASSERT(lua_type(STATE, (int)(-1 * components)) == LUA_TTABLE, "Missing world");
     
     bool is_tables = true;
     bool is_init   = true;
     for (int32_t i = -1; i > -1 * components; i--)
     {
-        if (lua_type(L, i) != LUA_TTABLE) is_tables = false;
-        if (lua_type(L, i) != LUA_TNUMBER) is_init = false;
+        if (lua_type(STATE, i) != LUA_TTABLE) is_tables = false;
+        if (lua_type(STATE, i) != LUA_TNUMBER) is_init = false;
     }
     
     S2D_ASSERT(is_tables || is_init, "Arguments invalid");
@@ -153,7 +155,7 @@ int World::getEntity(Lua::State L)
     ent.set("entity", (void*)entity.raw_id());
     ent.set("good", true);
     ent.set("world", (void*)world.c_ptr()); // Currently hacky way to store a pointer (must be considered an int64)
-    S2D_ASSERT(!lua_gettop(L), "Unknown args");
+    S2D_ASSERT(!lua_gettop(STATE), "Unknown args");
 
     ent.toStack(L);
     return 1;

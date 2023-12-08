@@ -51,8 +51,9 @@ namespace S2D::Lua::Lib
     /* struct Base */
     template<typename... Args>
     std::tuple<Args...>
-    Base::extractArgs(State L)
+    Base::extractArgs(State _L)
     {
+        auto* L = reinterpret_cast<lua_State*>(_L);
         S2D_ASSERT(lua_gettop(L) == sizeof...(Args), "Lua arguments do not match expected args.");
         std::tuple<Args...> values;
         Util::CompileTime::static_for<sizeof...(Args)>([&](auto n) {

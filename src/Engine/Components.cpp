@@ -253,7 +253,7 @@ Component<Name::Tilemap>::setTile(
 
     tilemap->tiles.setTile(x, y, layer, { { (unsigned int)cx, (unsigned int)cy } });
 
-    lua_pushboolean(L, true);
+    Lua::CompileTime::TypeMap<Lua::Boolean>::push(L, true);
 
     return 1;
 }
@@ -275,7 +275,7 @@ Component<Name::Tilemap>::setLayerState(
 
     tilemap->tiles.setLayerState((uint32_t)layer, (LayerState)(int)layer_state);
 
-    lua_pushboolean(L, true);
+    Lua::CompileTime::TypeMap<Lua::Boolean>::push(L, true);
 
     return 1;
 }

@@ -10,8 +10,6 @@ namespace S2D::Engine
 {
     int Surface::drawText(Lua::State L)
     {
-        //S2D_ASSERT(false, "Text not supported");
-
         const auto [ surface_table, x, y, size, text, font ] = 
             extractArgs<Lua::Table, Lua::Number, Lua::Number, Lua::Number, Lua::String, Lua::String>(L);
 
@@ -40,10 +38,10 @@ namespace S2D::Engine
             extractArgs<Lua::Table, Lua::String, Lua::Number, Lua::Table>(L);
 
         LUA_ASSERT(surface_table.hasValue("scene"), "Surface missing scene");
-        const auto* scene = (Scene*)surface_table.get<void*>("scene");
+        const auto* scene = (Scene*)*surface_table.get<void**>("scene");
 
         LUA_ASSERT(surface_table.hasValue("surface"), "Surface missing render surface");
-        auto* surface = (Graphics::DrawTexture*)surface_table.get<void*>("surface");
+        auto* surface = (Graphics::DrawTexture*)*surface_table.get<void**>("surface");
 
         // Get the resource
         const auto res_type = (ResourceType)(int)type;

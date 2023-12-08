@@ -2,6 +2,8 @@
 #include <Simple2D/Lua/TypeMap.hpp>
 #include <Simple2D/Def.hpp>
 
+#include "Lua.cpp"
+
 #include <iostream>
 
 namespace S2D::Lua
@@ -49,36 +51,36 @@ Table::Table(const Table::Map& map) :
 
 Table::Table(State L)
 {
-    lua_pushnil(L);
-    while (lua_next(L, -2) != 0)
+    lua_pushnil(STATE);
+    while (lua_next(STATE, -2) != 0)
     {
         const auto key = [&]()
         {
-            switch (lua_type(L, -2))
+            switch (lua_type(STATE, -2))
             {
-            case LUA_TSTRING: return std::string(lua_tostring(L, -2));
-            case LUA_TNUMBER: return std::to_string((int)lua_tonumber(L, -2));
+            case LUA_TSTRING: return std::string(lua_tostring(STATE, -2));
+            case LUA_TNUMBER: return std::to_string((int)lua_tonumber(STATE, -2));
             default: S2D_ASSERT(false, "Lua type mismatch");
             }
         }();
         
         std::shared_ptr<void> value;
 
-        const auto count = lua_gettop(L);
-        const auto type = lua_type(L, -1);
+        const auto count = lua_gettop(STATE);
+        const auto type = lua_type(STATE, -1);
         switch(type)
         {
-        case LUA_TNUMBER:   value = Data::emplace(static_cast<Lua::Number>(lua_tonumber(L, -1))); break;
-        case LUA_TSTRING:   value = Data::emplace(Lua::String(lua_tostring(L, -1)));              break;
-        case LUA_TBOOLEAN:  value = Data::emplace(lua_toboolean(L, -1));                          break;
-        case LUA_TUSERDATA: value = Data::emplace(lua_touserdata(L, -1));                         break;
-        case LUA_TTABLE:    value = Data::emplace(Table(L)); break;
+        case LUA_TNUMBER:   value = Data::emplace(static_cast<Lua::Number>(lua_tonumber(STATE, -1))); break;
+        case LUA_TSTRING:   value = Data::emplace(Lua::String(lua_tostring(STATE, -1)));              break;
+        case LUA_TBOOLEAN:  value = Data::emplace(lua_toboolean(STATE, -1));                          break;
+        case LUA_TUSERDATA: value = Data::emplace(lua_touserdata(STATE, -1));                         break;
+        case LUA_TTABLE:    value = Data::emplace(Table(STATE)); break;
         }
         
         dictionary.insert(std::pair(key, Data{ .data = value, .type = type }));
-        if (count == lua_gettop(L)) lua_pop(L, 1);
+        if (count == lua_gettop(STATE)) lua_pop(STATE, 1);
     }
-    lua_pop(L, 1);
+    lua_pop(STATE, 1);
 }
 
 template<typename T>
@@ -216,11 +218,11 @@ Table::toStack(State L) const
 {
     using namespace CompileTime;
 
-    lua_newtable(L);
+    lua_newtable(STATE);
 
     for (const auto& p : dictionary)
     {
-        lua_pushstring(L, p.first.c_str());
+        lua_pushstring(STATE, p.first.c_str());
 
         switch (p.second.type)
         {
@@ -234,10 +236,10 @@ Table::toStack(State L) const
             break;
         }
         case LUA_TFUNCTION: TypeMap<Lua::Function>::push(L, get<Lua::Function>(p.first)); break;
-        default: TypeMap<void*>::push(L, get<void*>(p.first)); break; // need to make this general
+        default: TypeMap<void*>::push(L, get<void*>(p.first)); break; // Worried about this... everywhere else needs void** so why does void* work?
         }
 
-        lua_settable(L, -3);
+        lua_settable(STATE, -3);
     }
 }
 

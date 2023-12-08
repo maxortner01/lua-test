@@ -31,7 +31,7 @@ ResLib::getResource(Lua::State L)
         = extractArgs<Lua::Table, Lua::Number, Lua::String>(L);
     
     LUA_EXCEPTION(world_table.hasValue("scene"), "World missing scene instance");
-    auto* scene = (Scene*)world_table.get<void*>("scene");
+    auto* scene = (Scene*)*world_table.get<void**>("scene");
 
     LUA_EXCEPTION(type >= 0 && type <= (Lua::Number)(int)ResourceType::Image, "Resource type invalid!");
 

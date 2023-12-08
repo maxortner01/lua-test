@@ -11,5 +11,5 @@ extern "C"
 
 namespace S2D::Lua
 {
-    using State = lua_State*;
+    using State = void*;
 }

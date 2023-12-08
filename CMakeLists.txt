@@ -51,6 +51,7 @@ link_libraries(${LUA_LIBRARIES})
 
 ## LUA
 set(LUA_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/Lua/TypeMap.cpp
     ${CMAKE_SOURCE_DIR}/src/Lua/Lib.cpp
     ${CMAKE_SOURCE_DIR}/src/Lua/Runtime.cpp
     ${CMAKE_SOURCE_DIR}/src/Lua/Table.cpp)

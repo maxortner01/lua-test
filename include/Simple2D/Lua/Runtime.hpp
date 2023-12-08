@@ -102,9 +102,13 @@ namespace S2D::Lua
         bool     good() const;
         operator bool() const;
 
+
         const auto& filename() const { return _filename; }
 
     private:
+        void _pop(int n = 1) const;
+        int _call_func(uint32_t args, uint32_t ret) const;
+
         State L;
         bool _good;
         std::string _filename;
@@ -138,8 +142,13 @@ namespace S2D::Lua
         const std::string& name,
         Args&&... args)
     {
-        lua_getglobal(L, name.c_str());
-        if (!lua_isfunction(L, -1)) { lua_pop(L, 1); return { Runtime::ErrorCode::NotFunction }; }
+        const auto glob_res = getGlobal<Lua::Function>(name);
+        if (!glob_res)
+        {
+            _pop();
+            if (glob_res.error().code() == Runtime::ErrorCode::TypeMismatch) return { Runtime::ErrorCode::NotFunction };
+            else return { glob_res.error() };
+        }
 
         auto args_set = std::tuple(std::forward<Args>(args)...);
         Util::CompileTime::static_for<sizeof...(args)>([&](auto n){
@@ -148,7 +157,7 @@ namespace S2D::Lua
             CompileTime::TypeMap<Type>::push(L, std::get<I>(args_set));
         });
 
-        if (lua_pcall(L, sizeof...(Args), sizeof...(Return), 0) != LUA_OK) return { { ErrorCode::FunctionError, std::string(lua_tostring(L, -1)) } };
+        if (_call_func(sizeof...(Args), sizeof...(Return)) != LUA_OK) return { { ErrorCode::FunctionError, CompileTime::TypeMap<Lua::String>::construct(L) } };
         
         bool err = false;
         auto left = sizeof...(Return);
@@ -172,7 +181,7 @@ namespace S2D::Lua
         S2D_ASSERT(!left, "Still arguments left.");
         if (err)
         {
-            lua_pop(L, (int)left);
+            _pop(left);
             return { ErrorCode::TypeMismatch };
         }
 

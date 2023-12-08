@@ -6,6 +6,8 @@
 
 #include <Simple2D/Log/Log.hpp>
 
+#include "../../Lua/Lua.cpp"
+
 #define LUA_EXCEPTION(expr, msg) if (!(expr)) { logger->error(msg); return 0; }
 
 namespace S2D::Engine
@@ -37,7 +39,7 @@ MeshLib::getVertexCount(Lua::State L)
     LUA_EXCEPTION(entity.has<CustomMesh>(), "Entity missing custom mesh component");
     
     auto* mesh = entity.get<CustomMesh>();
-    lua_pushnumber(L, mesh->mesh ? mesh->mesh->vertices.vertexCount() : 0);
+    lua_pushnumber(STATE, mesh->mesh ? mesh->mesh->vertices.vertexCount() : 0);
     return 1;
 }
 

@@ -6,6 +6,8 @@
 #include <cassert>
 #include <filesystem>
 
+#include "../Lua/Lua.cpp"
+
 namespace S2D::Log
 {
 
@@ -13,10 +15,10 @@ int Library::log(Lua::State L)
 {
     using Map = Lua::CompileTime::TypeMap<Lua::String>;
 
-    S2D_ASSERT(lua_gettop(L) == 1, "Lua argument size mismatch");
+    S2D_ASSERT(lua_gettop(STATE) == 1, "Lua argument size mismatch");
     S2D_ASSERT(Map::check(L), "Not a string");
 
-    auto val = Map::construct(L);
+    auto val = Map::construct(STATE);
 
     Logger::instance("lua")->info(val);
 
@@ -27,7 +29,7 @@ int Library::error(Lua::State L)
 {
     using Map = Lua::CompileTime::TypeMap<Lua::String>;
 
-    S2D_ASSERT(lua_gettop(L) == 1, "Lua argument size mismatch");
+    S2D_ASSERT(lua_gettop(STATE) == 1, "Lua argument size mismatch");
     S2D_ASSERT(Map::check(L), "Not a string");
 
     auto val = Map::construct(L);
@@ -39,14 +41,14 @@ int Library::error(Lua::State L)
 
 int Library::_assert(Lua::State L)
 {
-    S2D_ASSERT(lua_gettop(L) == 1, "Lua argument size mismatch");
-    S2D_ASSERT(lua_isboolean(L, -1), "Not a boolean");
+    S2D_ASSERT(lua_gettop(STATE) == 1, "Lua argument size mismatch");
+    S2D_ASSERT(lua_isboolean(STATE, -1), "Not a boolean");
 
     lua_Debug debug;
-    lua_getstack(L, 1, &debug);
-    lua_getinfo(L, "nSl", &debug);
+    lua_getstack(STATE, 1, &debug);
+    lua_getinfo(STATE, "nSl", &debug);
 
-    bool expr = lua_toboolean(L, -1);
+    bool expr = lua_toboolean(STATE, -1);
     if (!expr)
     {
         const auto path = [&]() -> auto
