@@ -59,7 +59,8 @@ set(BUILD_TESTING OFF)
 ## GRAPHICS
 # Build SDL as a dll needed in the final product
 set(SDL_TEST_LIBRARY OFF)
-set(SDL_SHARED ON)
+set(SDL_SHARED OFF)
+set(SDL_STATIC ON)
 add_subdirectory(${CMAKE_SOURCE_DIR}/extern/SDL)
 
 # Build the static glew into graphics
@@ -100,7 +101,6 @@ set(ENGINE_SOURCES
     ${CMAKE_SOURCE_DIR}/src/Engine/LuaScene.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Mesh/Mesh.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Resources.cpp
-    ${CMAKE_SOURCE_DIR}/src/Engine/Application.cpp
     ${CMAKE_SOURCE_DIR}/src/Engine/Renderer.cpp
 
     ${CMAKE_SOURCE_DIR}/src/Engine/LuaLib/ImageLib.cpp
@@ -121,7 +121,7 @@ set(ENGINE_SOURCES
     ${CMAKE_SOURCE_DIR}/src/Log/Library.cpp
     ${CMAKE_SOURCE_DIR}/src/Log/Log.cpp)
 
-add_library(simple2d-engine STATIC ${ENGINE_SOURCES})
+add_library(simple2d-engine SHARED ${ENGINE_SOURCES})
 
 target_link_libraries(simple2d-engine PRIVATE simple2d-lua simple2d-graphics spdlog::spdlog fcl flecs ${LUA_LIBRARIES})
 target_include_directories(simple2d-engine PRIVATE 
@@ -131,8 +131,15 @@ target_include_directories(simple2d-engine PRIVATE
     ${CMAKE_SOURCE_DIR}/extern/fcl/include
     ${CMAKE_CURRENT_BINARY_DIR}/extern/fcl/include)
 
-## EXECUTABLE
-#add_executable(main entry.cpp)
+## APPLICATION
+set(APPLICATION_SOURCES ${CMAKE_SOURCE_DIR}/src/Engine/Application.cpp)
 
-#target_compile_definitions(main PUBLIC -DSOURCE_DIR="${CMAKE_SOURCE_DIR}")
-#target_link_libraries(main PUBLIC simple2d-lua simple2d-engine simple2d-graphics flecs)
+add_library(simple2d-entry STATIC ${APPLICATION_SOURCES})
+
+target_link_libraries(simple2d-entry PRIVATE simple2d-engine)
+
+## EXECUTABLE
+add_executable(main entry.cpp)
+
+target_compile_definitions(main PUBLIC -DSOURCE_DIR="${CMAKE_SOURCE_DIR}")
+target_link_libraries(main PUBLIC simple2d-engine simple2d-graphics simple2d-lua simple2d-entry flecs)
