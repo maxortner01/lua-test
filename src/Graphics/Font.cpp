@@ -112,6 +112,8 @@ namespace S2D::Graphics
                     }
             };
 
+            FT_Bitmap_Embolden(ft, &face->glyph->bitmap, 2, 2);
+
             uint8_t* data = face->glyph->bitmap.buffer;
             if (mono)
             {

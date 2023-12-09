@@ -139,7 +139,9 @@ add_library(simple2d-entry STATIC ${APPLICATION_SOURCES})
 target_link_libraries(simple2d-entry PRIVATE simple2d-engine)
 
 ## EXECUTABLE
-add_executable(main entry.cpp)
+set(GAME_DIRECTORY /Users/maxortner/Projects/censor)
 
-target_compile_definitions(main PUBLIC -DSOURCE_DIR="${CMAKE_SOURCE_DIR}")
+add_executable(main ${GAME_DIRECTORY}/src/main.cpp)
+
+target_compile_definitions(main PUBLIC -DSOURCE_DIR="${GAME_DIRECTORY}/out")
 target_link_libraries(main PUBLIC simple2d-engine simple2d-graphics simple2d-lua simple2d-entry flecs)

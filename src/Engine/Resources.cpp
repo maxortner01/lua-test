@@ -8,6 +8,8 @@
 #include <fstream>
 #include <sstream>
 
+#define INIT(type) const auto id = typeid(type).hash_code(); if (!resources.count(id)) resources.insert(std::pair(id, ResourceMap())); auto& types = resources.at(id)
+
 namespace S2D::Engine
 {
 
@@ -18,9 +20,7 @@ template<typename T>
 Resources::Result<void>
 Resources::loadResource(const std::string& name, const std::string& filename)
 {
-    const auto id = typeid(T).hash_code(); 
-    if (!resources.count(id)) resources.insert(std::pair(id, ResourceMap()));
-    auto& types = resources.at(id);
+    INIT(T);
     if (types.count(name)) return { Error::AlreadyExists };
     auto* resource = new T();
     S2D_ASSERT(resource->fromFile(filename), "Resource failed to load");
@@ -41,9 +41,7 @@ template<>
 Resources::Result<void>
 Resources::loadResource<Graphics::Program>(const std::string& name, const std::string& filename, Graphics::Shader::Type type)
 {
-    const auto id = typeid(Graphics::Program).hash_code();
-    if (!resources.count(id)) resources.insert(std::pair(id, ResourceMap()));
-    auto& types = resources.at(id);
+    INIT(Graphics::Program);
     Graphics::Program* res = nullptr;
     if (types.count(name)) res = (Graphics::Program*)types.at(name).get();
     else 
@@ -81,34 +79,54 @@ Resources::loadResource<Graphics::Program>(const std::string& name, const std::s
     return { };
 }
 
+template<>
+Resources::Result<void>
+Resources::loadResource<Graphics::DrawTexture>(const std::string& name)
+{
+    INIT(Graphics::DrawTexture);
+
+    if (types.count(name)) return { Error::AlreadyExists };
+    auto* resource = new Graphics::DrawTexture();
+    types.insert(std::pair(
+        name,
+        std::shared_ptr<void>(
+            (void*)resource,
+            [](void* ptr) { delete reinterpret_cast<Graphics::DrawTexture*>(ptr); }
+        )
+    ));
+    return { };
+}
+
 template<typename T>
 Resources::Result<const T*>
 Resources::getResource(const std::string& name) const
 {
     const auto id = typeid(T).hash_code();
-    S2D_ASSERT(resources.count(id), "Resource type does not exist");
+    if (!resources.count(id)) return { Error::ResourceTypeMissing };
     auto& types = resources.at(id);
-    S2D_ASSERT(types.count(name), "Resource does not exist");
+    if (!types.count(name)) return { Error::ResourceMissing };
     return static_cast<const T*>(types.at(name).get());
 }
-template typename Resources::Result<const Graphics::Font*> Resources::getResource<Graphics::Font>(const std::string&) const;
+template typename Resources::Result<const Graphics::Font*>   Resources::getResource<Graphics::Font>    (const std::string&) const;
 template typename Resources::Result<const Graphics::Texture*> Resources::getResource<Graphics::Texture>(const std::string&) const;
-template typename Resources::Result<const Graphics::Image*> Resources::getResource<Graphics::Image>(const std::string&) const;
+template typename Resources::Result<const Graphics::Image*>   Resources::getResource<Graphics::Image>  (const std::string&) const;
 template typename Resources::Result<const Graphics::Program*> Resources::getResource<Graphics::Program>(const std::string&) const;
+template typename Resources::Result<const Graphics::DrawTexture*> Resources::getResource<Graphics::DrawTexture>(const std::string&) const;
 
 template<typename T>
 Resources::Result<T*>
 Resources::getResource(const std::string& name)
 {
     const auto id = typeid(T).hash_code();
-    S2D_ASSERT(resources.count(id), "Resource type does not exist");
+    if (!resources.count(id)) return { Error::ResourceTypeMissing };
     auto& types = resources.at(id);
-    S2D_ASSERT(types.count(name), "Resource does not exist");
+    if (!types.count(name)) return { Error::ResourceMissing };
     return static_cast<T*>(types.at(name).get());
 }
 template typename Resources::Result<Graphics::Font*> Resources::getResource<Graphics::Font>(const std::string&);
 template typename Resources::Result<Graphics::Texture*> Resources::getResource<Graphics::Texture>(const std::string&);
 template typename Resources::Result<Graphics::Image*> Resources::getResource<Graphics::Image>(const std::string&);
 template typename Resources::Result<Graphics::Program*> Resources::getResource<Graphics::Program>(const std::string&);
+template typename Resources::Result<Graphics::DrawTexture*> Resources::getResource<Graphics::DrawTexture>(const std::string&);
 
 }

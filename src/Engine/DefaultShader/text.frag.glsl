@@ -11,10 +11,9 @@ uniform sampler2D texture0;
 
 void main()
 {
-    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(texture0, texPos).r);
+    vec4 sampled = vec4(0.0, 0.0, 0.0, texture(texture0, texPos).r);
     color = vertexColor * sampled;
     if (sampled.a < 0.1) discard;
-    //color = vec4(1, 1, 1, 1);
 }
 
 )"

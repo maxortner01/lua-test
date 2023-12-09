@@ -11,7 +11,9 @@ namespace S2D::Engine
     {
         enum class Error
         {
-            AlreadyExists
+            AlreadyExists,
+            ResourceTypeMissing,
+            ResourceMissing
         };
 
         ~Resources();
@@ -23,10 +25,14 @@ namespace S2D::Engine
         Result<void>
         loadResource(const std::string& name, const std::string& filename);
 
-        // Only works for T = sf::Shader
+        // Only works for T = Graphics::Program
         template<typename T>
         Result<void>
         loadResource(const std::string& name, const std::string& filename, Graphics::Shader::Type type);
+
+        template<typename T>
+        Result<void>
+        loadResource(const std::string& name);
 
         template<typename T>
         Result<const T*>

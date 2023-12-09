@@ -125,11 +125,14 @@ namespace S2D::Engine
 
         if (sprite->texture.size())
         {
-            auto* texture = [&]() 
+            const auto* texture = [&]() -> const Graphics::Texture*
             {
                 const auto res = _scene->resources.getResource<Graphics::Texture>(sprite->texture);
-                S2D_ASSERT(res, "Error loading texture");
-                return res.value();
+                if (res) return res.value();
+
+                const auto r = _scene->resources.getResource<Graphics::DrawTexture>(sprite->texture);
+                S2D_ASSERT_ARGS(r, "No texture or DrawTexture with name %s", sprite->texture.c_str());
+                return r.value()->texture();
             }();
             context.textures.push_back(texture);
         }
@@ -181,7 +184,7 @@ namespace S2D::Engine
         };
         vao.uploadIndices(indices);
 
-        const auto scale = transform.getScale() * 0.1f;
+        const auto scale = transform.getScale();
         auto pos = Math::Vec2f(0, 0);
         for (const auto& c : text)
         {
