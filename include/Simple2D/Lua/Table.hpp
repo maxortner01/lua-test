@@ -52,6 +52,8 @@ namespace S2D::Lua
         Table(State L);
         ~Table() = default;
 
+        const Data& getRaw(const std::string& name) const;
+
         template<typename T>
         void each(std::function<void(uint32_t, T&)> lambda);
 

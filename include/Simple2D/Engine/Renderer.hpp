@@ -4,6 +4,8 @@
 
 #include "Components.hpp"
 
+#include <unordered_map>
+
 namespace S2D::Graphics
 {
     struct Font;
@@ -40,6 +42,10 @@ namespace S2D::Engine
 
         template<typename _Component>
         void renderComponent(flecs::entity camera, flecs::entity e, Graphics::Surface& target, Graphics::Context context) const;
+
+        //std::unique_ptr<
+            //std::unordered_map<flecs::id_t, int>
+        //> moused_over;
 
     private:
         Scene* _scene;

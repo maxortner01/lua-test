@@ -33,9 +33,11 @@ void Texture::unbind() const
 
 bool
 Texture::fromFile(
-    const std::filesystem::path& filepath)
+    const std::filesystem::path& filepath,
+    Scaling _scaling)
 {
     int32_t width, height, channels;
+    stbi_set_flip_vertically_on_load(true);
     uint8_t* data = stbi_load(filepath.c_str(), &width, &height, &channels, 0);
     if (!data) return false;
     //S2D_ASSERT_ARGS(data, "Error loading file \"%s\"", filepath.filename().c_str());
@@ -58,10 +60,20 @@ Texture::fromFile(
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
+    const auto scaling = [&]()
+    {
+        switch (_scaling)
+        {
+        case Scaling::Linear: return GL_LINEAR;
+        case Scaling::Nearest: return GL_NEAREST;
+        default: return GL_NONE;
+        }
+    }();
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scaling);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scaling);
 
     unbind();
 
@@ -74,7 +86,8 @@ bool
 Texture::fromMemory(
     const Math::Vec2u& size, 
     const uint8_t* data, 
-    Format _format)
+    Format _format,
+    Scaling _scaling)
 {
     const auto format = [&]()
     {
@@ -96,10 +109,20 @@ Texture::fromMemory(
 
     glTexImage2D(GL_TEXTURE_2D, 0, format, size.x, size.y, 0, format, GL_UNSIGNED_BYTE, data);
 
+    const auto scaling = [&]()
+    {
+        switch (_scaling)
+        {
+        case Scaling::Linear: return GL_LINEAR;
+        case Scaling::Nearest: return GL_NEAREST;
+        default: return GL_NONE;
+        }
+    }();
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scaling);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scaling);
 
     return true;
 }
@@ -107,7 +130,8 @@ Texture::fromMemory(
 bool 
 Texture::fromEmpty(
     const Math::Vec2u& size, 
-    Format _format)
+    Format _format,
+    Scaling _scaling)
 {
     const auto format = [&]()
     {
@@ -127,10 +151,20 @@ Texture::fromEmpty(
     
     glTexImage2D(GL_TEXTURE_2D, 0, format, size.x, size.y, 0, format, GL_UNSIGNED_BYTE, nullptr);
 
+    const auto scaling = [&]()
+    {
+        switch (_scaling)
+        {
+        case Scaling::Linear: return GL_LINEAR;
+        case Scaling::Nearest: return GL_NEAREST;
+        default: return GL_NONE;
+        }
+    }();
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scaling);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scaling);
 
 
     return true;

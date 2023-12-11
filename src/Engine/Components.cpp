@@ -117,6 +117,15 @@ Component<Name::Transform>::fromTable(
     data->scale = table.get<Lua::Number>("scale");
 }
 
+S2D::Math::Transform modelTransform(const Transform* transform)
+{
+    S2D::Math::Transform model;
+    model.translate(transform->position);
+    model.scale({ transform->scale, transform->scale, transform->scale });
+    model.rotate({ 0.f, 0.f, transform->rotation });
+    return model;
+}
+
 /* Rigidbody */
 Lua::Table 
 Component<Name::Rigidbody>::getTable(

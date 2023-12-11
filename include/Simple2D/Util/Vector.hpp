@@ -2,12 +2,36 @@
 
 #include "../Def.hpp"
 
+#include "Matrix.hpp"
+
 namespace S2D::Math
 {
     template<typename _Type>
     struct Vec4
     {
         _Type x, y, z, w;
+
+        Mat<4, 1, _Type> matrix() const
+        {
+            Mat<4, 1, _Type> rows(false);
+            rows.at(0, 0) = x;
+            rows.at(1, 0) = y;
+            rows.at(2, 0) = z;
+            rows.at(3, 0) = w;
+            return rows;
+        }
+
+        Vec4<_Type> transform(const Mat4f& matrix) const
+        {
+            Mat<4, 1, _Type> rows(false);
+            rows.at(0, 0) = x;
+            rows.at(1, 0) = y;
+            rows.at(2, 0) = z;
+            rows.at(3, 0) = w;
+
+            const auto res = matrix * rows;
+            return { res.at(0, 0), res.at(1, 0), res.at(2, 0), res.at(3, 0) };
+        }
     };
 
     using Vec4f = Vec4<float>;

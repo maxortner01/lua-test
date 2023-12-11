@@ -71,13 +71,13 @@ namespace S2D::Graphics
         void setDrawType(DrawType type);
         DrawType getDrawType() const { return draw_type; }
 
-        const std::size_t& vertexCount() const { return count; }
+        const uint32_t& vertexCount() const { return count; }
 
     private:
         std::optional<Buffer> indices;
         Buffer buffer;
 
-        std::size_t count;
+        uint32_t count;
         Handle handle;
         DrawType draw_type;
     };

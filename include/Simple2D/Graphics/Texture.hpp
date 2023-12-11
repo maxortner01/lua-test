@@ -16,6 +16,11 @@ namespace S2D::Graphics
             Red, RGB, RGBA
         };
 
+        enum class Scaling
+        {
+            Linear, Nearest
+        };
+
         Texture(const Texture&) = delete;
         
         Texture() = default;
@@ -26,13 +31,13 @@ namespace S2D::Graphics
         void unbind() const;
 
         [[nodiscard]]
-        bool fromFile(const std::filesystem::path& path);
+        bool fromFile(const std::filesystem::path& path, Scaling scaling = Scaling::Nearest);
 
         [[nodiscard]]
-        bool fromMemory(const Math::Vec2u& size, const uint8_t* data, Format format);
+        bool fromMemory(const Math::Vec2u& size, const uint8_t* data, Format format, Scaling scaling = Scaling::Nearest);
 
         [[nodiscard]]
-        bool fromEmpty(const Math::Vec2u& size, Format _format);
+        bool fromEmpty(const Math::Vec2u& size, Format _format, Scaling scaling = Scaling::Nearest);
 
     private:
         Handle handle;

@@ -124,7 +124,7 @@ namespace S2D::Graphics
             S2D_ASSERT(character.texture->fromMemory(
                 character.size, 
                 data, 
-                Texture::Format::Red), "Failure to create glyph texture");
+                Texture::Format::Red, Texture::Scaling::Linear), "Failure to create glyph texture");
 
             if (mono)
                 std::free(data);

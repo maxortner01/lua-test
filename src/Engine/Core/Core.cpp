@@ -109,7 +109,6 @@ void Core::run()
         // We execute all the scripts
         // THEN the other registered systems run with world.progress()
         // THEN the draw method is called
-        
         auto& world = top_scene->world;
         auto camera = world.filter<const Camera>().first();
 
@@ -137,7 +136,6 @@ void Core::run()
                         (int)ret.error().code(),                                                        \
                         script.first->filename(),                                                       \
                         ret.error().message())                                                          
-
 
             for (auto& script : script.runtime)
             {
@@ -191,15 +189,23 @@ void Core::run()
         frame_times[frame % frame_times.size()] = Time::dt;
 
         // Set mouse position
+        /*
         Math::Vec2f camera_pos;
         if (camera.is_alive() && camera.has<Transform>())
         {
             const auto* transform = camera.get<Transform>();
             camera_pos = { transform->position.x, transform->position.y };
-        }
+        }*/
 
-        // Won't need this hacky stuff once we start using shaders and pass camera transform info to them
-        Input::mouse_position = Graphics::Mouse::getPosition() + camera_pos - (Math::Vec2f)window.getSize() / 2.f;
+        // Mouse position in window coordinates
+        Input::mouse_position = [&]()
+        {
+            const auto window_pos = Graphics::Mouse::getPosition();
+            return Math::Vec2f(
+                (window_pos.x / (float)this->window.getSize().x - 0.5f) * 2.f,
+                (window_pos.y / (float)this->window.getSize().y - 0.5f) * -2.f
+            );
+        }();
 
         frame++;
 

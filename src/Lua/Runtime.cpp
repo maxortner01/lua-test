@@ -80,8 +80,19 @@ Runtime::getGlobal(const std::string& name)
 template Runtime::Result<Number>   Runtime::getGlobal(const std::string&);
 template Runtime::Result<String>   Runtime::getGlobal(const std::string&);
 template Runtime::Result<Boolean>  Runtime::getGlobal(const std::string&);
-template Runtime::Result<Function> Runtime::getGlobal(const std::string&);
 template Runtime::Result<Table>    Runtime::getGlobal(const std::string&);
+
+template<>
+Runtime::Result<Lua::Function>
+Runtime::getGlobal<Lua::Function>(const std::string& name)
+{
+    lua_getglobal(STATE, name.c_str());
+    const auto t = lua_type(STATE, -1);
+    if (t != LUA_TFUNCTION)
+        return { ErrorCode::TypeMismatch };
+    
+    return { CompileTime::TypeMap<Lua::Function>::construct(L) };
+}
 
 template<typename T>
 Runtime::Result<void>
@@ -103,7 +114,7 @@ bool Runtime::good() const
 Runtime::operator bool() const
 { return good(); }
 
-void Runtime::_pop(int n) const
+void Runtime::_pop(std::size_t n) const
 {
     lua_pop(STATE, n);
 }

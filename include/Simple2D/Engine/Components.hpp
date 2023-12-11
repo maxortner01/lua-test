@@ -3,6 +3,8 @@
 #include "../Lua.hpp"
 
 #include "../Util/Matrix.hpp"
+#include "../Util/Transform.hpp"
+
 #include "Mesh.hpp"
 
 #include <flecs.h>
@@ -102,6 +104,8 @@ namespace S2D::Engine
         float scale = 1.f;
         float rotation;
     );
+
+    S2D::Math::Transform modelTransform(const Component<Name::Transform>::Data* transform);
 
     COMPONENT_DEFINITION(Rigidbody,
         Lua::Number linear_drag;

@@ -106,7 +106,7 @@ namespace S2D::Lua
         const auto& filename() const { return _filename; }
 
     private:
-        void _pop(int n = 1) const;
+        void _pop(std::size_t n = 1) const;
         int _call_func(uint32_t args, uint32_t ret) const;
 
         State L;

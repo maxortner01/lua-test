@@ -13,7 +13,7 @@ namespace S2D::Graphics
         std::shared_ptr<Texture> texture;
         Math::Vec2u size;
         Math::Vec2i bearing;
-        uint32_t advance;
+        std::size_t advance;
     };
 
     struct Font

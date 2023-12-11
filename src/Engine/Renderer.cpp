@@ -1,6 +1,7 @@
 #include <Simple2D/Engine/Renderer.hpp>
 #include <Simple2D/Engine/Mesh.hpp>
 #include <Simple2D/Engine/Core.hpp>
+#include <Simple2D/Engine/LuaLib/Input.hpp>
 
 #include <Simple2D/Graphics/Font.hpp>
 
@@ -91,13 +92,9 @@ namespace S2D::Engine
         const auto* entity_transform = entity.get<Transform>();
         S2D_ASSERT(camera_transform, "Camera missing transform");
 
-        Math::Transform model;
-        model.translate(entity_transform->position);
-        model.scale({ entity_transform->scale, entity_transform->scale, entity_transform->scale });
-        model.rotate({ 0.f, 0.f, entity_transform->rotation });
-
-        const auto view = viewMatrix(camera);
-        const auto proj = projectionMatrix(camera);
+        const auto model = modelTransform(entity_transform);
+        const auto view  = viewMatrix(camera);
+        const auto proj  = projectionMatrix(camera);
 
         const auto mat = model.matrix() * view * proj;
 
@@ -136,6 +133,67 @@ namespace S2D::Engine
             }();
             context.textures.push_back(texture);
         }
+
+        /*
+        const auto mouse_over = [&]()
+        {
+            const auto* transform = e.get<Transform>();
+            S2D_ASSERT(transform, "Entity missing transform");
+            
+            const auto size = 0.162; // wtf is happening here?
+
+            auto model = modelTransform(transform).matrix();
+            //model.at(1, 1) *= sprite->size.y / sprite->size.x;
+            const auto view = viewMatrix(camera);
+            const auto proj = projectionMatrix(camera);
+            const auto inv_MVP = Math::inverse(model * view * proj).transpose();
+
+            const auto pos   = Input::mouse_position;
+            const auto pos4d = Math::Vec4f{ pos.x, pos.y, 0.f, 0.f };
+            const auto inv = inv_MVP * pos4d.matrix();
+            const auto t_pos = Math::Vec2f(inv.at(0, 0), inv.at(1, 0) * sprite->size.x / sprite->size.y);
+
+            if (t_pos.x >= -1.f * size && t_pos.x <= size && t_pos.y >= -1.f * size && t_pos.y <= size)
+                return true;
+            return false;
+        }();
+
+        if (mouse_over && !moused_over->count(e.raw_id()))
+        {
+            moused_over->insert(std::pair(e.raw_id(), 0));
+            // call mouse enter function
+            if (e.has<Script>())
+            {
+                const auto* script = e.get<Script>();
+                for (auto& runtime : script->runtime)
+                {
+                    if (runtime.second) // if it's been initialized
+                    {
+                        const auto res = runtime.first->runFunction<>("OnMouseEnter");
+                        if (!res && res.error().code() != Lua::Runtime::ErrorCode::NotFunction)
+                            Log::Logger::instance("engine")->error("Error in OnMouseEnter(): {}", res.error().message());
+                    }
+                }
+            }
+        }
+        if (!mouse_over && moused_over->count(e.raw_id()))
+        {
+            moused_over->erase(e.raw_id());
+            // call mouse leave function
+            if (e.has<Script>())
+            {
+                const auto* script = e.get<Script>();
+                for (auto& runtime : script->runtime)
+                {
+                    if (runtime.second) // if it's been initialized
+                    {
+                        const auto res = runtime.first->runFunction<>("OnMouseLeave");
+                        if (!res && res.error().code() != Lua::Runtime::ErrorCode::NotFunction)
+                            Log::Logger::instance("engine")->error("Error in OnMouseEnter(): {}", res.error().message());
+                    }
+                }
+            }
+        }*/
 
         target.draw(sprite->mesh->vertices, context);
     }
@@ -176,8 +234,7 @@ namespace S2D::Engine
         uint32_t pixel_height) const
     {
         S2D_ASSERT(font, "Must have font to render text");
-        //auto mesh = RawMesh::getQuadMesh();
-
+        
         Graphics::VertexArray vao;
         const std::vector<uint32_t> indices = {
             0, 1, 2, 2, 3, 1
@@ -235,19 +292,6 @@ namespace S2D::Engine
         Renderer::set_uniforms(e, camera, context.program, target);
     }
 
-    /*
-    template<>
-    void 
-    Renderer::renderComponent<Text>(
-        flecs::entity camera, 
-        flecs::entity e, 
-        sf::RenderTarget& target,
-        sf::Shader* shader) const
-    {
-        sf::RenderStates states;
-        states.shader = shader;
-    }*/
-
     template<>
     void 
     Renderer::renderComponent<CustomMesh>(
@@ -279,7 +323,8 @@ namespace S2D::Engine
         default_sprite(std::make_unique<DefaultShader<Sprite>>()),
         default_tilemap(std::make_unique<DefaultShader<Tilemap>>()),
         default_text(std::make_unique<DefaultShader<Text>>()),
-        default_flat(std::make_unique<DefaultShader<Graphics::Surface>>())
+        default_flat(std::make_unique<DefaultShader<Graphics::Surface>>())//,
+        //moused_over(std::make_unique<std::unordered_map<flecs::id_t, int>>())
     {   }
 
     void 

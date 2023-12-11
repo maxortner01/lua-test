@@ -72,6 +72,7 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/extern/freetype)
 
 set(GRAPHICS_SOURCES
     ${CMAKE_SOURCE_DIR}/src/Log/Log.cpp
+    ${CMAKE_SOURCE_DIR}/src/Graphics/Text.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/Font.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/Image.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/Surface.cpp

@@ -83,6 +83,13 @@ Table::Table(State L)
     lua_pop(STATE, 1);
 }
 
+const Table::Data& 
+Table::getRaw(const std::string& name) const
+{
+    S2D_ASSERT_ARGS(dictionary.count(name), "Error requesting raw data \"%s\"", name.c_str());
+    return dictionary.at(name);
+}
+
 template<typename T>
 void 
 Table::each(std::function<void(uint32_t, T&)> lambda)
