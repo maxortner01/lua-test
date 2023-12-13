@@ -17,10 +17,12 @@ namespace S2D::Graphics
 
         void close();
         bool isOpen() const;
-        bool pollEvent(Event& event) const;
+        virtual bool pollEvent(Event& event) const;
     
     protected:
         Handle window;
+
+        void standardEvents(void* sdl_event, Event& event) const;
 
     private:
         bool _open;

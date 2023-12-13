@@ -222,6 +222,7 @@ void Core::run()
 Core::Core(const Application& app) :
     window(app.size, app.name)
 {   
+    S2D_ASSERT(fbo.create(app.size), "Failed to create final FBO");
     Log::Logger::instance("engine")->info("Core and context started");
 }
 

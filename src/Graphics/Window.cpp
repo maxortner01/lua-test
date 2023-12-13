@@ -62,48 +62,51 @@ namespace S2D::Graphics
     {
         SDL_Event e;
         return (SDL_PollEvent(&e) ? [&]() -> bool
-        {
-            switch (e.type)
-            {
-            case SDL_EVENT_KEY_DOWN:
-            {
-                event.type = Event::Type::KeyPress;
-                event.keyPress.key = handle_key(e.key.keysym);
-                break;
-            }
-            case SDL_EVENT_KEY_UP:
-            {
-                event.type = Event::Type::KeyRelease;
-                event.keyPress.key = handle_key(e.key.keysym);
-                break;
-            }
-            case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            {
-                event.type = Event::Type::MousePress;
-                event.mousePress.button = handle_mouse_button(e.button.button);
-                event.mousePress.position = { e.button.x, e.button.y };
-                break;
-            }
-            case SDL_EVENT_MOUSE_BUTTON_UP:
-            {
-                event.type = Event::Type::MouseRelease;
-                event.mouseRelease.button = handle_mouse_button(e.button.button);
-                event.mousePress.position = { e.button.x, e.button.y };
-                break;
-            }
-            case SDL_EVENT_QUIT:
-            {
-                event.type = Event::Type::Close;
-                break;
-            }
-            default:
-            {
-                event.type = Event::Type::Unsupported;
-                break;
-            }
-            }
-
-            return true;
-        }() : false);
+        { standardEvents(reinterpret_cast<void*>(&e), event); return true; }() : false);
     }
+
+    void Window::standardEvents(void* sdl_event, Event& event) const
+    {
+        const auto& e = *reinterpret_cast<SDL_Event*>(sdl_event);
+
+        switch (e.type)
+        {
+        case SDL_EVENT_KEY_DOWN:
+        {
+            event.type = Event::Type::KeyPress;
+            event.keyPress.key = handle_key(e.key.keysym);
+            break;
+        }
+        case SDL_EVENT_KEY_UP:
+        {
+            event.type = Event::Type::KeyRelease;
+            event.keyPress.key = handle_key(e.key.keysym);
+            break;
+        }
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        {
+            event.type = Event::Type::MousePress;
+            event.mousePress.button = handle_mouse_button(e.button.button);
+            event.mousePress.position = { e.button.x, e.button.y };
+            break;
+        }
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+        {
+            event.type = Event::Type::MouseRelease;
+            event.mouseRelease.button = handle_mouse_button(e.button.button);
+            event.mousePress.position = { e.button.x, e.button.y };
+            break;
+        }
+        case SDL_EVENT_QUIT:
+        {
+            event.type = Event::Type::Close;
+            break;
+        }
+        default:
+        {
+            event.type = Event::Type::Unsupported;
+            break;
+        }
+        }
+    }   
 }

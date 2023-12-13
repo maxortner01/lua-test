@@ -12,7 +12,7 @@ void Core::render(Scene* scene)
 {   
     auto& log = Log::Logger::instance("engine");
 
-    Graphics::DrawTexture* current_target = nullptr;
+    Graphics::DrawTexture* current_target = &fbo;
     const auto& targets  = scene->renderpass->targets;
     const auto& commands = scene->renderpass->commands;
     
@@ -132,7 +132,7 @@ void Core::render(Scene* scene)
             info.texture = current_target->texture();
             info.depth_test = false;
 
-            renderer->renderQuad(model, window, info);
+            renderer->renderQuad(model, fbo, info);
 
             break;
         }
@@ -177,6 +177,24 @@ void Core::render(Scene* scene)
         default: break;
         }
     }
+
+#ifndef USE_IMGUI
+    // After all, we render the fbo to the screen
+    Math::Transform model;
+    model.scale({ 
+        2.f, 
+        2.f, 
+        1.f 
+    });
+
+    Renderer::QuadInfo info;
+    info.texture = fbo.texture();
+    info.depth_test = false;
+
+    renderer->renderQuad(model, window, info);
+#else
+    window.handle(fbo);
+#endif
 }
 
 }

@@ -85,9 +85,33 @@ set(GRAPHICS_SOURCES
     ${CMAKE_SOURCE_DIR}/src/Graphics/Mouse.cpp
     ${CMAKE_SOURCE_DIR}/src/Graphics/Window.cpp)
 
+#if USE_IMGUI
+set(IMGUI_SOURCES
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imconfig.h
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_demo.cpp
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_draw.cpp
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_internal.h
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_tables.cpp
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imgui_widgets.cpp
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imgui.cpp
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imgui.h
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imstb_rectpack.h
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imstb_textedit.h
+    ${CMAKE_SOURCE_DIR}/extern/imgui/imstb_truetype.h
+    
+    ${CMAKE_SOURCE_DIR}/extern/imgui/backends/imgui_impl_opengl3.cpp
+    ${CMAKE_SOURCE_DIR}/extern/imgui/backends/imgui_impl_opengl3.h
+    ${CMAKE_SOURCE_DIR}/extern/imgui/backends/imgui_impl_sdl3.cpp
+    ${CMAKE_SOURCE_DIR}/extern/imgui/backends/imgui_impl_sdl3.h)
+
+set(GRAPHICS_INCLUDES ${CMAKE_SOURCE_DIR}/extern/freetype/include)
+
+set(IMGUI_INCLUDES ${CMAKE_SOURCE_DIR}/extern/imgui)
+
 add_library(simple2d-graphics SHARED ${GRAPHICS_SOURCES})
 
-target_include_directories(simple2d-graphics PRIVATE ${CMAKE_SOURCE_DIR}/extern/freetype/include)
+#target_compile_definitions(simple2d-graphics PRIVATE -DUSE_IMGUI)
+target_include_directories(simple2d-graphics PRIVATE ${GRAPHICS_INCLUDES})
 target_link_libraries(simple2d-graphics PRIVATE SDL3::SDL3 libglew_static freetype)
 
 # ENGINE
@@ -124,6 +148,7 @@ set(ENGINE_SOURCES
 
 add_library(simple2d-engine SHARED ${ENGINE_SOURCES})
 
+target_compile_definitions(simple2d-engine PRIVATE -DUSE_IMGUI)
 target_link_libraries(simple2d-engine PRIVATE simple2d-lua simple2d-graphics spdlog::spdlog fcl flecs ${LUA_LIBRARIES})
 target_include_directories(simple2d-engine PRIVATE 
     ${LUA_INCLUDE_DIR}
