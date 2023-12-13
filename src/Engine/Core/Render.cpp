@@ -5,6 +5,12 @@
 
 #include <Simple2D/Log/Log.hpp>
 
+#ifdef USE_IMGUI
+#   include <imgui.h>
+#   include <backends/imgui_impl_opengl3.h>
+#   include <backends/imgui_impl_sdl3.h>
+#endif
+
 namespace S2D::Engine
 {
 
@@ -178,7 +184,6 @@ void Core::render(Scene* scene)
         }
     }
 
-#ifndef USE_IMGUI
     // After all, we render the fbo to the screen
     Math::Transform model;
     model.scale({ 
@@ -192,8 +197,42 @@ void Core::render(Scene* scene)
     info.depth_test = false;
 
     renderer->renderQuad(model, window, info);
+
+#ifdef USE_IMGUI
+    //ImGui::SetNextWindowPos(ImVec2(0, 0));
+    //ImGui::SetNextWindowSize(ImVec2(window.getSize().x, window.getSize().y));
+
+    ImGui::Begin("Hello");
+
+    ImGui::Text("This is some useful text");
+
+    ImGui::End();
+
+    /*
+    ImGui::Begin("GameWindow");
+    {
+        ImGui::BeginChild("GameRender");
+
+        ImVec2 wsize = ImGui::GetWindowSize();
+        ImGui::Image((ImTextureID)fbo.texture()->id(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+
+        ImGui::EndChild();
+    }
+    ImGui::End();*/
 #else
-    window.handle(fbo);
+    // After all, we render the fbo to the screen
+    Math::Transform model;
+    model.scale({ 
+        2.f, 
+        2.f, 
+        1.f 
+    });
+
+    Renderer::QuadInfo info;
+    info.texture = fbo.texture();
+    info.depth_test = false;
+
+    renderer->renderQuad(model, window, info);
 #endif
 }
 

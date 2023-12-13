@@ -106,25 +106,6 @@ namespace S2D::Graphics
         SDL_GL_SwapWindow(reinterpret_cast<SDL_Window*>(window));
     }
 
-    void DrawWindow::handle(const DrawTexture& tex) 
-    {
-#   ifdef USE_IMGUI
-        ImGui::SetNextWindowPos(ImVec2(0, 0));
-        ImGui::SetNextWindowSize(ImVec2(getSize().x, getSize().y));
-
-        ImGui::Begin("GameWindow");
-        {
-            ImGui::BeginChild("GameRender");
-
-            ImVec2 wsize = ImGui::GetWindowSize();
-            ImGui::Image((ImTextureID)tex.texture()->id(), wsize, ImVec2(0, 1), ImVec2(1, 0));
-
-            ImGui::EndChild();
-        }
-        ImGui::End();
-#   endif
-    }
-
     void DrawWindow::bind() const
     {
         glBindRenderbuffer(GL_RENDERBUFFER, 0);

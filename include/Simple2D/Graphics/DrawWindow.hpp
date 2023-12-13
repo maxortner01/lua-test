@@ -19,8 +19,6 @@ namespace S2D::Graphics
         void display() const;
         void bind() const override;
 
-        void handle(const DrawTexture& tex);
-
         const Math::Vec2u& getSize() const override;
 
         bool pollEvent(Event& event) const override;
