@@ -63,6 +63,7 @@ namespace S2D::Engine
         void collide(Scene* scene);
 
         Graphics::DrawWindow window;
+        Graphics::DrawTexture fbo; // The final frame buffer (get's blitted to window)
 
         std::stack<Scene*> _scenes;
     };

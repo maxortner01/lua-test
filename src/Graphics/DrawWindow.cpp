@@ -1,9 +1,16 @@
 #include <Simple2D/Graphics/DrawWindow.hpp>
+#include <Simple2D/Graphics/DrawTexture.hpp>
 
 #include <Simple2D/Util/Error.hpp>
 
 #include <GL/glew.h>
 #include <SDL3/SDL.h>
+
+#ifdef USE_IMGUI
+#   include <imgui.h>
+#   include <backends/imgui_impl_opengl3.h>
+#   include <backends/imgui_impl_sdl3.h>
+#endif
 
 namespace S2D::Graphics
 {
@@ -34,10 +41,27 @@ namespace S2D::Graphics
         glewExperimental = GL_TRUE;
         const auto init = glewInit();
         S2D_ASSERT_ARGS(init == GLEW_OK, "Error loading glew: \"%s\"", glewGetErrorString( init ));
+
+#   ifdef USE_IMGUI
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // IF using Docking Branch
+
+        ImGui_ImplSDL3_InitForOpenGL(reinterpret_cast<SDL_Window*>(this->window), context);
+        ImGui_ImplOpenGL3_Init();
+#   endif
     }
 
     DrawWindow::~DrawWindow()
     {
+#   ifdef USE_IMGUI
+        ImGui_ImplOpenGL3_Shutdown();
+        ImGui_ImplSDL3_Shutdown();
+        ImGui::DestroyContext();
+#   endif
         if (context)
             SDL_GL_DeleteContext(reinterpret_cast<SDL_GLContext*>(context));
         context = nullptr;
@@ -48,9 +72,57 @@ namespace S2D::Graphics
         return _size;
     }
 
+    bool DrawWindow::pollEvent(Event& event) const
+    {
+        SDL_Event e;
+        if (SDL_PollEvent(&e))
+        {
+#       ifdef USE_IMGUI
+            ImGui_ImplSDL3_ProcessEvent(&e);
+#       endif
+            standardEvents(reinterpret_cast<void*>(&e), event);
+            return true;
+        }
+#   ifdef USE_IMGUI
+        else 
+        {
+            // For now, if this is the last event, start the ImGui context
+            ImGui_ImplSDL3_NewFrame();
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui::NewFrame();
+            return false;
+        }
+#   else
+        else return false;
+#   endif
+    }
+
     void DrawWindow::display() const
     {
+#   ifdef USE_IMGUI
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+#   endif
         SDL_GL_SwapWindow(reinterpret_cast<SDL_Window*>(window));
+    }
+
+    void DrawWindow::handle(const DrawTexture& tex) 
+    {
+#   ifdef USE_IMGUI
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(ImVec2(getSize().x, getSize().y));
+
+        ImGui::Begin("GameWindow");
+        {
+            ImGui::BeginChild("GameRender");
+
+            ImVec2 wsize = ImGui::GetWindowSize();
+            ImGui::Image((ImTextureID)tex.texture()->id(), wsize, ImVec2(0, 1), ImVec2(1, 0));
+
+            ImGui::EndChild();
+        }
+        ImGui::End();
+#   endif
     }
 
     void DrawWindow::bind() const

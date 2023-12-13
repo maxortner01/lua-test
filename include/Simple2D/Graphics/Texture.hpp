@@ -30,6 +30,8 @@ namespace S2D::Graphics
         void bind() const;
         void unbind() const;
 
+        Handle id() const;
+
         [[nodiscard]]
         bool fromFile(const std::filesystem::path& path, Scaling scaling = Scaling::Nearest);
 

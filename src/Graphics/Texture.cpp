@@ -31,6 +31,8 @@ void Texture::unbind() const
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+Texture::Handle Texture::id() const { return handle; }
+
 bool
 Texture::fromFile(
     const std::filesystem::path& filepath,
