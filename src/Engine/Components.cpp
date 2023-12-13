@@ -324,24 +324,6 @@ Component<Name::Tilemap>::fromTable(
     data->spritesheet.texture_name = spritesheet.get<Lua::String>("texture_name");
 }
 
-Lua::Table 
-Component<Name::Collider>::getTable(
-    const Data& data)
-{
-    Lua::Table table;
-    table.set<Lua::Number>("ColliderComponent", data.collider_component);
-    return table;
-}
-
-void 
-Component<Name::Collider>::fromTable(
-    const Lua::Table& table, 
-    void* _data)
-{
-    auto* data = reinterpret_cast<Data*>(_data);
-    data->collider_component = table.get<Lua::Number>("ColliderComponent");
-}
-
 const char* operator*(Projection p)
 {
     switch (p)

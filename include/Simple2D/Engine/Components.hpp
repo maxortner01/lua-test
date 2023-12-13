@@ -63,7 +63,6 @@ namespace S2D::Engine
         Sprite,
         Text,
         Tilemap,
-        Collider,
         Camera,
         CustomMesh,
         Shader,
@@ -81,7 +80,6 @@ namespace S2D::Engine
         case Name::Sprite:     return "Sprite";
         case Name::Text:       return "Text";
         case Name::Tilemap:    return "Tilemap";
-        case Name::Collider:   return "Collider";
         case Name::Camera:     return "Camera";
         case Name::CustomMesh: return "CustomMesh";
         case Name::Shader:     return "Shader";
@@ -175,11 +173,6 @@ namespace S2D::Engine
         static void fromTable(const Lua::Table& table, void* _data);
     };
 
-    COMPONENT_DEFINITION(Collider,
-        Lua::Number collider_component;
-        std::unique_ptr<CollisionMesh> mesh;    
-    );
-
     enum class Projection
     {
         Orthographic, Perspective, Count
@@ -220,7 +213,6 @@ namespace S2D::Engine
     using Tilemap    = ComponentData<Name::Tilemap>;
     using Text       = ComponentData<Name::Text>;
     using Sprite     = ComponentData<Name::Sprite>;
-    using Collider   = ComponentData<Name::Collider>;
     using Rigidbody  = ComponentData<Name::Rigidbody>;
     using Camera     = ComponentData<Name::Camera>;    
     using CustomMesh = ComponentData<Name::CustomMesh>;    

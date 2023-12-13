@@ -17,9 +17,6 @@ Scene::Scene() :
     scripts(
         world.query_builder<Script>().build()
     ),
-    colliders(
-        world.query_builder<const Collider, Transform, Rigidbody>().build()
-    ),
     dead(
         world.query_builder<Dead>().build()
     ),
@@ -29,16 +26,7 @@ Scene::Scene() :
     renderer(
         std::make_unique<Renderer>(this)
     )
-{
-    // Shaders should be in the renderer, and there should be different ones for each component type
-    // Change the const shader pointer to a non-const and change the uniforms as needed there
-    // load default shader
-    //S2D_ASSERT(sf::Shader::isAvailable(), "Shaders are not supported on this machine");
-
-    // For some wack reason the matrix multiplication *does not* translate
-
-    //S2D_ASSERT(default_shader.loadFromMemory(vertex, fragment), "Error loading default shader");
-}
+{   }
 
 Scene* Core::getTopScene()
 {
@@ -172,7 +160,6 @@ void Core::run()
         
         // Since colliders possibly change the velocity, we need to run collision check and *then* 
         // do the rigidbody transformation
-        collide(top_scene);
         top_scene->rigidbodies.each([&](Transform& transform, Rigidbody& rigidbody)
         {
             rigidbody.velocity += (rigidbody.added_force - rigidbody.velocity * rigidbody.linear_drag) * (float)Time::dt;
@@ -187,15 +174,6 @@ void Core::run()
         if (Time::dt > 1.0) Time::dt = 1.0;
         tick = now;
         frame_times[frame % frame_times.size()] = Time::dt;
-
-        // Set mouse position
-        /*
-        Math::Vec2f camera_pos;
-        if (camera.is_alive() && camera.has<Transform>())
-        {
-            const auto* transform = camera.get<Transform>();
-            camera_pos = { transform->position.x, transform->position.y };
-        }*/
 
         // Mouse position in window coordinates
         Input::mouse_position = [&]()

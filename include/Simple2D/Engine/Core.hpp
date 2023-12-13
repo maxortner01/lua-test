@@ -27,9 +27,7 @@ namespace S2D::Engine
 
         // Important cached queries for rendering
         flecs::query<Script> scripts; // for script system
-        flecs::query<Transform, Rigidbody> rigidbodies; // for collision
-        flecs::query<const Collider, Transform, Rigidbody> colliders; // for collision
-        //flecs::query<const Transform> transforms; // for rendering
+        flecs::query<Transform, Rigidbody> rigidbodies; // for physics
         flecs::query<Dead> dead; // for cleanup
 
         std::unique_ptr<Renderer> renderer;
