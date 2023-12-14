@@ -14,7 +14,7 @@ uniform mat4 MVP;
 
 void main()
 {
-    vec4 sprite_pos = vec4(position.x, position.y * spriteSize.y / spriteSize.x, position.z, 1.0);
+    vec4 sprite_pos = vec4(position.x * spriteSize.x, position.y * spriteSize.y, position.z, 1.0);
 
     gl_Position = MVP * sprite_pos;
     texPos = tex_coords;

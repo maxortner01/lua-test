@@ -44,6 +44,9 @@ Texture::fromFile(
     if (!data) return false;
     //S2D_ASSERT_ARGS(data, "Error loading file \"%s\"", filepath.filename().c_str());
 
+    _size.x = width;
+    _size.y = height;
+
     const auto format = [&]()
     {
         switch (channels)
@@ -126,6 +129,8 @@ Texture::fromMemory(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scaling);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scaling);
 
+    _size = size;
+
     return true;
 }
 
@@ -168,6 +173,7 @@ Texture::fromEmpty(
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scaling);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scaling);
 
+    _size = size;
 
     return true;
 }

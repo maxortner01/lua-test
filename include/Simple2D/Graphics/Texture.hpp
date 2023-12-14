@@ -32,6 +32,8 @@ namespace S2D::Graphics
 
         Handle id() const;
 
+        Math::Vec2u getSize() const { return _size; }
+
         [[nodiscard]]
         bool fromFile(const std::filesystem::path& path, Scaling scaling = Scaling::Nearest);
 
@@ -43,6 +45,7 @@ namespace S2D::Graphics
 
     private:
         Handle handle;
+        Math::Vec2u _size;
     };
 
 }

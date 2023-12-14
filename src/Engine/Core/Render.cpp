@@ -1,11 +1,13 @@
 #include <Simple2D/Engine/Core.hpp>
 #include <Simple2D/Engine/LuaLib/Surface.hpp>
+#include <Simple2D/Engine/LuaLib/Time.hpp>
 
 #include <Simple2D/Util/Transform.hpp>
 
 #include <Simple2D/Log/Log.hpp>
 
 #ifdef USE_IMGUI
+#   include <sstream>
 #   include <imgui.h>
 #   include <backends/imgui_impl_opengl3.h>
 #   include <backends/imgui_impl_sdl3.h>
@@ -122,16 +124,9 @@ void Core::render(Scene* scene)
             /* Need to be able to draw sprite */
             Math::Transform model;
             model.scale({ 
-                (float)params->size.x / (float)current_target->getSize().x * 2.f, 
-                (float)params->size.y / (float)current_target->getSize().y * 2.f, 
-                1.f 
-            });
-
-            // this might be wrong
-            model.translate({
-                params->position.x / (2.f * window.getSize().x),
-                params->position.y / (2.f * window.getSize().y),
-                0.f
+                (float)fbo.getSize().x,
+                (float)fbo.getSize().y,
+                1.f
             });
 
             Renderer::QuadInfo info;
@@ -187,8 +182,8 @@ void Core::render(Scene* scene)
     // After all, we render the fbo to the screen
     Math::Transform model;
     model.scale({ 
-        2.f, 
-        2.f, 
+        (float)window.getSize().x,
+        (float)window.getSize().y, 
         1.f 
     });
 
@@ -199,13 +194,205 @@ void Core::render(Scene* scene)
     renderer->renderQuad(model, window, info);
 
 #ifdef USE_IMGUI
-    //ImGui::SetNextWindowPos(ImVec2(0, 0));
-    //ImGui::SetNextWindowSize(ImVec2(window.getSize().x, window.getSize().y));
+    const std::function<void(const Lua::Table&)> push_table = 
+        [&](const Lua::Table& table)
+        {
+            for (const auto& p : table.getMap())
+            {
+                using namespace Lua::CompileTime;
+                /**/ if (p.second.type == TypeMap<Lua::String>::LuaType)
+                {
+                    const Lua::String* value = reinterpret_cast<Lua::String*>(p.second.data.get());
+                    ImGui::Text("%s: %s", p.first.c_str(), value->c_str());
+                }
+                else if (p.second.type == TypeMap<Lua::Number>::LuaType)
+                {
+                    const Lua::Number* value = reinterpret_cast<Lua::Number*>(p.second.data.get());
+                    ImGui::Text("%s: %f", p.first.c_str(), *value);
+                }
+                else if (p.second.type == TypeMap<Lua::Boolean>::LuaType)
+                {
+                    const Lua::Boolean* value = reinterpret_cast<Lua::Boolean*>(p.second.data.get());
+                    ImGui::Text("%s: %s", p.first.c_str(), ( *value ? "True" : "False" ));
+                }
+                else if (p.second.type == TypeMap<Lua::Table>::LuaType)
+                {
+                    const Lua::Table* value = reinterpret_cast<Lua::Table*>(p.second.data.get());
+                    if (ImGui::TreeNode(p.first.c_str()))
+                    {
+                        push_table(*value);
+                        ImGui::TreePop();
+                    }
+                }
+            }
+        };
 
-    ImGui::Begin("Hello");
+    std::string fps = (std::stringstream() << std::fixed << std::setprecision(2) << 1.0 / Time::dt).str();
+    ImGui::Begin("Debug");
+    ImGui::Text("FPS: %s", fps.c_str());
+    
+    if (ImGui::CollapsingHeader("Entities"))
+    {
+        auto& world = scene->world;
+        
+        uint32_t count = 1;
+        world.children([&](flecs::entity e)
+        {
+            bool has = false;
+            Util::CompileTime::static_for<(int)Name::Count>([&](auto n)
+            {
+                if (has) return;
+                const std::size_t i = n;
+                constexpr Name name = (Name)i;
+                using Type = Component<name>;
+                if (e.has<ComponentData<name>>())
+                {
+                    has = true;
+                }
+            });
 
-    ImGui::Text("This is some useful text");
+            if (!has) return;
 
+            const auto name = ( 
+                e.name().length() ? 
+                std::string(e.name()) : 
+                (std::stringstream() << "[Unnamed Entity " << count++ << "]").str().c_str() 
+            );
+
+            if (ImGui::TreeNode(name.c_str()))
+            {
+                Util::CompileTime::static_for<(int)Name::Count>([&](auto n)
+                {
+                    const std::size_t i = n;
+                    constexpr Name name = (Name)i;
+                    using Type = Component<name>;
+                    if (e.has<ComponentData<name>>())
+                    {
+                        const auto table = Type::getTable(*e.get<ComponentData<name>>());
+                        if (ImGui::TreeNode(*(Name)i))
+                        {
+                            push_table(table);
+                            ImGui::TreePop();
+                        }
+                    }
+                });
+                ImGui::TreePop();
+            }
+        });
+    }
+
+    if (ImGui::CollapsingHeader("Resources"))
+    {
+        // Fonts
+        const auto fonts = scene->resources.getResourceMap<Graphics::Font>();
+        if (fonts)
+        {
+            if (ImGui::TreeNode("Fonts"))
+            {
+                for (const auto& p : *fonts.value())
+                    ImGui::Text("%s", p.first.c_str());
+                ImGui::TreePop();
+            }
+        }
+        else
+        {
+            ImGui::Text("No fonts loaded.");
+        }
+
+        // Textures, Drawtextures, images
+        const auto textures = scene->resources.getResourceMap<Graphics::Texture>();
+        const auto draw_textures = scene->resources.getResourceMap<Graphics::DrawTexture>();
+        const auto images = scene->resources.getResourceMap<Graphics::Image>();
+
+        bool started = false;
+        bool texture_node = false;
+        bool some_images = false;
+        if (textures)
+        {
+            if (!started) 
+            {
+                started = true;
+                texture_node = ImGui::TreeNode("Textures");
+            }
+            some_images = true;
+
+            if (texture_node)
+            {
+                const auto& t = textures.value();
+                for (const auto& p : *t)
+                {
+                    const Graphics::Texture* tex = reinterpret_cast<const Graphics::Texture*>(p.second.get());
+                    if (ImGui::TreeNode(p.first.c_str()))
+                    {
+                        ImGui::Text("Size: (%u, %u)", tex->getSize().x, tex->getSize().y);
+
+                        ImVec2 wsize = ImGui::GetItemRectSize();
+                        const auto aspect = (float)tex->getSize().x / (float)tex->getSize().y;
+
+                        ImGui::Image((ImTextureID)tex->id(), ImVec2(wsize.x, wsize.x / aspect), ImVec2(0, 1), ImVec2(1, 0));
+                        
+                        ImGui::TreePop();
+                    }
+                }
+            }
+        }
+
+        if (draw_textures)
+        {
+            if (!started) 
+            {
+                started = true;
+                texture_node = ImGui::TreeNode("Textures");
+            }
+            some_images = true;
+
+            if (texture_node)
+            {
+                const auto& t = textures.value();
+                for (const auto& p : *t)
+                    ImGui::Text("%s", p.first.c_str());
+            }
+        }
+
+        if (images)
+        {
+            if (!started) 
+            {
+                started = true;
+                texture_node = ImGui::TreeNode("Textures");
+            }
+            some_images = true;
+
+            if (texture_node)
+            {
+                const auto& t = textures.value();
+                for (const auto& p : *t)
+                    ImGui::Text("%s", p.first.c_str());
+            }
+        }
+
+        if (texture_node) ImGui::TreePop();
+
+        if (!some_images)
+        {
+            ImGui::Text("No textures loaded.");
+        }
+
+        // Programs
+        const auto programs = scene->resources.getResourceMap<Graphics::Program>();
+
+        if (programs)
+        {
+            if (ImGui::TreeNode("Programs"))
+            {
+                ImGui::TreePop();
+            }
+        }
+        else
+        {
+            ImGui::Text("No shaders loaded.");
+        }
+    }
     ImGui::End();
 
     /*

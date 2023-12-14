@@ -338,6 +338,11 @@ namespace S2D::Engine
         Graphics::Context context;
         context.program = &default_flat->shader;
         context.program->setUniform("model", transform.matrix());
+        
+        Camera camera;
+        camera.projection = Projection::Orthographic;
+        camera.size = target.getSize();
+        context.program->setUniform("proj", projectionMatrix(camera));
 
         if (info.has_value())
         {

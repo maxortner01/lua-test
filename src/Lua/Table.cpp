@@ -127,28 +127,30 @@ template void Table::each(std::function<void(uint32_t, const Lua::Table&)>) cons
 template void Table::each(std::function<void(uint32_t, void* const&)>) const;
 
 template<typename T>
-void Table::try_get(const std::string& name, std::function<void(T&)> lambda)
+void Table::try_get(const std::string& name, std::function<void(T&)> lambda, std::optional<std::function<void()>> if_not)
 {
     if (hasValue(name)) lambda(get<T>(name));
+    else { if (if_not.has_value()) if_not.value()(); }
 }
-template void Table::try_get(const std::string&, std::function<void(Lua::Number&)>);
-template void Table::try_get(const std::string&, std::function<void(Lua::String&)>);
-template void Table::try_get(const std::string&, std::function<void(Lua::Boolean&)>);
-template void Table::try_get(const std::string&, std::function<void(Lua::Function&)>);
-template void Table::try_get(const std::string&, std::function<void(Lua::Table&)>);
-template void Table::try_get(const std::string&, std::function<void(void*&)>);
+template void Table::try_get(const std::string&, std::function<void(Lua::Number&)>, std::optional<std::function<void()>>);
+template void Table::try_get(const std::string&, std::function<void(Lua::String&)>, std::optional<std::function<void()>>);
+template void Table::try_get(const std::string&, std::function<void(Lua::Boolean&)>, std::optional<std::function<void()>>);
+template void Table::try_get(const std::string&, std::function<void(Lua::Function&)>, std::optional<std::function<void()>>);
+template void Table::try_get(const std::string&, std::function<void(Lua::Table&)>, std::optional<std::function<void()>>);
+template void Table::try_get(const std::string&, std::function<void(void*&)>, std::optional<std::function<void()>>);
 
 template<typename T>
-void Table::try_get(const std::string& name, std::function<void(const T&)> lambda) const
+void Table::try_get(const std::string& name, std::function<void(const T&)> lambda, std::optional<std::function<void()>> if_not) const
 {
     if (hasValue(name)) lambda(get<T>(name));
+    else { if (if_not.has_value()) if_not.value()(); }
 }
-template void Table::try_get(const std::string&, std::function<void(const Lua::Number&)>) const;
-template void Table::try_get(const std::string&, std::function<void(const Lua::String&)>) const;
-template void Table::try_get(const std::string&, std::function<void(const Lua::Boolean&)>) const;
-template void Table::try_get(const std::string&, std::function<void(const Lua::Function&)>) const;
-template void Table::try_get(const std::string&, std::function<void(const Lua::Table&)>) const;
-template void Table::try_get(const std::string&, std::function<void(void* const&)>) const;
+template void Table::try_get(const std::string&, std::function<void(const Lua::Number&)>, std::optional<std::function<void()>>) const;
+template void Table::try_get(const std::string&, std::function<void(const Lua::String&)>, std::optional<std::function<void()>>) const;
+template void Table::try_get(const std::string&, std::function<void(const Lua::Boolean&)>, std::optional<std::function<void()>>) const;
+template void Table::try_get(const std::string&, std::function<void(const Lua::Function&)>, std::optional<std::function<void()>>) const;
+template void Table::try_get(const std::string&, std::function<void(const Lua::Table&)>, std::optional<std::function<void()>>) const;
+template void Table::try_get(const std::string&, std::function<void(void* const&)>, std::optional<std::function<void()>>) const;
 
 void
 Table::fromTable(const Table& table)

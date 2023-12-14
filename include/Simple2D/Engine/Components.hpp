@@ -180,14 +180,16 @@ namespace S2D::Engine
 
     const char* operator*(Projection p);
 
-    Math::Mat4f viewMatrix(flecs::entity camera);
-    Math::Mat4f projectionMatrix(flecs::entity camera);
-
     COMPONENT_DEFINITION(Camera,
         Lua::Number FOV;
         Projection projection;
         Math::Vec2u size;
     );
+
+    Math::Mat4f viewMatrix(flecs::entity camera);
+
+    Math::Mat4f projectionMatrix(flecs::entity camera);
+    Math::Mat4f projectionMatrix(const Component<Name::Camera>::Data& camera);
 
     COMPONENT_DEFINITION(CustomMesh,
         std::unique_ptr<RawMesh> mesh;

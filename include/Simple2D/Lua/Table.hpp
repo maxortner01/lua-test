@@ -61,10 +61,10 @@ namespace S2D::Lua
         void each(std::function<void(uint32_t, const T&)> lambda) const;
 
         template<typename T>
-        void try_get(const std::string& name, std::function<void(T&)> lambda);
+        void try_get(const std::string& name, std::function<void(T&)> lambda, std::optional<std::function<void()>> if_not = std::nullopt);
 
         template<typename T>
-        void try_get(const std::string& name, std::function<void(const T&)> lambda) const;
+        void try_get(const std::string& name, std::function<void(const T&)> lambda, std::optional<std::function<void()>> if_not = std::nullopt) const;
 
         /**
          * @brief Make the entries equivalent to another table

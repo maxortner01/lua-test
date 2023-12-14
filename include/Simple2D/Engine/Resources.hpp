@@ -9,6 +9,8 @@ namespace S2D::Engine
 {
     struct Resources 
     {
+        using ResourceMap = std::unordered_map<std::string, std::shared_ptr<void>>;
+
         enum class Error
         {
             AlreadyExists,
@@ -42,9 +44,12 @@ namespace S2D::Engine
         Result<T*>
         getResource(const std::string& name);
 
+        template<typename T>
+        Result<const ResourceMap*>
+        getResourceMap() const;
+
     private:
-        using ResourceMap = std::unordered_map<std::string, std::shared_ptr<void>>;
-        std::unordered_map<std::size_t, ResourceMap> resources;
+        std::unordered_map<std::size_t, std::unique_ptr<ResourceMap>> resources;
     };
 
 }

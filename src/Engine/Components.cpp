@@ -84,6 +84,8 @@ setComponentFromTable(
     S2D_ASSERT(found, "Component doesn't exist");
 }
 
+#define COPY(t, name, type_a, type_b, member, default) t.try_get<type_a>(name, [&](const type_a& v) { member = static_cast<type_b>(v); }, [&]() { member = default; })
+
 /* Position */
 Lua::Table 
 Component<Name::Transform>::getTable(
@@ -109,12 +111,17 @@ Component<Name::Transform>::fromTable(
 {
     auto* data = reinterpret_cast<Data*>(_data);
 
-    const auto& position = table.get<Lua::Table>("position");
-    data->position.x = position.get<float>("x");
-    data->position.y = position.get<float>("y");
-    data->position.z = position.get<float>("z");
-    data->rotation = table.get<Lua::Number>("rotation");
-    data->scale = table.get<Lua::Number>("scale");
+    table.try_get<Lua::Table>("position", 
+    [&](const Lua::Table& position)
+    {
+        COPY(position, "x", Lua::Number, Lua::Number, data->position.x, 0);
+        COPY(position, "y", Lua::Number, Lua::Number, data->position.y, 0);
+        COPY(position, "z", Lua::Number, Lua::Number, data->position.z, 0);
+    },
+    [&]() { data->position = S2D::Math::Vec3f(); });
+
+    COPY(table, "rotation", Lua::Number, Lua::Number, data->rotation, 0.f);
+    COPY(table, "scale",    Lua::Number, Lua::Number, data->scale,    1.f);
 }
 
 S2D::Math::Transform modelTransform(const Transform* transform)
@@ -347,26 +354,57 @@ viewMatrix(
 }
 
 S2D::Math::Mat4f 
+projectionMatrix(const Camera& camera)
+{
+
+    switch (camera.projection)
+    {
+    case Projection::Perspective:
+    {
+        const auto near = 0.01;
+        const auto far = 10000.0;
+        const auto aspectRatio = (float)camera.size.x / (float)camera.size.y;
+
+        const auto t = 1.f / tanf(Util::degrees(camera.FOV / 2.f).asRadians());
+
+        S2D::Math::Mat4f proj(false);
+        proj[0][0] = t / aspectRatio;
+        proj[1][1] = t;
+        proj[2][2] = -1.f * (far + near) / (far - near);
+        proj[3][2] = -2.f * (far * near) / (far - near);
+        proj[2][3] = -1.f;
+
+        return proj;
+    }
+    case Projection::Orthographic:
+    {
+        const auto far = 1.f, near = 0.f;
+        const auto right  = camera.size.x;
+        const auto bottom = camera.size.y;
+        const auto top = 0.0, left = 0.0;
+
+        S2D::Math::Mat4f proj(true);
+        proj[0][0] = 2.0 / (right - left);
+        proj[1][1] = 2.0 / (top - bottom);
+        proj[2][2] = -2.0 / (far - near);
+        proj[3][3] = 1.0;
+
+        proj[3][0] = -1.0 * (right + left) / (right - left);
+        proj[3][1] = -1.0 * (top + bottom) / (top - bottom);
+        proj[3][2] = -1.0 * (far + near) / (far - near);
+
+        return proj;
+    }
+    }
+}
+
+S2D::Math::Mat4f 
 projectionMatrix(
     flecs::entity camera)
 {
     const auto* camera_comp = camera.get<Camera>();
     S2D_ASSERT(camera_comp, "Camera missing camera component");
-
-    const auto aspectRatio = (float)camera_comp->size.x / (float)camera_comp->size.y;
-
-    const auto near = 0.01;
-    const auto far = 10000.0;
-    const auto t = 1.f / tanf(Util::degrees(camera_comp->FOV / 2.f).asRadians());
-
-    S2D::Math::Mat4f proj(false);
-    proj[0][0] = t / aspectRatio;
-    proj[1][1] = t;
-    proj[2][2] = -1.f * (far + near) / (far - near);
-    proj[3][2] = -2.f * (far * near) / (far - near);
-    proj[2][3] = -1.f;
-
-    return proj;
+    return projectionMatrix(*camera_comp);
 }
 
 Lua::Table 
@@ -391,12 +429,13 @@ Component<Name::Camera>::fromTable(
     void* _data)
 {
     auto* data = reinterpret_cast<Data*>(_data);
-    data->FOV = table.get<Lua::Number>("FOV");
-    data->projection = (Projection)(int)table.get<Lua::Number>("projection");
+
+    COPY(table, "FOV",        Lua::Number, Lua::Number, data->FOV,        90.f);
+    COPY(table, "projection", Lua::Number, Projection,  data->projection, Projection::Orthographic);
 
     const auto& size = table.get<Lua::Table>("size");
-    data->size.x = size.get<Lua::Number>("width");
-    data->size.y = size.get<Lua::Number>("height");
+    COPY(size, "width",  Lua::Number, Lua::Number, data->size.x, 0);
+    COPY(size, "height", Lua::Number, Lua::Number, data->size.y, 0);
 }
 
 Lua::Table 

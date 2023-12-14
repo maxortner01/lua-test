@@ -25,17 +25,17 @@ static void constructSprite(Graphics::VertexArray& vertices)
 
     // Forming a quad from two triangles
     const Math::Vec3f offsets[] = {
-        { -0.5f,  0.5f, 0.f },
-        {  0.5f, -0.5f, 0.f },
-        { -0.5f, -0.5f, 0.f },
-        {  0.5f,  0.5f, 0.f }
+        { 0.f, 1.f, 0.f },
+        { 1.f, 0.f, 0.f },
+        { 0.f, 0.f, 0.f },
+        { 1.f, 1.f, 0.f }
     };
 
     const Math::Vec2f tex_coords[] = {
-        { 0, 1 },
-        { 1, 0 },
         { 0, 0 },
-        { 1, 1 }
+        { 1, 1 },
+        { 0, 1 },
+        { 1, 0 }
     };
 
     vertices.setDrawType(VertexArray::DrawType::Triangles);
