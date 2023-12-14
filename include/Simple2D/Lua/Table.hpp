@@ -126,6 +126,8 @@ namespace S2D::Lua
          * @param L The Lua state to dump the table onto
          */
         void toStack(State L) const;
+
+        std::string toString(uint32_t indent = 0) const;
     
     private:
         Map dictionary;

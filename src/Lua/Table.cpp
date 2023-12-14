@@ -4,7 +4,7 @@
 
 #include "Lua.cpp"
 
-#include <iostream>
+#include <sstream>
 
 namespace S2D::Lua
 {
@@ -250,6 +250,50 @@ Table::toStack(State L) const
 
         lua_settable(STATE, -3);
     }
+}
+
+std::string Table::toString(uint32_t indent) const
+{
+    const auto indent_string = [&]()
+    {
+        std::string r;
+        for (uint32_t i = 0; i < indent; i++) r += " ";
+        return r;
+    }();
+
+    std::stringstream ss;
+    uint32_t index = 0;
+    for (const auto& p : getMap())
+    {
+        if (index) ss << ",\n";
+        
+        using namespace Lua::CompileTime;
+        /**/ if (p.second.type == TypeMap<Lua::String>::LuaType)
+        {
+            const Lua::String* value = reinterpret_cast<Lua::String*>(p.second.data.get());
+            ss << indent_string << p.first << " = \"" << *value << "\"";
+        }
+        else if (p.second.type == TypeMap<Lua::Number>::LuaType)
+        {
+            const Lua::Number* value = reinterpret_cast<Lua::Number*>(p.second.data.get());
+            ss << indent_string << p.first << " = " << *value << "";
+        }
+        else if (p.second.type == TypeMap<Lua::Boolean>::LuaType)
+        {
+            const Lua::Boolean* value = reinterpret_cast<Lua::Boolean*>(p.second.data.get());
+            ss << indent_string << p.first << " = " << ( *value ? "true" : "false") << "";
+        }
+        else if (p.second.type == TypeMap<Lua::Table>::LuaType)
+        {
+            const Lua::Table* value = reinterpret_cast<Lua::Table*>(p.second.data.get());
+            ss << indent_string << p.first << " = {\n";
+            ss << value->toString(indent + 2);
+            ss << indent_string << "\n}";
+        }
+        
+        index++;
+    }
+    return ss.str();
 }
 
 } // S2D::Lua
