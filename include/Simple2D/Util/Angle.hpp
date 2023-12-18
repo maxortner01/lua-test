@@ -5,12 +5,14 @@ namespace S2D::Util
 {
     struct Angle
     {
+        static constexpr float CONVERSION = 3.14159f / 180.f;
+
         Angle()  = default;
         ~Angle() = default;
 
         float asDegrees() const
         {
-            return value / 0.0174533f;
+            return value / Angle::CONVERSION;
         }
 
         float asRadians() const
@@ -29,7 +31,7 @@ namespace S2D::Util
 
     constexpr Angle degrees(const float& deg)
     {
-        return { deg * 0.0174533f }; 
+        return { deg * Angle::CONVERSION }; 
     }
 
     constexpr Angle radians(const float& rad)

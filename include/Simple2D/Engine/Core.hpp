@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../Util.hpp"
+#include "../Lua.hpp"
+#include "../Log.hpp"
 
 #include "Renderpass.hpp"
 #include "Resources.hpp"
@@ -29,6 +31,23 @@ namespace S2D::Engine
         flecs::query<Script> scripts; // for script system
         flecs::query<Transform, Rigidbody> rigidbodies; // for physics
         flecs::query<Dead> dead; // for cleanup
+
+        template<typename... Return, typename... Args>
+        void runFunction(const std::string& name, Args&&... args)
+        {
+            scripts.each([&](flecs::entity e, Script& script)
+            {
+                for (auto& runtime : script.runtime)
+                {
+                    if (runtime.second) // if it's initialized
+                    {
+                        const auto res = runtime.first->runFunction<Return...>(name, std::forward<Args>(args)...);
+                        if (!res && res.error().code() != Lua::Runtime::ErrorCode::NotFunction)
+                            Log::Logger::instance("engine")->error("Error calling function {}: {}", name.c_str(), res.error().message());
+                    }
+                }
+            });
+        }
 
         std::unique_ptr<Renderer> renderer;
         std::unique_ptr<Renderpass> renderpass;
@@ -61,6 +80,10 @@ namespace S2D::Engine
     private:
         void render(Scene* scene);
         void collide(Scene* scene);
+
+#   ifdef USE_IMGUI
+        void render_imgui(Scene* scene);
+#   endif
 
         Graphics::DrawWindow window;
         Graphics::DrawTexture fbo; // The final frame buffer (get's blitted to window)

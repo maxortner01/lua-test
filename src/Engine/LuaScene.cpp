@@ -104,7 +104,7 @@ LuaScene::load_resources(const Lua::Table& resources)
 void 
 LuaScene::start() 
 {
-    auto& log = Log::Logger::instance("engine");
+    auto log = Log::Logger::instance("engine");
 
     prestart();
 

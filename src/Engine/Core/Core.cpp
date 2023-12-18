@@ -42,8 +42,25 @@ void Core::run()
     std::vector<double> frame_times(120);
 
     uint32_t frame = 0;
-    while (window.isOpen() && _scenes.size())
+    while (window.isOpen())
     {
+        Scene* top_scene = nullptr;
+        while (top_scene && _scenes.size())
+        {
+            auto* scene = getTopScene();
+            if (!scene->running)
+            {
+                delete scene;
+                _scenes.pop();
+            }
+            else
+                top_scene = scene;
+        }
+
+#   ifndef USE_IMGUI
+        if (!top_scene) break;
+#   endif
+
         Event event;
 
         // Change all KeyState::Pressed to KeyState::Down
@@ -62,41 +79,41 @@ void Core::run()
             if (event.type == Event::Type::Close)
                 window.close();
 
+            if (!top_scene) continue;
+
             if (event.type == Event::Type::KeyPress)
             {
                 const auto code = std::string(*event.keyPress.key);
                 if (!Input::global_state.count(code)) Input::global_state.insert(std::pair(code, Input::KeyState::Press));
+                top_scene->runFunction<>("KeyPress");
             }
             else if (event.type == Event::Type::KeyRelease)
             {
                 const auto code = std::string(*event.keyPress.key);
                 if (Input::global_state.count(code)) Input::global_state.at(code) = Input::KeyState::Release;
+                top_scene->runFunction<>("KeyRelease");
             }
             else if (event.type == Event::Type::MousePress)
             {
                 const auto code = std::string(*event.mousePress.button);
                 if (!Input::global_state.count(code)) Input::global_state.insert(std::pair(code, Input::KeyState::Press));
+                top_scene->runFunction<>("MousePress");
             }
             else if (event.type == Event::Type::MouseRelease)
             {
                 const auto code = std::string(*event.mousePress.button);
                 if (Input::global_state.count(code)) Input::global_state.at(code) = Input::KeyState::Release;
+                top_scene->runFunction<>("MouseRelease");
             }
-        }
-
-    get_top_scene:
-        if (!_scenes.size()) break;
-        auto* top_scene = getTopScene();
-        if (!top_scene->running)
-        {
-            delete top_scene;
-            _scenes.pop();
-            goto get_top_scene;
         }
 
         // We execute all the scripts
         // THEN the other registered systems run with world.progress()
         // THEN the draw method is called
+
+        if (top_scene)
+        {
+
         auto& world = top_scene->world;
         auto camera = world.filter<const Camera>().first();
 
@@ -151,13 +168,6 @@ void Core::run()
             for (auto& e : dead_entities) e.destruct();
         }
 
-        window.clear();
-
-        world.progress();
-        top_scene->update();
-
-        render(top_scene);
-        
         // Since colliders possibly change the velocity, we need to run collision check and *then* 
         // do the rigidbody transformation
         top_scene->rigidbodies.each([&](Transform& transform, Rigidbody& rigidbody)
@@ -165,6 +175,16 @@ void Core::run()
             rigidbody.velocity += (rigidbody.added_force - rigidbody.velocity * rigidbody.linear_drag) * (float)Time::dt;
             transform.position += Math::Vec3f(rigidbody.velocity.x, rigidbody.velocity.y, 0.f) * (float)Time::dt;
         });
+       
+        world.progress();
+        top_scene->update();
+
+        }
+
+        window.clear();
+
+        if (top_scene) render(top_scene);
+        else render_imgui(nullptr);
 
         window.display();
 

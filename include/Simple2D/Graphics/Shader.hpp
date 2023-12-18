@@ -23,7 +23,6 @@ namespace S2D::Graphics
 
         Shader(const std::string& contents, Shader::Type type);
         ~Shader();
-
     };
 
     struct Program

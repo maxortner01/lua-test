@@ -338,7 +338,7 @@ namespace S2D::Engine
         Graphics::Context context;
         context.program = &default_flat->shader;
         context.program->setUniform("model", transform.matrix());
-        
+
         Camera camera;
         camera.projection = Projection::Orthographic;
         camera.size = target.getSize();
@@ -427,9 +427,25 @@ namespace S2D::Engine
             }();
         }
 
+        const auto* script = entity.get<Script>();
+        const auto run_func = [&](const std::string& name)
+        {
+            for (const auto& runtime : script->runtime)
+                if (runtime.second)
+                {
+                    const auto res = runtime.first->runFunction<>(name);
+                    if (!res && res.error().code() != Lua::Runtime::ErrorCode::NotFunction)
+                        Log::Logger::instance("engine")->info("Error calling PreDraw: {}", res.error().message());
+                }
+        };
+
+        if (script) run_func("PreDraw");
+
         RENDER_COMPONENT(Sprite);
         RENDER_COMPONENT(Tilemap);
         RENDER_COMPONENT(Text);
         RENDER_COMPONENT(CustomMesh);
+
+        if (script) run_func("PostDraw");
     }
 }
